@@ -4,13 +4,18 @@ import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
+import android.widget.TextView
+import android.widget.Toast
 import com.lcj.sb.account.switcher.adapter.AccountListAdapter
 import com.lcj.sb.account.switcher.model.AccountModel
+import com.lcj.sb.account.switcher.utils.AccountInfoManager
+import com.lcj.sb.account.switcher.utils.Configs
 import java.io.File
 import java.io.FileFilter
 import java.util.*
 
 class MainActivity : BaseActivity() {
+    var mCurrentAccountTextView: TextView? = null
     var mAccountListView: RecyclerView? = null
 
     var mDataList: ArrayList<AccountModel>? = null
@@ -22,6 +27,7 @@ class MainActivity : BaseActivity() {
 
         initView()
         checkSBFolderExists()
+        loadCurrentAccount()
         initAccountList()
     }
 
@@ -32,17 +38,26 @@ class MainActivity : BaseActivity() {
 
     override fun initView() {
         super.initView()
+        mCurrentAccountTextView = findViewById(R.id.main_current_account_text)
         mAccountListView = findViewById(R.id.main_account_list)
+
+        mCurrentAccountTextView?.text = ""
+    }
+
+    fun loadCurrentAccount() {
+        Log.i(LOG_TAG, "loadCurrentAccount")
+        AccountInfoManager.getInstance().readAccountInfoFile()
+        mCurrentAccountTextView?.text = AccountInfoManager.getInstance().mCurrentAccount
     }
 
     fun checkSBFolderExists() {
         Log.i(LOG_TAG, "checkSBFolderExists")
-        Log.v(LOG_TAG, "checkSBFolderExists PATH_EXTERNAL_STORAGE : " + PATH_EXTERNAL_STORAGE)
-        Log.v(LOG_TAG, "checkSBFolderExists PATH_APP_DATA : " + PATH_APP_DATA)
-        var dirAppData: File = File(PATH_APP_DATA)
-        var dirSB: File = File(String.format("%s/%s", PATH_APP_DATA, PREFIX_NAME_SB))
+        Log.v(LOG_TAG, "checkSBFolderExists Configs.PATH_EXTERNAL_STORAGE : " + Configs.PATH_EXTERNAL_STORAGE)
+        Log.v(LOG_TAG, "checkSBFolderExists Configs.PATH_APP_DATA : " + Configs.PATH_APP_DATA)
+        var dirAppData: File = File(Configs.PATH_APP_DATA)
+        var dirSB: File = File(String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB))
         var fileFilter: FileFilter = FileFilter { file ->
-            var regex: Regex = Regex(String.format("%s\\.\\w", PREFIX_NAME_SB))
+            var regex: Regex = Regex(String.format("%s\\.\\w", Configs.PREFIX_NAME_SB))
             file.name.contains(regex)
         }
         var folders: Array<File> = dirAppData.listFiles(fileFilter)
@@ -61,6 +76,27 @@ class MainActivity : BaseActivity() {
     fun initAccountList() {
         Log.i(LOG_TAG, "initAccountList")
         mAccountListAdapter = AccountListAdapter(mActivity, mDataList!!)
+        mAccountListAdapter?.setCallback(object : AccountListAdapter.Callback {
+            override fun onLoadSuccess(account: String?) {
+                Log.i(LOG_TAG, "onLoadSuccess")
+                AccountInfoManager.getInstance().mCurrentAccount = account
+                AccountInfoManager.getInstance().writeAccountInfoFile()
+                Log.v(LOG_TAG, "onLoadSuccess account : " + account)
+                mHandler.post {
+                    mCurrentAccountTextView?.text = account
+                    Toast.makeText(mActivity, "Load Success", Toast.LENGTH_SHORT).show()
+                }
+
+                var intent = packageManager.getLaunchIntentForPackage(Configs.PREFIX_NAME_SB)
+                startActivity(intent)
+            }
+
+            override fun onSaveSuccess() {
+                mHandler.post {
+                    Toast.makeText(mActivity, "Save Success", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
 
         var layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
         mAccountListView?.layoutManager = layoutManager
