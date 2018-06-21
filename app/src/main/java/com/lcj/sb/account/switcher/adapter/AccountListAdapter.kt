@@ -44,6 +44,9 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
     override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
         var selectedItem = mDataList?.get(position)
 
+        holder?.saveButton?.isEnabled = !selectedItem?.disable!!
+        holder?.loadButton?.isEnabled = !selectedItem?.disable!!
+
         holder?.folderNameTextView?.text = selectedItem?.folderName
         holder?.saveButton?.setOnClickListener({
             Log.i(LOG_TAG, "Save Button Click")
@@ -53,6 +56,8 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
             var fileSrcFolder = File(pathSrcFolder)
 
             Thread({
+                mCallback?.onSaveStart()
+
                 for (srcFile in fileSrcFolder.listFiles()) {
                     if (srcFile.isFile) {
                         var dstFileName = String.format("%s/%s", pathDstFolder, srcFile.name)
@@ -127,6 +132,8 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
 
     interface Callback {
         fun onLoadSuccess(account: String?)
+
+        fun onSaveStart()
 
         fun onSaveSuccess()
     }

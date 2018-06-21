@@ -17,6 +17,7 @@ import java.util.*
 class MainActivity : BaseActivity() {
     var mCurrentAccountTextView: TextView? = null
     var mAccountListView: RecyclerView? = null
+    var mActionStatusTextView: TextView? = null
 
     var mDataList: ArrayList<AccountModel>? = null
     var mAccountListAdapter: AccountListAdapter? = null
@@ -40,8 +41,10 @@ class MainActivity : BaseActivity() {
         super.initView()
         mCurrentAccountTextView = findViewById(R.id.main_current_account_text)
         mAccountListView = findViewById(R.id.main_account_list)
+        mActionStatusTextView = findViewById(R.id.main_action_status_text)
 
         mCurrentAccountTextView?.text = ""
+        mActionStatusTextView?.text = ""
     }
 
     fun loadCurrentAccount() {
@@ -91,8 +94,20 @@ class MainActivity : BaseActivity() {
                 startActivity(intent)
             }
 
-            override fun onSaveSuccess() {
+            override fun onSaveStart() {
+                Log.i(LOG_TAG, "onSaveStart")
+                mDataList?.forEach { item -> item.disable = true }
                 mHandler.post {
+                    mActionStatusTextView?.text = "File Saving..."
+                    mAccountListAdapter?.notifyDataSetChanged()
+                }
+            }
+
+            override fun onSaveSuccess() {
+                mDataList?.forEach { item -> item.disable = false }
+                mHandler.post {
+                    mActionStatusTextView?.text = ""
+                    mAccountListAdapter?.notifyDataSetChanged()
                     Toast.makeText(mActivity, "Save Success", Toast.LENGTH_SHORT).show()
                 }
             }

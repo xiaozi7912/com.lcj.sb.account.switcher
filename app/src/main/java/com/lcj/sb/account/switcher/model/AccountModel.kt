@@ -6,6 +6,7 @@ package com.lcj.sb.account.switcher.model
 class AccountModel() {
     open var folderName: String? = null
     open var folderPath: String? = null
+    open var disable: Boolean = false
 
     constructor(folderName: String, folderPath: String) : this() {
         this.folderName = folderName
