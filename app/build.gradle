@@ -10,8 +10,8 @@ android {
         applicationId "com.lcj.sb.account.switcher"
         minSdkVersion 16
         targetSdkVersion 26
-        versionCode 2018062120
-        versionName "0.0.3"
+        versionCode 2018070201
+        versionName "0.1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
