@@ -10,19 +10,47 @@ import java.io.*
 class AccountInfoManager() {
     val LOG_TAG: String = javaClass.simpleName
 
-    var mCurrentAccount: String? = null
+    val KEY_TAB_TYPE: String = "TAB_TYPE"
+    val KEY_ACCOUNT_TYPE_JP: String = "ACCOUNT_JP"
+    val KEY_ACCOUNT_TYPE_TW: String = "ACCOUNT_TW"
+    val VALUE_ACCOUNT_TYPE_DEFAULT = "No Account"
+
+    var currentTab: Int = TAB_TYPE_JP
         get() {
-            Log.i(LOG_TAG, "mCurrentAccount get")
+            Log.i(LOG_TAG, "currentTab get")
             return field
         }
         set(value) {
-            Log.i(LOG_TAG, "mCurrentAccount set")
-            Log.v(LOG_TAG, "mCurrentAccount set value : " + value)
+            Log.i(LOG_TAG, "currentTab set")
+            Log.v(LOG_TAG, "currentTab set value : " + value)
+            field = value
+        }
+    var currentJPAccount: String? = null
+        get() {
+            Log.i(LOG_TAG, "currentJPAccount get")
+            return field
+        }
+        set(value) {
+            Log.i(LOG_TAG, "currentJPAccount set")
+            Log.v(LOG_TAG, "currentJPAccount set value : " + value)
+            field = value
+        }
+    var currentTWAccount: String? = null
+        get() {
+            Log.i(LOG_TAG, "currentTWAccount get")
+            return field
+        }
+        set(value) {
+            Log.i(LOG_TAG, "currentTWAccount set")
+            Log.v(LOG_TAG, "currentTWAccount set value : " + value)
             field = value
         }
 
     companion object {
-        var mInstance: AccountInfoManager? = null
+        private var mInstance: AccountInfoManager? = null
+
+        val TAB_TYPE_JP: Int = 1
+        val TAB_TYPE_TW: Int = 2
 
         fun getInstance(): AccountInfoManager {
             if (mInstance == null) mInstance = AccountInfoManager()
@@ -32,7 +60,7 @@ class AccountInfoManager() {
 
     fun readAccountInfoFile() {
         Log.i(LOG_TAG, "readAccountInfoFile")
-        var accountFile = File(String.format("%s/%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB, Configs.NAME_ACCOUNT_INFO_FILE))
+        var accountFile = File(String.format("%s/%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW, Configs.NAME_ACCOUNT_INFO_FILE))
         Log.v(LOG_TAG, "readAccountInfoFile accountFile.absolutePath : " + accountFile.absolutePath)
         Log.v(LOG_TAG, "readAccountInfoFile accountFile.exists : " + accountFile.exists())
 
@@ -48,22 +76,27 @@ class AccountInfoManager() {
             } while (readLine != null)
 
             var jsonObject = JSONObject(strBuilder.toString())
-            mCurrentAccount = jsonObject.optString("account")
 
+            currentTab = jsonObject.optInt(KEY_TAB_TYPE, TAB_TYPE_JP)
+            currentJPAccount = jsonObject.optString(KEY_ACCOUNT_TYPE_JP, VALUE_ACCOUNT_TYPE_DEFAULT)
+            currentTWAccount = jsonObject.optString(KEY_ACCOUNT_TYPE_TW, VALUE_ACCOUNT_TYPE_DEFAULT)
             reader.close()
         } else {
-            mCurrentAccount = "No Account"
+            currentTWAccount = VALUE_ACCOUNT_TYPE_DEFAULT
+            currentJPAccount = VALUE_ACCOUNT_TYPE_DEFAULT
         }
     }
 
     fun writeAccountInfoFile() {
         Log.i(LOG_TAG, "writeAccountInfoFile")
-        var accountFile = File(String.format("%s/%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB, Configs.NAME_ACCOUNT_INFO_FILE))
+        var accountFile = File(String.format("%s/%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW, Configs.NAME_ACCOUNT_INFO_FILE))
         Log.v(LOG_TAG, "writeAccountInfoFile accountFile.absolutePath : " + accountFile.absolutePath)
         Log.v(LOG_TAG, "writeAccountInfoFile accountFile.exists : " + accountFile.exists())
         var jsonObject = JSONObject()
 
-        jsonObject.put("account", mCurrentAccount)
+        jsonObject.put(KEY_TAB_TYPE, currentTab)
+        jsonObject.put(KEY_ACCOUNT_TYPE_JP, currentJPAccount)
+        jsonObject.put(KEY_ACCOUNT_TYPE_TW, currentTWAccount)
 
         var writer = BufferedWriter(FileWriter(accountFile))
         writer.write(jsonObject.toString())

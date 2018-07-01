@@ -1,12 +1,14 @@
 package com.lcj.sb.account.switcher.adapter
 
 import android.app.Activity
+import android.graphics.Color
 import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.model.AccountModel
@@ -17,18 +19,28 @@ import java.io.*
  * Created by Larry on 2018-06-18.
  */
 class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>() {
-    val LOG_TAG: String = javaClass.simpleName
-    var mActivity: Activity? = null
-    var mInflater: LayoutInflater? = null
-    var mDataList: ArrayList<AccountModel>? = null
-    var mCallback: Callback? = null
+    private val LOG_TAG: String = javaClass.simpleName
+    private var mActivity: Activity? = null
+    private var mInflater: LayoutInflater? = null
+    private var mDataList: ArrayList<AccountModel>? = null
+    private var mCallback: Callback? = null
 
-    val BUFFER_SIZE = 256
+    private val BUFFER_SIZE = 256
 
-    constructor(activity: Activity, dataList: ArrayList<AccountModel>) : this() {
+    private var mPrefixNameSB: String? = null
+    var currentFolderName: String? = null
+        get() {
+            return field
+        }
+        set(value) {
+            field = value
+        }
+
+    constructor(activity: Activity?, prefixNameSB: String, dataList: ArrayList<AccountModel>) : this() {
         Log.i(LOG_TAG, "constructor")
         this.mActivity = activity
         this.mInflater = LayoutInflater.from(activity)
+        this.mPrefixNameSB = prefixNameSB
         this.mDataList = dataList
     }
 
@@ -44,6 +56,12 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
     override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
         var selectedItem = mDataList?.get(position)
 
+        if (currentFolderName.equals(selectedItem?.folderName)) {
+            holder?.rootLayout?.setBackgroundColor(Color.parseColor("#55ff0000"))
+        } else {
+            holder?.rootLayout?.setBackgroundColor(Color.TRANSPARENT)
+        }
+
         holder?.saveButton?.isEnabled = !selectedItem?.disable!!
         holder?.loadButton?.isEnabled = !selectedItem?.disable!!
 
@@ -51,7 +69,7 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
         holder?.saveButton?.setOnClickListener({
             Log.i(LOG_TAG, "Save Button Click")
             Log.v(LOG_TAG, "Save Button Click selectedItem?.folderPath : " + selectedItem?.folderPath)
-            var pathSrcFolder = String.format("%s/%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB, "files")
+            var pathSrcFolder = String.format("%s/%s/%s", Configs.PATH_APP_DATA, mPrefixNameSB, "files")
             var pathDstFolder = String.format("%s/%s", selectedItem?.folderPath, "files")
             var fileSrcFolder = File(pathSrcFolder)
 
@@ -71,7 +89,7 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
             Log.i(LOG_TAG, "Load Button Click")
             Log.v(LOG_TAG, "Load Button Click selectedItem?.folderPath : " + selectedItem?.folderPath)
             var srcFolder: String = String.format("%s/%s", selectedItem?.folderPath, "files")
-            var dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB)
+            var dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, mPrefixNameSB)
             var command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
             Log.v(LOG_TAG, "Load Button Click command : " + command)
 
@@ -97,7 +115,7 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
         mCallback = callback
     }
 
-    fun writeFile(srcFilePath: String, dstFilePath: String) {
+    private fun writeFile(srcFilePath: String, dstFilePath: String) {
         Log.i(LOG_TAG, "writeFile")
         Log.v(LOG_TAG, "writeFile srcFilePath : " + srcFilePath)
         Log.v(LOG_TAG, "writeFile dstFilePath : " + dstFilePath)
@@ -119,11 +137,13 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
     }
 
     class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView) {
+        var rootLayout: LinearLayout? = null
         var folderNameTextView: TextView? = null
         var saveButton: Button? = null
         var loadButton: Button? = null
 
         init {
+            rootLayout = itemView?.findViewById(R.id.item_account_list_root)
             folderNameTextView = itemView?.findViewById(R.id.item_account_list_folder_name_text)
             saveButton = itemView?.findViewById(R.id.item_account_list_save_button)
             loadButton = itemView?.findViewById(R.id.item_account_list_load_button)
