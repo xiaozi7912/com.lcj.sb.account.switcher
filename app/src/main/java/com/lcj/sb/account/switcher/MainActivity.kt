@@ -1,5 +1,6 @@
 package com.lcj.sb.account.switcher
 
+import android.Manifest
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -7,8 +8,15 @@ import android.widget.Button
 import com.lcj.sb.account.switcher.fragment.SBJPFragment
 import com.lcj.sb.account.switcher.fragment.SBTWFragment
 import com.lcj.sb.account.switcher.utils.AccountInfoManager
+import pub.devrel.easypermissions.AfterPermissionGranted
+import pub.devrel.easypermissions.EasyPermissions
+
 
 class MainActivity : BaseActivity() {
+    companion object {
+        const val REQUEST_CODE_WRITE_PERMISSION = 1001
+    }
+
     var mTabJPButton: Button? = null
     var mTabTWButton: Button? = null
 
@@ -17,10 +25,9 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        AccountInfoManager.getInstance().readAccountInfoFile()
 
         initView()
-        initSelectedTab()
+        requestPermissions()
     }
 
     override fun onResume() {
@@ -33,6 +40,12 @@ class MainActivity : BaseActivity() {
         AccountInfoManager.getInstance().writeAccountInfoFile()
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
+    }
+
     override fun initView() {
         super.initView()
         mTabJPButton = findViewById(R.id.main_tab_jp_button)
@@ -40,6 +53,18 @@ class MainActivity : BaseActivity() {
 
         mTabJPButton?.setOnClickListener(onClickListener)
         mTabTWButton?.setOnClickListener(onClickListener)
+    }
+
+    @AfterPermissionGranted(REQUEST_CODE_WRITE_PERMISSION)
+    fun requestPermissions() {
+        val perms = arrayOf<String>(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+
+        if (EasyPermissions.hasPermissions(mActivity, *perms)) {
+            AccountInfoManager.getInstance().readAccountInfoFile()
+            initSelectedTab()
+        } else {
+            EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
+        }
     }
 
     fun initSelectedTab() {
