@@ -2,6 +2,7 @@ package com.lcj.sb.account.switcher.adapter
 
 import android.app.Activity
 import android.graphics.Color
+import android.net.Uri
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -10,9 +11,11 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.storage.FirebaseStorage
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.model.AccountModel
 import com.lcj.sb.account.switcher.utils.Configs
+import com.lcj.sb.account.switcher.utils.ZipManager
 import java.io.*
 
 /**
@@ -29,12 +32,6 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
 
     private var mPrefixNameSB: String? = null
     var currentFolderName: String? = null
-        get() {
-            return field
-        }
-        set(value) {
-            field = value
-        }
 
     constructor(activity: Activity?, prefixNameSB: String, dataList: ArrayList<AccountModel>) : this() {
         Log.i(LOG_TAG, "constructor")
@@ -57,23 +54,23 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
         var selectedItem = mDataList?.get(position)
 
         if (currentFolderName.equals(selectedItem?.folderName)) {
-            holder?.rootLayout?.setBackgroundColor(Color.parseColor("#55ff0000"))
+            holder.rootLayout?.setBackgroundColor(Color.parseColor("#55ff0000"))
         } else {
-            holder?.rootLayout?.setBackgroundColor(Color.TRANSPARENT)
+            holder.rootLayout?.setBackgroundColor(Color.TRANSPARENT)
         }
 
-        holder?.saveButton?.isEnabled = !selectedItem?.disable!!
-        holder?.loadButton?.isEnabled = !selectedItem?.disable!!
+        holder.saveButton?.isEnabled = !selectedItem?.disable!!
+        holder.loadButton?.isEnabled = !selectedItem.disable
 
-        holder?.folderNameTextView?.text = selectedItem?.folderName
-        holder?.saveButton?.setOnClickListener({
+        holder.folderNameTextView?.text = selectedItem.folderName
+        holder.saveButton?.setOnClickListener {
             Log.i(LOG_TAG, "Save Button Click")
-            Log.v(LOG_TAG, "Save Button Click selectedItem?.folderPath : " + selectedItem?.folderPath)
-            var pathSrcFolder = String.format("%s/%s/%s", Configs.PATH_APP_DATA, mPrefixNameSB, "files")
-            var pathDstFolder = String.format("%s/%s", selectedItem?.folderPath, "files")
-            var fileSrcFolder = File(pathSrcFolder)
+            Log.v(LOG_TAG, "Save Button Click selectedItem?.folderPath : " + selectedItem.folderPath)
+            val pathSrcFolder = String.format("%s/%s/%s", Configs.PATH_APP_DATA, mPrefixNameSB, "files")
+            val pathDstFolder = String.format("%s/%s", selectedItem.folderPath, "files")
+            val fileSrcFolder = File(pathSrcFolder)
 
-            Thread({
+            Thread {
                 mCallback?.onSaveStart()
 
                 for (srcFile in fileSrcFolder.listFiles()) {
@@ -83,32 +80,91 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
                     }
                 }
                 mCallback?.onSaveSuccess()
-            }).start()
-        })
-        holder?.loadButton?.setOnClickListener({
-            Log.i(LOG_TAG, "Load Button Click")
-            Log.v(LOG_TAG, "Load Button Click selectedItem?.folderPath : " + selectedItem?.folderPath)
-            var srcFolder: String = String.format("%s/%s", selectedItem?.folderPath, "files")
-            var dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, mPrefixNameSB)
-            var command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
-            Log.v(LOG_TAG, "Load Button Click command : " + command)
+            }.start()
+        }
 
-            Thread({
-                var process: Process = Runtime.getRuntime().exec(command)
-                var buffReader = BufferedReader(InputStreamReader(process.inputStream))
+        holder.loadButton?.setOnClickListener {
+            Log.i(LOG_TAG, "Load Button Click")
+            Log.v(LOG_TAG, "Load Button Click selectedItem?.folderPath : " + selectedItem.folderPath)
+            val srcFolder: String = String.format("%s/%s", selectedItem.folderPath, "files")
+            val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, mPrefixNameSB)
+            val command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
+            Log.v(LOG_TAG, "Load Button Click command : $command")
+
+            Thread {
+                val process: Process = Runtime.getRuntime().exec(command)
+                val buffReader = BufferedReader(InputStreamReader(process.inputStream))
                 var readLine: String? = null
 
                 do {
                     readLine = buffReader.readLine()
-                    Log.v(LOG_TAG, "Load Button Click readLine : " + readLine)
+                    Log.v(LOG_TAG, "Load Button Click readLine : $readLine")
                 } while (readLine != null)
 
                 buffReader.close()
                 process.waitFor()
 
-                mCallback?.onLoadSuccess(selectedItem?.folderName)
-            }).start()
-        })
+                mCallback?.onLoadSuccess(selectedItem.folderName)
+            }.start()
+        }
+
+        holder.uploadButton?.setOnClickListener {
+            Log.i(LOG_TAG, "Upload Button Click")
+            Thread {
+                val srcFilePath = String.format("%s/%s", selectedItem.folderPath, "files")
+                val fileSrcFolder = File(srcFilePath)
+                val fileList = ArrayList<String>()
+                val zipFilePath = String.format("%s/%s.zip", selectedItem.folderPath, selectedItem.folderName)
+
+                for (srcFile in fileSrcFolder.listFiles()) {
+                    if (srcFile.isFile) {
+                        fileList.add(srcFile.absolutePath)
+                    }
+                }
+
+                ZipManager().zip(fileList, zipFilePath)
+
+                val file = Uri.fromFile(File(zipFilePath))
+                val storage = FirebaseStorage.getInstance()
+                val storageRef = storage.reference
+                val fileRef = storageRef.child("summons/${file.lastPathSegment}")
+                val uploadTask = fileRef.putFile(file)
+
+                storageRef.listAll()
+                        .addOnSuccessListener { result ->
+                            Log.i(LOG_TAG, "addOnSuccessListener")
+                            result.items.forEach { item ->
+                                Log.v(LOG_TAG, "${item.name}")
+                            }
+                        }
+                        .addOnFailureListener {
+                            Log.i(LOG_TAG, "addOnFailureListener")
+                        }
+
+                uploadTask
+                        .addOnSuccessListener { Log.i(LOG_TAG, "addOnSuccessListener") }
+                        .addOnFailureListener { Log.i(LOG_TAG, "addOnFailureListener") }
+            }.start()
+        }
+
+        holder.downloadButton.setOnClickListener {
+            Log.i(LOG_TAG, "downloadButton")
+            Thread {
+                val storage = FirebaseStorage.getInstance()
+                val zipFileRef = storage.reference.child("${selectedItem.folderName}.zip")
+                val localFile = File.createTempFile("summons_", ".zip")
+
+                zipFileRef.getFile(localFile)
+                        .addOnProgressListener { taskSnapshot ->
+                            val progress: Double = (taskSnapshot.bytesTransferred * 100.0) / taskSnapshot.totalByteCount
+                            Log.v(LOG_TAG, "getFile bytesTransferred : ${taskSnapshot.bytesTransferred}")
+                            Log.v(LOG_TAG, "getFile totalByteCount : ${taskSnapshot.totalByteCount}")
+                            Log.v(LOG_TAG, "getFile progress : $progress")
+                        }
+                        .addOnSuccessListener { Log.i(LOG_TAG, "getFile addOnSuccessListener") }
+                        .addOnFailureListener { Log.i(LOG_TAG, "getFile addOnFailureListener") }
+            }.start()
+        }
     }
 
     fun setCallback(callback: Callback) {
@@ -136,17 +192,21 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
         reader.close()
     }
 
-    class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView!!) {
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var rootLayout: LinearLayout? = null
-        var folderNameTextView: TextView? = null
-        var saveButton: Button? = null
-        var loadButton: Button? = null
+        var folderNameTextView: TextView
+        var saveButton: Button
+        var loadButton: Button
+        var uploadButton: Button
+        var downloadButton: Button
 
         init {
-            rootLayout = itemView?.findViewById(R.id.item_account_list_root)
-            folderNameTextView = itemView?.findViewById(R.id.item_account_list_folder_name_text)
-            saveButton = itemView?.findViewById(R.id.item_account_list_save_button)
-            loadButton = itemView?.findViewById(R.id.item_account_list_load_button)
+            rootLayout = itemView.findViewById(R.id.item_account_list_root)
+            folderNameTextView = itemView.findViewById(R.id.item_account_list_folder_name_text)
+            saveButton = itemView.findViewById(R.id.item_account_list_save_button)
+            loadButton = itemView.findViewById(R.id.item_account_list_load_button)
+            uploadButton = itemView.findViewById(R.id.item_account_list_upload_button)
+            downloadButton = itemView.findViewById(R.id.item_download_zip_button)
         }
     }
 

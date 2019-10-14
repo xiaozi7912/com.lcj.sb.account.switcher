@@ -12,17 +12,19 @@
 
         <Button
             android:id="@+id/main_tab_jp_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="2dp"
-            android:background="@drawable/selector_main_tab_jp_button" />
+            android:layout_weight="1"
+            android:text="サモンズボード" />
 
         <Button
             android:id="@+id/main_tab_tw_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="2dp"
-            android:background="@drawable/selector_main_tab_tw_button" />
+            android:layout_weight="1"
+            android:text="召喚圖板" />
     </LinearLayout>
 
     <FrameLayout

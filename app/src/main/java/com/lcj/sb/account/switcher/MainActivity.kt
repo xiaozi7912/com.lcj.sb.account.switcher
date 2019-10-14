@@ -26,13 +26,7 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initView()
         requestPermissions()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.i(LOG_TAG, "onResume")
     }
 
     override fun onStop() {
