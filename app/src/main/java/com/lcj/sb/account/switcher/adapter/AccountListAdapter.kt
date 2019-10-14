@@ -2,7 +2,6 @@ package com.lcj.sb.account.switcher.adapter
 
 import android.app.Activity
 import android.graphics.Color
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.model.AccountModel
 import com.lcj.sb.account.switcher.utils.Configs
@@ -48,12 +48,12 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
         return mDataList?.size!!
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         var rootView: View = mInflater?.inflate(R.layout.item_account_list, null, false)!!
         return ViewHolder(rootView)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         var selectedItem = mDataList?.get(position)
 
         if (currentFolderName.equals(selectedItem?.folderName)) {
@@ -136,7 +136,7 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
         reader.close()
     }
 
-    class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(itemView: View?) : RecyclerView.ViewHolder(itemView!!) {
         var rootLayout: LinearLayout? = null
         var folderNameTextView: TextView? = null
         var saveButton: Button? = null
