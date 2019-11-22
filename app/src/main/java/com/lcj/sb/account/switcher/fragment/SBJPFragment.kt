@@ -39,9 +39,9 @@ class SBJPFragment : BaseFragment() {
         mActionStatusTextView = mRootView?.findViewById(R.id.main_action_status_text)
 
         mCurrentAccountTextView?.visibility = View.GONE
-        mStartGameButton?.setOnClickListener({
+        mStartGameButton?.setOnClickListener {
             startGame()
-        })
+        }
         return mRootView
     }
 
@@ -139,7 +139,12 @@ class SBJPFragment : BaseFragment() {
 
     private fun startGame() {
         Log.i(LOG_TAG, "startGame")
-        var intent = mActivity?.packageManager?.getLaunchIntentForPackage(Configs.PREFIX_NAME_SB_JP)
-        startActivity(intent)
+        val intent = mActivity?.packageManager?.getLaunchIntentForPackage(Configs.PREFIX_NAME_SB_JP)
+
+        try {
+            startActivity(intent)
+        } catch (e: NullPointerException) {
+            e.printStackTrace()
+        }
     }
 }
