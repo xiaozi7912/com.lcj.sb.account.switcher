@@ -2,31 +2,45 @@ package com.lcj.sb.account.switcher
 
 import android.Manifest
 import android.os.Bundle
-import android.util.Log
-import android.view.View
-import android.widget.Button
-import com.lcj.sb.account.switcher.fragment.SBJPFragment
-import com.lcj.sb.account.switcher.fragment.SBTWFragment
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.view.GravityCompat
+import androidx.databinding.DataBindingUtil
+import com.lcj.sb.account.switcher.database.BaseDatabase
+import com.lcj.sb.account.switcher.database.entity.Account
+import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.utils.AccountInfoManager
+import com.lcj.sb.account.switcher.view.DrawerItemView
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 
 
 class MainActivity : BaseActivity() {
+    private lateinit var mBinding: ActivityMainBinding
+
     companion object {
         const val REQUEST_CODE_WRITE_PERMISSION = 1001
     }
 
-    var mTabJPButton: Button? = null
-    var mTabTWButton: Button? = null
-
-    val TAB_BUTTON_IDS = intArrayOf(R.id.main_tab_jp_button, R.id.main_tab_tw_button)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
+        mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
+        setSupportActionBar(mBinding.mainToolBar)
         requestPermissions()
+
+        val account = Account(
+                alias = "111",
+                folder = "qqqq",
+                lang = Account.Language.JP.ordinal,
+                createTime = System.currentTimeMillis(),
+                updateTime = System.currentTimeMillis()
+        )
+
+        Thread {
+            BaseDatabase
+                    .getInstance(mActivity)
+                    .getAccountDao()
+                    .insertAccount(account)
+        }.start()
     }
 
     override fun onStop() {
@@ -42,11 +56,20 @@ class MainActivity : BaseActivity() {
 
     override fun initView() {
         super.initView()
-        mTabJPButton = findViewById(R.id.main_tab_jp_button)
-        mTabTWButton = findViewById(R.id.main_tab_tw_button)
+        val toggle = ActionBarDrawerToggle(mActivity, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name)
+        mBinding.mainDrawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
 
-        mTabJPButton?.setOnClickListener(onClickListener)
-        mTabTWButton?.setOnClickListener(onClickListener)
+        mBinding.mainDrawerItemSbJ.setOnClickListener {
+            val drawerItem = it as DrawerItemView
+            supportActionBar!!.title = drawerItem.getTitle()
+            mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
+        }
+        mBinding.mainDrawerItemSbT.setOnClickListener {
+            val drawerItem = it as DrawerItemView
+            supportActionBar!!.title = drawerItem.getTitle()
+            mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
+        }
     }
 
     @AfterPermissionGranted(REQUEST_CODE_WRITE_PERMISSION)
@@ -55,60 +78,8 @@ class MainActivity : BaseActivity() {
 
         if (EasyPermissions.hasPermissions(mActivity, *perms)) {
             AccountInfoManager.getInstance().readAccountInfoFile()
-            initSelectedTab()
         } else {
             EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
         }
     }
-
-    fun initSelectedTab() {
-        Log.i(LOG_TAG, "initSelectedTab")
-        var selectedTab = AccountInfoManager.getInstance().currentTab
-        when (selectedTab) {
-            AccountInfoManager.TAB_TYPE_JP -> mTabJPButton?.performClick()
-            AccountInfoManager.TAB_TYPE_TW -> mTabTWButton?.performClick()
-        }
-    }
-
-    fun setTabButtonStatusAsDefault() {
-        Log.i(LOG_TAG, "setTabButtonStatusAsDefault")
-        for (viewId in TAB_BUTTON_IDS) {
-            findViewById<Button>(viewId).isActivated = false
-        }
-    }
-
-    fun updateTabButtonStatus(viewId: Int, activated: Boolean) {
-        findViewById<Button>(viewId).isActivated = activated
-    }
-
-    fun onTabJPButtonClick() {
-        Log.i(LOG_TAG, "onTabJPButtonClick")
-        var ft = fragmentManager.beginTransaction()
-
-        ft.replace(R.id.main_frame_layout, SBJPFragment.newInstance())
-        ft.commit()
-
-        AccountInfoManager.getInstance().currentTab = AccountInfoManager.TAB_TYPE_JP
-    }
-
-    fun onTabTWButtonClick() {
-        Log.i(LOG_TAG, "onTabTWButtonClick")
-        var ft = fragmentManager.beginTransaction()
-
-        ft.replace(R.id.main_frame_layout, SBTWFragment.newInstance())
-        ft.commit()
-
-        AccountInfoManager.getInstance().currentTab = AccountInfoManager.TAB_TYPE_TW
-    }
-
-    var onClickListener = View.OnClickListener({ v ->
-        setTabButtonStatusAsDefault()
-
-        when (v.id) {
-            R.id.main_tab_jp_button -> onTabJPButtonClick()
-            R.id.main_tab_tw_button -> onTabTWButtonClick()
-        }
-
-        updateTabButtonStatus(v.id, true)
-    })
 }

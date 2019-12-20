@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "605196839098",
+    "firebase_url": "https://summons-board-account.firebaseio.com",
+    "project_id": "summons-board-account",
+    "storage_bucket": "summons-board-account.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:605196839098:android:3ecd49fe8b1a18d2733a83",
+        "android_client_info": {
+          "package_name": "com.lcj.sb.account.switcher"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "605196839098-da3rb24objt2t65tqt6039q28diout1m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDywoJu8HXW8TQR8ZmnrEt2Dc-bAU8SHj0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "605196839098-da3rb24objt2t65tqt6039q28diout1m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
