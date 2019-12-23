@@ -1,38 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.lcj.sb.account.switcher.MainActivity">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <TextView
-        android:id="@+id/main_current_account_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="com.ghg.sb.a"
-        android:textColor="#000000"
-        android:textSize="20sp" />
+    <data>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/main_account_list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1" />
+    </data>
 
-    <TextView
-        android:id="@+id/main_action_status_text"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="File Saving..."
-        android:textColor="#000000"
-        android:textSize="20sp" />
+        android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/fragment_account_start_game_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Start Game" />
-</LinearLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/account_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/add_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_margin="16dp"
+            android:src="@drawable/round_add_white_24"
+            app:layout_behavior=".behavior.FabScrollBehavior" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

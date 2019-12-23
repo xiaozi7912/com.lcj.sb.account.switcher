@@ -10,7 +10,7 @@ import com.lcj.sb.account.switcher.database.entity.Account
 @Database(entities = [Account::class], version = 1)
 abstract class BaseDatabase : RoomDatabase() {
     companion object {
-        const val DB_NAME: String = BuildConfig.APPLICATION_ID + ".db"
+        private const val DB_NAME: String = BuildConfig.APPLICATION_ID + ".db"
         private var instance: BaseDatabase? = null
 
         fun getInstance(context: Context): BaseDatabase {
