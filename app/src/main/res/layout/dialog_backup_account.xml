@@ -50,5 +50,14 @@
             app:layout_constraintLeft_toRightOf="@+id/backup_cancel_btn"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/backup_input_et" />
+
+        <ProgressBar
+            android:id="@+id/backup_progress_bar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/backup_cancel_btn" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

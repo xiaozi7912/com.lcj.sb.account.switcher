@@ -35,6 +35,11 @@ open class BaseFragment : Fragment() {
         mCurrentLang = SharedPrefs.getInstance(mActivity).getCurrentLang()
     }
 
+    override fun onStart() {
+        super.onStart()
+        Log.i(LOG_TAG, "onStart")
+    }
+
     override fun onResume() {
         super.onResume()
         Log.i(LOG_TAG, "onResume")

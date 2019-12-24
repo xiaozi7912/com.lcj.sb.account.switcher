@@ -27,7 +27,7 @@ class FileManager {
             return false
         }
 
-        fun backupFolder(resPath: String, destPath: String) {
+        fun backupFolder(resPath: String, destPath: String, callback: (Int, Int, Boolean) -> Unit) {
             Log.i(LOG_TAG, "backupFolder")
             Log.v(LOG_TAG, "backupFolder resPath : $resPath")
             Log.v(LOG_TAG, "backupFolder destPath : $destPath")
@@ -41,11 +41,15 @@ class FileManager {
             resDir.listFiles(FileFilter { it.name == "files" })
                     .forEach { file ->
                         Log.v(LOG_TAG, "backupFolder absolutePath : ${file.absolutePath}")
-                        file.listFiles(FileFilter { it.isFile })
-                                .forEach {
-                                    Log.v(LOG_TAG, "backupFolder absolutePath : ${it.absolutePath}")
-                                    copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
-                                }
+                        val fileList = file.listFiles(FileFilter { it.isFile })
+                        var current = 0
+                        val totalSize = fileList.size
+                        fileList.forEach {
+                            Log.v(LOG_TAG, "backupFolder absolutePath : ${it.absolutePath}")
+                            copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
+                            current++
+                            callback(current, totalSize, (current == totalSize))
+                        }
                     }
         }
 

@@ -25,5 +25,5 @@ abstract class BaseDatabase : RoomDatabase() {
         }
     }
 
-    abstract fun getAccountDao(): AccountDao
+    abstract fun accountDAO(): AccountDao
 }
