@@ -15,7 +15,7 @@
             android:id="@+id/drawer_item_icon"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@mipmap/icon_launcher_jp_p"
+            android:src="@drawable/ic_launcher_jp_p"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

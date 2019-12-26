@@ -32,7 +32,7 @@ class DrawerItemView : LinearLayout {
             context!!.theme.obtainStyledAttributes(attrs, R.styleable.DrawerItemView, 0, 0)
                     .apply {
                         try {
-                            mIconId = getResourceId(R.styleable.DrawerItemView_src, R.mipmap.icon_launcher_jp_p)
+                            mIconId = getResourceId(R.styleable.DrawerItemView_src, R.drawable.ic_launcher_jp_p)
                             mTitleStr = getString(R.styleable.DrawerItemView_title)!!
                         } finally {
                             recycle()

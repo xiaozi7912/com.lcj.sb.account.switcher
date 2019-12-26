@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/drawer_action_summons_j"
-        android:icon="@mipmap/icon_launcher_jp_p"
+        android:icon="@drawable/ic_launcher_jp_p"
         android:title="サモンズボード" />
 
     <item

@@ -50,7 +50,7 @@
                     android:id="@+id/main_drawer_item_sb_j"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:src="@mipmap/icon_launcher_jp_n"
+                    app:src="@drawable/ic_launcher_jp_p"
                     app:title="サモンズボード" />
 
                 <com.lcj.sb.account.switcher.view.DrawerItemView
