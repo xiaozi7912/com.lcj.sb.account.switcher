@@ -55,8 +55,15 @@ class AccountFragment : BaseFragment() {
         }
         mAdapter = AccountAdapter(mActivity)
         mAdapter.setSaveButtonClick { holder, account ->
+            holder.binding.accountSaveBtn.isEnabled = false
+            holder.binding.accountLoadBtn.isEnabled = false
+
             Thread {
                 FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
+                    if (finished) mHandler.post {
+                        holder.binding.accountSaveBtn.isEnabled = true
+                        holder.binding.accountLoadBtn.isEnabled = true
+                    }
                 }
             }.start()
         }
@@ -65,6 +72,9 @@ class AccountFragment : BaseFragment() {
             val srcFolder: String = String.format("%s/%s", account.folder, "files")
             val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
             val command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
+
+            holder.binding.accountSaveBtn.isEnabled = false
+            holder.binding.accountLoadBtn.isEnabled = false
 
             Thread {
                 val process: Process = Runtime.getRuntime().exec(command)
@@ -77,6 +87,11 @@ class AccountFragment : BaseFragment() {
 
                 buffReader.close()
                 process.waitFor()
+
+                mHandler.post {
+                    holder.binding.accountSaveBtn.isEnabled = true
+                    holder.binding.accountLoadBtn.isEnabled = true
+                }
             }.start()
         }
         mBinding.accountList.addItemDecoration(DividerItemDecoration(mActivity, layoutManager.orientation))

@@ -8,6 +8,7 @@ import java.io.*
 class FileManager {
     companion object {
         const val LOG_TAG = "FileManager"
+        const val BUFFER_SIZE = 512
 
         fun isPackageInstalled(packageName: String, pm: PackageManager): Boolean {
             return try {
@@ -64,12 +65,13 @@ class FileManager {
                 bis = BufferedInputStream(FileInputStream(File(resFile)))
                 bos = BufferedOutputStream(FileOutputStream(File(destFile), false))
 
-                val buff = ByteArray(1024)
-                bis.read(buff)
+                val buff = ByteArray(BUFFER_SIZE)
+                var readSize: Int
 
                 do {
-                    bos.write(buff)
-                } while (bis.read(buff) != -1)
+                    readSize = bis.read(buff)
+                    if (readSize > 0) bos.write(buff, 0, readSize)
+                } while (readSize > 0)
             } catch (e: IOException) {
                 e.printStackTrace()
             } finally {
