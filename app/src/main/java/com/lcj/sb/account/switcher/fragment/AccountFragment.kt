@@ -2,7 +2,6 @@ package com.lcj.sb.account.switcher.fragment
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,7 +47,6 @@ class AccountFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        Log.v(LOG_TAG, "onActivityCreated ${mCurrentLang.name}")
         val layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
 
         mGameFolderPath = when (mCurrentLang) {
@@ -57,26 +55,16 @@ class AccountFragment : BaseFragment() {
         }
         mAdapter = AccountAdapter(mActivity)
         mAdapter.setSaveButtonClick { holder, account ->
-            Log.v(LOG_TAG, "onActivityCreated setSaveButtonClick ${account.alias}")
-            Log.v(LOG_TAG, "onActivityCreated setSaveButtonClick ${account.folder}")
             Thread {
                 FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
-                    Log.v(LOG_TAG, "onActivityCreated current : $current")
-                    Log.v(LOG_TAG, "onActivityCreated total : $total")
-                    Log.v(LOG_TAG, "onActivityCreated finished : $finished")
                 }
             }.start()
         }
         mAdapter.setLoadButtonClick { holder, account ->
-            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick ${account.alias}")
-            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick ${account.folder}")
             val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
             val srcFolder: String = String.format("%s/%s", account.folder, "files")
             val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
             val command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
-            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick srcFolder : $srcFolder")
-            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick dstFolder : $dstFolder")
-            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick command : $command")
 
             Thread {
                 val process: Process = Runtime.getRuntime().exec(command)
@@ -85,7 +73,6 @@ class AccountFragment : BaseFragment() {
 
                 do {
                     readLine = buffReader.readLine()
-                    Log.v(LOG_TAG, "Load Button Click readLine : $readLine")
                 } while (readLine != null)
 
                 buffReader.close()
@@ -110,11 +97,9 @@ class AccountFragment : BaseFragment() {
         mAlertDialog.show()
 
         binding.backupCancelBtn.setOnClickListener {
-            Log.i(LOG_TAG, "backupCancelBtn")
             mAlertDialog.dismiss()
         }
         binding.backupSubmitBtn.setOnClickListener {
-            Log.i(LOG_TAG, "backupSubmitBtn")
             val currentTime = System.currentTimeMillis()
 
 
@@ -123,8 +108,6 @@ class AccountFragment : BaseFragment() {
                 Account.Language.TW -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW, currentTime)
             }
 
-            Log.v(LOG_TAG, "mGameFolderPath $mGameFolderPath")
-            Log.v(LOG_TAG, "isFolderExists ${FileManager.isFolderExists(mGameFolderPath)}")
             it.isEnabled = false
             Observable.just(FileManager.isFolderExists(mGameFolderPath))
                     .subscribeOn(Schedulers.io())
