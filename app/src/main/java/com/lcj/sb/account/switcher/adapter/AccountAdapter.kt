@@ -16,6 +16,7 @@ class AccountAdapter(private val activity: Activity)
     private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<Account> = emptyList()
     private var mSaveButtonClickCallback: ((ViewHolder, Account) -> Unit)? = null
+    private var mLoadButtonClickCallback: ((ViewHolder, Account) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemAccountListBinding.inflate(mInflater, parent, false))
@@ -45,7 +46,7 @@ class AccountAdapter(private val activity: Activity)
             currentItem.selected = true
             Thread {
                 BaseDatabase.getInstance(activity)
-                        .accountDAO().deselectAllAccount()
+                        .accountDAO().deselectAllAccount(currentItem.lang)
                 BaseDatabase.getInstance(activity)
                         .accountDAO().updateAccount(currentItem)
             }.start()
@@ -54,7 +55,7 @@ class AccountAdapter(private val activity: Activity)
             mSaveButtonClickCallback?.let { it(holder, currentItem) }
         }
         holder.binding.accountLoadBtn.setOnClickListener {
-
+            mLoadButtonClickCallback?.let { it(holder, currentItem) }
         }
     }
 
@@ -65,6 +66,10 @@ class AccountAdapter(private val activity: Activity)
 
     fun setSaveButtonClick(callback: (ViewHolder, Account) -> Unit) {
         mSaveButtonClickCallback = callback
+    }
+
+    fun setLoadButtonClick(callback: (ViewHolder, Account) -> Unit) {
+        mLoadButtonClickCallback = callback
     }
 
     class ViewHolder(val binding: ItemAccountListBinding) : RecyclerView.ViewHolder(binding.root)

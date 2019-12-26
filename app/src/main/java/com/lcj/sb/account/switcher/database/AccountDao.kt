@@ -15,8 +15,8 @@ interface AccountDao {
     @Update
     fun updateAccount(account: Account)
 
-    @Query("UPDATE accounts SET selected = 0 WHERE selected = 1")
-    fun deselectAllAccount()
+    @Query("UPDATE accounts SET selected = 0 WHERE lang = :lang AND selected = 1")
+    fun deselectAllAccount(lang: Int)
 
     @Query("SELECT * FROM accounts WHERE lang = :lang ORDER BY id DESC LIMIT 10")
     fun loadAccounts(lang: Int): LiveData<List<Account>>

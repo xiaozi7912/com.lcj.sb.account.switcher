@@ -19,6 +19,8 @@ import com.lcj.sb.account.switcher.utils.FileManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class AccountFragment : BaseFragment() {
     private lateinit var mBinding: FragmentAccountBinding
@@ -55,14 +57,39 @@ class AccountFragment : BaseFragment() {
         }
         mAdapter = AccountAdapter(mActivity)
         mAdapter.setSaveButtonClick { holder, account ->
-            Log.v(LOG_TAG, "onActivityCreated ${account.alias}")
-            Log.v(LOG_TAG, "onActivityCreated ${account.folder}")
+            Log.v(LOG_TAG, "onActivityCreated setSaveButtonClick ${account.alias}")
+            Log.v(LOG_TAG, "onActivityCreated setSaveButtonClick ${account.folder}")
             Thread {
                 FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
                     Log.v(LOG_TAG, "onActivityCreated current : $current")
                     Log.v(LOG_TAG, "onActivityCreated total : $total")
                     Log.v(LOG_TAG, "onActivityCreated finished : $finished")
                 }
+            }.start()
+        }
+        mAdapter.setLoadButtonClick { holder, account ->
+            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick ${account.alias}")
+            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick ${account.folder}")
+            val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
+            val srcFolder: String = String.format("%s/%s", account.folder, "files")
+            val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
+            val command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
+            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick srcFolder : $srcFolder")
+            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick dstFolder : $dstFolder")
+            Log.v(LOG_TAG, "onActivityCreated setLoadButtonClick command : $command")
+
+            Thread {
+                val process: Process = Runtime.getRuntime().exec(command)
+                val buffReader = BufferedReader(InputStreamReader(process.inputStream))
+                var readLine: String?
+
+                do {
+                    readLine = buffReader.readLine()
+                    Log.v(LOG_TAG, "Load Button Click readLine : $readLine")
+                } while (readLine != null)
+
+                buffReader.close()
+                process.waitFor()
             }.start()
         }
         mBinding.accountList.addItemDecoration(DividerItemDecoration(mActivity, layoutManager.orientation))
