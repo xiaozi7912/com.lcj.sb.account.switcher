@@ -12,5 +12,8 @@ class Configs {
         const val PREFIX_NAME_SB_JP: String = "jp.gungho.bm"
         const val PREFIX_NAME_SB_TW: String = "com.ghg.sb"
         const val NAME_ACCOUNT_INFO_FILE: String = "account.json"
+
+        const val PREF_KEY_FIRST_RUN = "first_run"
+        const val PREF_KEY_LANGUAGE = "lang"
     }
 }

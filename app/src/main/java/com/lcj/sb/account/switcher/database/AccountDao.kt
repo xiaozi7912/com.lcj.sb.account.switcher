@@ -18,6 +18,6 @@ interface AccountDao {
     @Query("UPDATE accounts SET selected = 0 WHERE lang = :lang AND selected = 1")
     fun deselectAllAccount(lang: Int)
 
-    @Query("SELECT * FROM accounts WHERE lang = :lang ORDER BY id DESC LIMIT 10")
+    @Query("SELECT * FROM accounts WHERE lang = :lang ORDER BY id ASC LIMIT 20")
     fun loadAccounts(lang: Int): LiveData<List<Account>>
 }
