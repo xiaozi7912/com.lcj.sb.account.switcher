@@ -72,9 +72,16 @@ class AccountFragment : BaseFragment() {
 
             Thread {
                 FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
-                    if (finished) mHandler.post {
-                        holder.binding.accountSaveBtn.isEnabled = true
-                        holder.binding.accountLoadBtn.isEnabled = true
+                    if (finished) {
+                        account.let {
+                            it.updateTime = System.currentTimeMillis()
+                            BaseDatabase.getInstance(mActivity).accountDAO()
+                                    .updateAccount(it)
+                        }
+                        mHandler.post {
+                            holder.binding.accountSaveBtn.isEnabled = true
+                            holder.binding.accountLoadBtn.isEnabled = true
+                        }
                     }
                 }
             }.start()
