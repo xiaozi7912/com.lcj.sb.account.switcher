@@ -65,53 +65,29 @@ class AccountFragment : BaseFragment() {
             Account.Language.JP -> String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
             Account.Language.TW -> String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
         }
-        mAdapter = AccountAdapter(mActivity)
-        mAdapter.setSaveButtonClick { holder, account ->
-            holder.binding.accountSaveBtn.isEnabled = false
-            holder.binding.accountLoadBtn.isEnabled = false
 
-            Thread {
-                FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
-                    if (finished) {
-                        account.let {
-                            it.updateTime = System.currentTimeMillis()
-                            BaseDatabase.getInstance(mActivity).accountDAO()
-                                    .updateAccount(it)
-                        }
-                        mHandler.post {
-                            holder.binding.accountSaveBtn.isEnabled = true
-                            holder.binding.accountLoadBtn.isEnabled = true
-                        }
+        mAdapter = AccountAdapter(mActivity)
+        mAdapter.setItemClick { holder, account ->
+            AlertDialog.Builder(mActivity)
+                    .setTitle(account.alias)
+                    .setMessage("資料夾：${account.folder}")
+                    .setNeutralButton("修改") { dialog, which ->
+                        dialog.dismiss()
                     }
-                }
-            }.start()
+                    .setNegativeButton("讀取") { dialog, which ->
+                        onLoadClick(holder, account)
+                        dialog.dismiss()
+                    }
+                    .setPositiveButton("備份") { dialog, which ->
+                        onBackupClicked(holder, account)
+                        dialog.dismiss()
+                    }.create().show()
+        }
+        mAdapter.setSaveButtonClick { holder, account ->
+            onBackupClicked(holder, account)
         }
         mAdapter.setLoadButtonClick { holder, account ->
-            val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
-            val srcFolder: String = String.format("%s/%s", account.folder, "files")
-            val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
-            val command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
-
-            holder.binding.accountSaveBtn.isEnabled = false
-            holder.binding.accountLoadBtn.isEnabled = false
-
-            Thread {
-                val process: Process = Runtime.getRuntime().exec(command)
-                val buffReader = BufferedReader(InputStreamReader(process.inputStream))
-                var readLine: String?
-
-                do {
-                    readLine = buffReader.readLine()
-                } while (readLine != null)
-
-                buffReader.close()
-                process.waitFor()
-
-                mHandler.post {
-                    holder.binding.accountSaveBtn.isEnabled = true
-                    holder.binding.accountLoadBtn.isEnabled = true
-                }
-            }.start()
+            onLoadClick(holder, account)
         }
         mBinding.accountList.addItemDecoration(DividerItemDecoration(mActivity, layoutManager.orientation))
         mBinding.accountList.layoutManager = layoutManager
@@ -120,6 +96,55 @@ class AccountFragment : BaseFragment() {
         BaseDatabase.getInstance(mActivity).accountDAO()
                 .loadAccounts(mCurrentLang.ordinal)
                 .observe(this, Observer { mAdapter.update(it) })
+    }
+
+    private fun onBackupClicked(holder: AccountAdapter.ViewHolder, account: Account) {
+        holder.binding.accountSaveBtn.isEnabled = false
+        holder.binding.accountLoadBtn.isEnabled = false
+
+        Thread {
+            FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
+                if (finished) {
+                    account.let {
+                        it.updateTime = System.currentTimeMillis()
+                        BaseDatabase.getInstance(mActivity).accountDAO()
+                                .updateAccount(it)
+                    }
+                    mHandler.post {
+                        holder.binding.accountSaveBtn.isEnabled = true
+                        holder.binding.accountLoadBtn.isEnabled = true
+                    }
+                }
+            }
+        }.start()
+    }
+
+    private fun onLoadClick(holder: AccountAdapter.ViewHolder, account: Account) {
+        val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
+        val srcFolder: String = String.format("%s/%s", account.folder, "files")
+        val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
+        val command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
+
+        holder.binding.accountSaveBtn.isEnabled = false
+        holder.binding.accountLoadBtn.isEnabled = false
+
+        Thread {
+            val process: Process = Runtime.getRuntime().exec(command)
+            val buffReader = BufferedReader(InputStreamReader(process.inputStream))
+            var readLine: String?
+
+            do {
+                readLine = buffReader.readLine()
+            } while (readLine != null)
+
+            buffReader.close()
+            process.waitFor()
+
+            mHandler.post {
+                holder.binding.accountSaveBtn.isEnabled = true
+                holder.binding.accountLoadBtn.isEnabled = true
+            }
+        }.start()
     }
 
     private fun showBackupAccountDialog() {

@@ -38,6 +38,7 @@ class FileManager {
 
             destDir.mkdir()
             destFilesDir.mkdir()
+            destFilesDir.setLastModified(System.currentTimeMillis())
 
             resDir.listFiles(FileFilter { it.name == "files" })
                     .forEach { file ->

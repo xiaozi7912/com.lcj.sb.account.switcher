@@ -16,7 +16,7 @@
             android:id="@+id/account_icon_iv"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@mipmap/ic_launcher"
+            android:src="@drawable/ic_launcher_jp_n"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
