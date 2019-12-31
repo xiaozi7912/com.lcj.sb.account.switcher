@@ -61,6 +61,8 @@ class MainActivity : BaseActivity() {
             val drawerItem = it as DrawerItemView
             onDrawerItemSBClick(drawerItem.getTitle(), Account.Language.TW)
         }
+
+        if (!mFirstRun) selectLanguage()
     }
 
     @AfterPermissionGranted(REQUEST_CODE_WRITE_PERMISSION)
@@ -70,11 +72,7 @@ class MainActivity : BaseActivity() {
         if (EasyPermissions.hasPermissions(mActivity, *perms)) {
 //            AccountInfoManager.getInstance().readAccountInfoFile()
             getFirebaseInstanceId()
-            if (mFirstRun) {
-                loadExistsBackup()
-            } else {
-                selectLanguage()
-            }
+            if (mFirstRun) loadExistsBackup()
         } else {
             EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
         }
@@ -129,7 +127,7 @@ class MainActivity : BaseActivity() {
                 }
 
                 PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
-                    putBoolean(Configs.PREF_KEY_FIRST_RUN, true)
+                    putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
                     apply()
                 }
                 mHandler.post { selectLanguage() }
