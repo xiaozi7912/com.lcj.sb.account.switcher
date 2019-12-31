@@ -1,6 +1,8 @@
 package com.lcj.sb.account.switcher.fragment
 
 import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +10,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.AccountAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -41,7 +44,16 @@ class AccountFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.addFab.setOnClickListener {
-            showBackupAccountDialog()
+            val packageName = when (mCurrentLang) {
+                Account.Language.JP -> Configs.PREFIX_NAME_SB_JP
+                Account.Language.TW -> Configs.PREFIX_NAME_SB_TW
+            }
+
+            if (FileManager.isPackageInstalled(packageName, mActivity.packageManager)) {
+                showBackupAccountDialog()
+            } else {
+                showErrorNoInstalled(packageName)
+            }
         }
     }
 
@@ -116,8 +128,6 @@ class AccountFragment : BaseFragment() {
         }
         binding.backupSubmitBtn.setOnClickListener {
             val currentTime = System.currentTimeMillis()
-
-
             val destPath = when (mCurrentLang) {
                 Account.Language.JP -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP, currentTime)
                 Account.Language.TW -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW, currentTime)
@@ -146,5 +156,22 @@ class AccountFragment : BaseFragment() {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe { mAlertDialog.dismiss() }
         }
+    }
+
+    private fun showErrorNoInstalled(packageName: String) {
+        mAlertDialog = AlertDialog.Builder(mActivity)
+                .setMessage(R.string.no_install_game)
+                .setPositiveButton(R.string.google_play_text) { dialog, which ->
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        data = Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+                        setPackage("com.android.vending")
+                    }
+                    startActivity(intent)
+                }
+                .setNegativeButton(R.string.dialog_cancel) { dialog, which ->
+                    mAlertDialog.dismiss()
+                }
+                .create()
+        mAlertDialog.show()
     }
 }
