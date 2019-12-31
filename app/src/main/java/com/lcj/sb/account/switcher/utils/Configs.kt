@@ -9,8 +9,11 @@ class Configs {
     companion object {
         val PATH_EXTERNAL_STORAGE: String = Environment.getExternalStorageDirectory().absolutePath
         val PATH_APP_DATA: String = String.format("%s/%s", PATH_EXTERNAL_STORAGE, "Android/data")
-        val PREFIX_NAME_SB_JP: String = "jp.gungho.bm"
-        val PREFIX_NAME_SB_TW: String = "com.ghg.sb"
-        val NAME_ACCOUNT_INFO_FILE: String = "account.json"
+        const val PREFIX_NAME_SB_JP: String = "jp.gungho.bm"
+        const val PREFIX_NAME_SB_TW: String = "com.ghg.sb"
+        const val NAME_ACCOUNT_INFO_FILE: String = "account.json"
+
+        const val PREF_KEY_FIRST_RUN = "first_run"
+        const val PREF_KEY_LANGUAGE = "lang"
     }
 }

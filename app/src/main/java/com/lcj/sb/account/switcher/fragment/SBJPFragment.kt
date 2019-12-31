@@ -31,12 +31,12 @@ class SBJPFragment : BaseFragment() {
     private var mDataList: ArrayList<AccountModel>? = null
     private var mAccountListAdapter: AccountListAdapter? = null
 
-    override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mRootView = inflater?.inflate(R.layout.fragment_account, null, false)
-        mStartGameButton = mRootView?.findViewById(R.id.fragment_account_start_game_button)
-        mCurrentAccountTextView = mRootView?.findViewById(R.id.main_current_account_text)
-        mAccountListView = mRootView?.findViewById(R.id.main_account_list)
-        mActionStatusTextView = mRootView?.findViewById(R.id.main_action_status_text)
+//        mStartGameButton = mRootView?.findViewById(R.id.fragment_account_start_game_button)
+//        mCurrentAccountTextView = mRootView?.findViewById(R.id.main_current_account_text)
+//        mAccountListView = mRootView?.findViewById(R.id.main_account_list)
+//        mActionStatusTextView = mRootView?.findViewById(R.id.main_action_status_text)
 
         mCurrentAccountTextView?.visibility = View.GONE
         mStartGameButton?.setOnClickListener {
@@ -45,7 +45,7 @@ class SBJPFragment : BaseFragment() {
         return mRootView
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         updateCurrentAccountTextView("")
         mActionStatusTextView?.text = ""

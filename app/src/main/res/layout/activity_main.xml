@@ -1,34 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
+    <data>
+
+    </data>
+
+    <androidx.drawerlayout.widget.DrawerLayout
+        android:id="@+id/main_drawer_layout"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/main_tab_jp_button"
+        <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="2dp"
-            android:layout_weight="1"
-            android:text="サモンズボード" />
+            android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/main_tab_tw_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="2dp"
-            android:layout_weight="1"
-            android:text="召喚圖板" />
-    </LinearLayout>
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/main_tool_bar"
+                android:layout_width="0dp"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-    <FrameLayout
-        android:id="@+id/main_frame_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-</LinearLayout>
+            <FrameLayout
+                android:id="@+id/main_frame_layout"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/main_tool_bar" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.google.android.material.navigation.NavigationView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:fitsSystemWindows="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <com.lcj.sb.account.switcher.view.DrawerItemView
+                    android:id="@+id/main_drawer_item_sb_j"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:src="@drawable/ic_launcher_jp_p"
+                    app:title="サモンズボード" />
+
+                <com.lcj.sb.account.switcher.view.DrawerItemView
+                    android:id="@+id/main_drawer_item_sb_t"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:src="@mipmap/icon_launcher_tw_n"
+                    app:title="召喚圖板" />
+            </LinearLayout>
+        </com.google.android.material.navigation.NavigationView>
+    </androidx.drawerlayout.widget.DrawerLayout>
+</layout>

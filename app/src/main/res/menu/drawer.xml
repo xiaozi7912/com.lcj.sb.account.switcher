@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/drawer_action_summons_j"
+        android:icon="@drawable/ic_launcher_jp_p"
+        android:title="サモンズボード" />
+
+    <item
+        android:id="@+id/drawer_action_summons_t"
+        android:icon="@mipmap/icon_launcher_tw_p"
+        android:title="召喚圖板" />
+</menu>

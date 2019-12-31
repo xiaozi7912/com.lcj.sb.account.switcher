@@ -2,30 +2,37 @@ package com.lcj.sb.account.switcher
 
 import android.Manifest
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.Log
-import android.view.View
-import android.widget.Button
-import com.lcj.sb.account.switcher.fragment.SBJPFragment
-import com.lcj.sb.account.switcher.fragment.SBTWFragment
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.view.GravityCompat
+import androidx.databinding.DataBindingUtil
+import com.google.firebase.iid.FirebaseInstanceId
+import com.lcj.sb.account.switcher.database.BaseDatabase
+import com.lcj.sb.account.switcher.database.entity.Account
+import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
+import com.lcj.sb.account.switcher.fragment.AccountFragment
 import com.lcj.sb.account.switcher.utils.AccountInfoManager
+import com.lcj.sb.account.switcher.utils.Configs
+import com.lcj.sb.account.switcher.view.DrawerItemView
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
+import java.io.File
+import java.io.FileFilter
+import java.util.regex.Pattern
 
 
 class MainActivity : BaseActivity() {
+    private lateinit var mBinding: ActivityMainBinding
+
     companion object {
         const val REQUEST_CODE_WRITE_PERMISSION = 1001
     }
 
-    var mTabJPButton: Button? = null
-    var mTabTWButton: Button? = null
-
-    val TAB_BUTTON_IDS = intArrayOf(R.id.main_tab_jp_button, R.id.main_tab_tw_button)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
+        mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
+        setSupportActionBar(mBinding.mainToolBar)
         requestPermissions()
     }
 
@@ -42,73 +49,114 @@ class MainActivity : BaseActivity() {
 
     override fun initView() {
         super.initView()
-        mTabJPButton = findViewById(R.id.main_tab_jp_button)
-        mTabTWButton = findViewById(R.id.main_tab_tw_button)
+        val toggle = ActionBarDrawerToggle(mActivity, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name)
+        mBinding.mainDrawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
 
-        mTabJPButton?.setOnClickListener(onClickListener)
-        mTabTWButton?.setOnClickListener(onClickListener)
+        mBinding.mainDrawerItemSbJ.setOnClickListener {
+            val drawerItem = it as DrawerItemView
+            onDrawerItemSBClick(drawerItem.getTitle(), Account.Language.JP)
+        }
+        mBinding.mainDrawerItemSbT.setOnClickListener {
+            val drawerItem = it as DrawerItemView
+            onDrawerItemSBClick(drawerItem.getTitle(), Account.Language.TW)
+        }
+
+        if (!mFirstRun) selectLanguage()
     }
 
     @AfterPermissionGranted(REQUEST_CODE_WRITE_PERMISSION)
     fun requestPermissions() {
-        val perms = arrayOf<String>(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        val perms = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
         if (EasyPermissions.hasPermissions(mActivity, *perms)) {
-            AccountInfoManager.getInstance().readAccountInfoFile()
-            initSelectedTab()
+//            AccountInfoManager.getInstance().readAccountInfoFile()
+            getFirebaseInstanceId()
+            if (mFirstRun) loadExistsBackup()
         } else {
             EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
         }
     }
 
-    fun initSelectedTab() {
-        Log.i(LOG_TAG, "initSelectedTab")
-        var selectedTab = AccountInfoManager.getInstance().currentTab
-        when (selectedTab) {
-            AccountInfoManager.TAB_TYPE_JP -> mTabJPButton?.performClick()
-            AccountInfoManager.TAB_TYPE_TW -> mTabTWButton?.performClick()
+    private fun getFirebaseInstanceId() {
+        FirebaseInstanceId.getInstance().instanceId
+                .addOnSuccessListener {
+                    Log.i(LOG_TAG, "addOnSuccessListener")
+                    Log.v(LOG_TAG, "addOnSuccessListener it.id : ${it.id}")
+                    Log.v(LOG_TAG, "addOnSuccessListener it.token : ${it.token}")
+                }
+                .addOnFailureListener {
+                    Log.i(LOG_TAG, "addOnFailureListener")
+                }
+                .addOnCompleteListener {
+                    Log.i(LOG_TAG, "addOnCompleteListener")
+                }
+    }
+
+    private fun loadExistsBackup() {
+        Thread {
+            File(Configs.PATH_APP_DATA).apply {
+                listFiles(FileFilter {
+                    val pattern = Pattern.compile("jp\\.gungho\\.bm\\.\\w+")
+                    pattern.matcher(it.name).matches()
+                }).sorted().forEach {
+                    Log.v(LOG_TAG, "it.name : ${it.name}")
+                    val currentTime = System.currentTimeMillis()
+                    BaseDatabase.getInstance(mActivity).accountDAO()
+                            .insertAccount(Account(
+                                    alias = it.name,
+                                    folder = it.absolutePath,
+                                    lang = Account.Language.JP.ordinal,
+                                    createTime = currentTime,
+                                    updateTime = currentTime))
+                }
+
+                listFiles(FileFilter {
+                    val pattern = Pattern.compile("com\\.ghg\\.sb\\.\\w+")
+                    pattern.matcher(it.name).matches()
+                }).sorted().forEach {
+                    Log.v(LOG_TAG, "it.name : ${it.name}")
+                    val currentTime = System.currentTimeMillis()
+                    BaseDatabase.getInstance(mActivity).accountDAO()
+                            .insertAccount(Account(
+                                    alias = it.name,
+                                    folder = it.absolutePath,
+                                    lang = Account.Language.TW.ordinal,
+                                    createTime = currentTime,
+                                    updateTime = currentTime))
+                }
+
+                PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+                    putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
+                    apply()
+                }
+                mHandler.post { selectLanguage() }
+            }
+        }.start()
+    }
+
+    private fun selectLanguage() {
+        when (mCurrentLang) {
+            Account.Language.JP -> {
+                mBinding.mainDrawerItemSbJ.performClick()
+            }
+            Account.Language.TW -> {
+                mBinding.mainDrawerItemSbT.performClick()
+            }
         }
     }
 
-    fun setTabButtonStatusAsDefault() {
-        Log.i(LOG_TAG, "setTabButtonStatusAsDefault")
-        for (viewId in TAB_BUTTON_IDS) {
-            findViewById<Button>(viewId).isActivated = false
-        }
-    }
+    private fun onDrawerItemSBClick(title: String, lang: Account.Language) {
+        supportActionBar!!.title = title
 
-    fun updateTabButtonStatus(viewId: Int, activated: Boolean) {
-        findViewById<Button>(viewId).isActivated = activated
-    }
-
-    fun onTabJPButtonClick() {
-        Log.i(LOG_TAG, "onTabJPButtonClick")
-        var ft = fragmentManager.beginTransaction()
-
-        ft.replace(R.id.main_frame_layout, SBJPFragment.newInstance())
+        val ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.main_frame_layout, AccountFragment.newInstance())
         ft.commit()
 
-        AccountInfoManager.getInstance().currentTab = AccountInfoManager.TAB_TYPE_JP
-    }
-
-    fun onTabTWButtonClick() {
-        Log.i(LOG_TAG, "onTabTWButtonClick")
-        var ft = fragmentManager.beginTransaction()
-
-        ft.replace(R.id.main_frame_layout, SBTWFragment.newInstance())
-        ft.commit()
-
-        AccountInfoManager.getInstance().currentTab = AccountInfoManager.TAB_TYPE_TW
-    }
-
-    var onClickListener = View.OnClickListener({ v ->
-        setTabButtonStatusAsDefault()
-
-        when (v.id) {
-            R.id.main_tab_jp_button -> onTabJPButtonClick()
-            R.id.main_tab_tw_button -> onTabTWButtonClick()
+        mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
+        PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+            putString(Configs.PREF_KEY_LANGUAGE, lang.name)
+            apply()
         }
-
-        updateTabButtonStatus(v.id, true)
-    })
+    }
 }

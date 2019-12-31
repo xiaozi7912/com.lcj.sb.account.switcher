@@ -194,19 +194,19 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var rootLayout: LinearLayout? = null
-        var folderNameTextView: TextView
-        var saveButton: Button
-        var loadButton: Button
-        var uploadButton: Button
-        var downloadButton: Button
+        lateinit var folderNameTextView: TextView
+        lateinit var saveButton: Button
+        lateinit var loadButton: Button
+        lateinit var uploadButton: Button
+        lateinit var downloadButton: Button
 
         init {
-            rootLayout = itemView.findViewById(R.id.item_account_list_root)
-            folderNameTextView = itemView.findViewById(R.id.item_account_list_folder_name_text)
-            saveButton = itemView.findViewById(R.id.item_account_list_save_button)
-            loadButton = itemView.findViewById(R.id.item_account_list_load_button)
-            uploadButton = itemView.findViewById(R.id.item_account_list_upload_button)
-            downloadButton = itemView.findViewById(R.id.item_download_zip_button)
+//            rootLayout = itemView.findViewById(R.id.item_account_list_root)
+//            folderNameTextView = itemView.findViewById(R.id.item_account_list_folder_name_text)
+//            saveButton = itemView.findViewById(R.id.item_account_list_save_button)
+//            loadButton = itemView.findViewById(R.id.item_account_list_load_button)
+//            uploadButton = itemView.findViewById(R.id.item_account_list_upload_button)
+//            downloadButton = itemView.findViewById(R.id.item_download_zip_button)
         }
     }
 
