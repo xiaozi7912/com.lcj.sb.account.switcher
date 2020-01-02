@@ -1,6 +1,8 @@
 package com.lcj.sb.account.switcher
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.preference.PreferenceManager
@@ -40,6 +42,13 @@ open abstract class BaseActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         Log.i(LOG_TAG, "onStart")
+    }
+
+    fun startWebSite(url: String) {
+        Intent(Intent.ACTION_VIEW).let {
+            it.data = Uri.parse(url)
+            startActivity(it)
+        }
     }
 
     abstract fun initView()

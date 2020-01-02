@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
+import android.view.Menu
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
@@ -42,6 +43,11 @@ class MainActivity : BaseActivity() {
         requestPermissions()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.toolbar_menu, menu)
+        return true
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
@@ -52,6 +58,16 @@ class MainActivity : BaseActivity() {
         val toggle = ActionBarDrawerToggle(mActivity, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name)
         mBinding.mainDrawerLayout.addDrawerListener(toggle)
         toggle.syncState()
+
+        mBinding.mainToolBar.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.toolbar_menu_info -> when (mCurrentLang) {
+                    Account.Language.JP -> startWebSite(Configs.URL_WEB_SITE_JP)
+                    Account.Language.TW -> startWebSite(Configs.URL_WEB_SITE_TW)
+                }
+            }
+            false
+        }
 
         mBinding.mainDrawerItemSbJ.setOnClickListener {
             val currentItem = it as DrawerItemView
@@ -167,5 +183,6 @@ class MainActivity : BaseActivity() {
             putString(Configs.PREF_KEY_LANGUAGE, lang.name)
             apply()
         }
+        mCurrentLang = lang
     }
 }
