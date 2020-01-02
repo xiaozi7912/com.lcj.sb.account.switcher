@@ -11,8 +11,8 @@ android {
         applicationId "com.lcj.sb.account.switcher"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 4
-        versionName "0.0.4"
+        versionCode 5
+        versionName "0.0.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     productFlavors {
