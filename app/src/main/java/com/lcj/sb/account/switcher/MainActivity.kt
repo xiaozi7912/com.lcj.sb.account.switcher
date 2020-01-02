@@ -14,7 +14,6 @@ import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.fragment.AccountFragment
-import com.lcj.sb.account.switcher.utils.AccountInfoManager
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.view.DrawerItemView
 import pub.devrel.easypermissions.AfterPermissionGranted
@@ -35,16 +34,12 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
         setSupportActionBar(mBinding.mainToolBar)
+
         MobileAds.initialize(mActivity) {
             val adRequest = AdRequest.Builder().build()
             mBinding.mainAdView.loadAd(adRequest)
         }
         requestPermissions()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        AccountInfoManager.getInstance().writeAccountInfoFile()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -54,18 +49,25 @@ class MainActivity : BaseActivity() {
     }
 
     override fun initView() {
-        super.initView()
         val toggle = ActionBarDrawerToggle(mActivity, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name)
         mBinding.mainDrawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
         mBinding.mainDrawerItemSbJ.setOnClickListener {
-            val drawerItem = it as DrawerItemView
-            onDrawerItemSBClick(drawerItem.getTitle(), Account.Language.JP)
+            val currentItem = it as DrawerItemView
+            val anotherItem = mBinding.mainDrawerItemSbT
+
+            currentItem.setImageRes(R.drawable.ic_launcher_jp_p)
+            anotherItem.setImageRes(R.drawable.ic_launcher_tw_n)
+            onDrawerItemSBClick(currentItem.getTitle(), Account.Language.JP)
         }
         mBinding.mainDrawerItemSbT.setOnClickListener {
-            val drawerItem = it as DrawerItemView
-            onDrawerItemSBClick(drawerItem.getTitle(), Account.Language.TW)
+            val currentItem = it as DrawerItemView
+            val anotherItem = mBinding.mainDrawerItemSbJ
+
+            currentItem.setImageRes(R.drawable.ic_launcher_tw_p)
+            anotherItem.setImageRes(R.drawable.ic_launcher_jp_n)
+            onDrawerItemSBClick(currentItem.getTitle(), Account.Language.TW)
         }
 
         if (!mFirstRun) selectLanguage()
@@ -79,6 +81,7 @@ class MainActivity : BaseActivity() {
 //            AccountInfoManager.getInstance().readAccountInfoFile()
             getFirebaseInstanceId()
             if (mFirstRun) loadExistsBackup()
+            initView()
         } else {
             EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
         }

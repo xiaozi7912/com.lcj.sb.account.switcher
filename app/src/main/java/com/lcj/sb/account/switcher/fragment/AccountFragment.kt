@@ -44,15 +44,22 @@ class AccountFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.addFab.setOnClickListener {
-            val packageName = when (mCurrentLang) {
-                Account.Language.JP -> Configs.PREFIX_NAME_SB_JP
-                Account.Language.TW -> Configs.PREFIX_NAME_SB_TW
+            getPackageName().let {
+                if (FileManager.isPackageInstalled(it, mActivity)) {
+                    showBackupAccountDialog()
+                } else {
+                    showErrorNoInstalled(it)
+                }
             }
+        }
 
-            if (FileManager.isPackageInstalled(packageName, mActivity.packageManager)) {
-                showBackupAccountDialog()
-            } else {
-                showErrorNoInstalled(packageName)
+        mBinding.gameFab.setOnClickListener {
+            getPackageName().let {
+                if (FileManager.isPackageInstalled(it, mActivity)) {
+                    startApplication(it)
+                } else {
+                    showErrorNoInstalled(it)
+                }
             }
         }
     }

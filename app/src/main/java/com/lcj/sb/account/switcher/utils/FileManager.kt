@@ -1,5 +1,6 @@
 package com.lcj.sb.account.switcher.utils
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import java.io.*
@@ -10,9 +11,9 @@ class FileManager {
         const val LOG_TAG = "FileManager"
         const val BUFFER_SIZE = 512
 
-        fun isPackageInstalled(packageName: String, pm: PackageManager): Boolean {
+        fun isPackageInstalled(packageName: String, context: Context): Boolean {
             return try {
-                pm.getPackageInfo(packageName, 0)
+                context.packageManager.getPackageInfo(packageName, 0)
                 true
             } catch (e: PackageManager.NameNotFoundException) {
                 false

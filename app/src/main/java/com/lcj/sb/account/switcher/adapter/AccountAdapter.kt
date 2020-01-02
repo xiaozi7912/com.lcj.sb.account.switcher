@@ -36,11 +36,11 @@ class AccountAdapter(private val activity: Activity)
         holder.binding.accountPathTv.visibility = View.INVISIBLE
 
         if (currentItem.selected) {
-            val iconResId = if (currentItem.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_p else R.mipmap.icon_launcher_tw_p
+            val iconResId = if (currentItem.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_p else R.drawable.ic_launcher_tw_p
             holder.binding.accountIconIv.setImageResource(iconResId)
             holder.binding.accountAliasTv.setTextColor(Color.RED)
         } else {
-            val iconResId = if (currentItem.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_n else R.mipmap.icon_launcher_tw_n
+            val iconResId = if (currentItem.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_n else R.drawable.ic_launcher_tw_n
             holder.binding.accountIconIv.setImageResource(iconResId)
             holder.binding.accountAliasTv.setTextColor(Color.BLACK)
         }

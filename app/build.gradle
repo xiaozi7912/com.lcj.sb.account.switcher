@@ -5,6 +5,8 @@ apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 28
+    flavorDimensions "admob"
+
     defaultConfig {
         applicationId "com.lcj.sb.account.switcher"
         minSdkVersion 21
@@ -12,6 +14,17 @@ android {
         versionCode 4
         versionName "0.0.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    productFlavors {
+        ad_mob_sandbox {
+            dimension "admob"
+            resValue "string", "AD_UNIT_ID", '"ca-app-pub-3940256099942544/6300978111"'
+        }
+
+        ad_mob {
+            dimension "admob"
+            resValue "string", "AD_UNIT_ID", '"ca-app-pub-5692319161651426/3653778519"'
+        }
     }
     buildTypes {
         release {
