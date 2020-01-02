@@ -30,9 +30,20 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/main_ad_view"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/main_tool_bar" />
+
+            <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/main_ad_view"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                ads:adSize="BANNER"
+                ads:adUnitId="@string/AD_UNIT_ID"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.navigation.NavigationView
@@ -57,7 +68,7 @@
                     android:id="@+id/main_drawer_item_sb_t"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:src="@mipmap/icon_launcher_tw_n"
+                    app:src="@drawable/ic_launcher_tw_p"
                     app:title="召喚圖板" />
             </LinearLayout>
         </com.google.android.material.navigation.NavigationView>

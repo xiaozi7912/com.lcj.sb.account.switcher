@@ -48,4 +48,16 @@ open class BaseFragment : Fragment() {
         super.onResume()
         Log.i(LOG_TAG, "onResume")
     }
+
+    fun getPackageName(): String = when (mCurrentLang) {
+        Account.Language.JP -> Configs.PREFIX_NAME_SB_JP
+        Account.Language.TW -> Configs.PREFIX_NAME_SB_TW
+    }
+
+    fun startApplication(appId: String) {
+        mActivity.packageManager
+                .getLaunchIntentForPackage(appId).let {
+                    startActivity(it)
+                }
+    }
 }

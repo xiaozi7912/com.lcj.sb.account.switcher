@@ -10,12 +10,15 @@ import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.AccountAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.DialogBackupAccountBinding
+import com.lcj.sb.account.switcher.databinding.DialogEditAccountBinding
 import com.lcj.sb.account.switcher.databinding.FragmentAccountBinding
+import com.lcj.sb.account.switcher.model.AccountEditViewModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.FileManager
 import io.reactivex.Observable
@@ -44,15 +47,22 @@ class AccountFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.addFab.setOnClickListener {
-            val packageName = when (mCurrentLang) {
-                Account.Language.JP -> Configs.PREFIX_NAME_SB_JP
-                Account.Language.TW -> Configs.PREFIX_NAME_SB_TW
+            getPackageName().let {
+                if (FileManager.isPackageInstalled(it, mActivity)) {
+                    showBackupAccountDialog()
+                } else {
+                    showErrorNoInstalled(it)
+                }
             }
+        }
 
-            if (FileManager.isPackageInstalled(packageName, mActivity.packageManager)) {
-                showBackupAccountDialog()
-            } else {
-                showErrorNoInstalled(packageName)
+        mBinding.gameFab.setOnClickListener {
+            getPackageName().let {
+                if (FileManager.isPackageInstalled(it, mActivity)) {
+                    startApplication(it)
+                } else {
+                    showErrorNoInstalled(it)
+                }
             }
         }
     }
@@ -61,30 +71,37 @@ class AccountFragment : BaseFragment() {
         super.onActivityCreated(savedInstanceState)
         val layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
 
-        mGameFolderPath = when (mCurrentLang) {
-            Account.Language.JP -> String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
-            Account.Language.TW -> String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
+        when (mCurrentLang) {
+            Account.Language.JP -> {
+                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
+                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_NAME_SB_JP, LOG_TAG)
+            }
+            Account.Language.TW -> {
+                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
+                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_NAME_SB_TW, LOG_TAG)
+            }
         }
 
         mAdapter = AccountAdapter(mActivity)
         mAdapter.setItemClick { holder, account ->
             AlertDialog.Builder(mActivity)
                     .setTitle(account.alias)
-                    .setMessage("資料夾：${account.folder}")
-                    .setNeutralButton("修改") { dialog, which ->
+                    .setMessage(String.format(getString(R.string.dialog_folder_path), account.folder))
+                    .setNeutralButton(getString(R.string.dialog_button_edit)) { dialog, which ->
+                        onEditClick(holder, account)
                         dialog.dismiss()
                     }
-                    .setNegativeButton("讀取") { dialog, which ->
+                    .setNegativeButton(getString(R.string.dialog_button_load)) { dialog, which ->
                         onLoadClick(holder, account)
                         dialog.dismiss()
                     }
-                    .setPositiveButton("備份") { dialog, which ->
-                        onBackupClicked(holder, account)
+                    .setPositiveButton(getString(R.string.dialog_button_backup)) { dialog, which ->
+                        onBackupClick(holder, account)
                         dialog.dismiss()
                     }.create().show()
         }
         mAdapter.setSaveButtonClick { holder, account ->
-            onBackupClicked(holder, account)
+            onBackupClick(holder, account)
         }
         mAdapter.setLoadButtonClick { holder, account ->
             onLoadClick(holder, account)
@@ -98,25 +115,28 @@ class AccountFragment : BaseFragment() {
                 .observe(this, Observer { mAdapter.update(it) })
     }
 
-    private fun onBackupClicked(holder: AccountAdapter.ViewHolder, account: Account) {
-        holder.binding.accountSaveBtn.isEnabled = false
-        holder.binding.accountLoadBtn.isEnabled = false
+    private fun onEditClick(holder: AccountAdapter.ViewHolder, account: Account) {
+        val binding = DialogEditAccountBinding.inflate(layoutInflater)
 
-        Thread {
-            FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
-                if (finished) {
-                    account.let {
-                        it.updateTime = System.currentTimeMillis()
-                        BaseDatabase.getInstance(mActivity).accountDAO()
-                                .updateAccount(it)
-                    }
-                    mHandler.post {
-                        holder.binding.accountSaveBtn.isEnabled = true
-                        holder.binding.accountLoadBtn.isEnabled = true
-                    }
+        AccountEditViewModel(account.alias).let { model ->
+            binding.model = model
+
+            AlertDialog.Builder(mActivity).apply {
+                setView(binding.root)
+            }.create().let { dialog ->
+                binding.editAccountAliasEdit.setText(account.alias)
+
+                binding.editAccountCancelBtn.setOnClickListener {
+                    model.onCancelClick()
+                    dialog.dismiss()
                 }
+                binding.editAccountEditBtn.setOnClickListener {
+                    model.onEditClick(mActivity, account)
+                    dialog.dismiss()
+                }
+                dialog.show()
             }
-        }.start()
+        }
     }
 
     private fun onLoadClick(holder: AccountAdapter.ViewHolder, account: Account) {
@@ -143,6 +163,28 @@ class AccountFragment : BaseFragment() {
             mHandler.post {
                 holder.binding.accountSaveBtn.isEnabled = true
                 holder.binding.accountLoadBtn.isEnabled = true
+                mBinding.gameFab.performClick()
+            }
+        }.start()
+    }
+
+    private fun onBackupClick(holder: AccountAdapter.ViewHolder, account: Account) {
+        holder.binding.accountSaveBtn.isEnabled = false
+        holder.binding.accountLoadBtn.isEnabled = false
+
+        Thread {
+            FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
+                if (finished) {
+                    account.let {
+                        it.updateTime = System.currentTimeMillis()
+                        BaseDatabase.getInstance(mActivity).accountDAO()
+                                .updateAccount(it)
+                    }
+                    mHandler.post {
+                        holder.binding.accountSaveBtn.isEnabled = true
+                        holder.binding.accountLoadBtn.isEnabled = true
+                    }
+                }
             }
         }.start()
     }
@@ -200,7 +242,7 @@ class AccountFragment : BaseFragment() {
                     }
                     startActivity(intent)
                 }
-                .setNegativeButton(R.string.dialog_cancel) { dialog, which ->
+                .setNegativeButton(R.string.dialog_button_cancel) { dialog, which ->
                     mAlertDialog.dismiss()
                 }
                 .create()

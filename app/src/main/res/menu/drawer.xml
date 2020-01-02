@@ -7,6 +7,6 @@
 
     <item
         android:id="@+id/drawer_action_summons_t"
-        android:icon="@mipmap/icon_launcher_tw_p"
+        android:icon="@drawable/ic_launcher_tw_p"
         android:title="召喚圖板" />
 </menu>

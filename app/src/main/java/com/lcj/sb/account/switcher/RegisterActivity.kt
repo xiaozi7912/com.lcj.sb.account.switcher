@@ -18,7 +18,6 @@ class RegisterActivity : BaseActivity() {
     }
 
     override fun initView() {
-        super.initView()
         mEmailInputEditText = findViewById(R.id.account_edit_text)
         mPasswordInputEditText = findViewById(R.id.password_edit_text)
         mRegisterButton = findViewById(R.id.register_button)

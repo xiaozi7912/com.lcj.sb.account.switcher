@@ -43,6 +43,10 @@ class DrawerItemView : LinearLayout {
         }
     }
 
+    fun setImageRes(resId: Int) {
+        mIconView.setImageResource(resId)
+    }
+
     fun getTitle(): String {
         return mTitleStr
     }
