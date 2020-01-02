@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.AccountAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
@@ -70,9 +71,15 @@ class AccountFragment : BaseFragment() {
         super.onActivityCreated(savedInstanceState)
         val layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
 
-        mGameFolderPath = when (mCurrentLang) {
-            Account.Language.JP -> String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
-            Account.Language.TW -> String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
+        when (mCurrentLang) {
+            Account.Language.JP -> {
+                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
+                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_NAME_SB_JP, null)
+            }
+            Account.Language.TW -> {
+                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
+                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_NAME_SB_TW, null)
+            }
         }
 
         mAdapter = AccountAdapter(mActivity)

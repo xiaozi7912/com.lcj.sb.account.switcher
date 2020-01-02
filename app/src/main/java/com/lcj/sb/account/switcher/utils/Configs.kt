@@ -19,5 +19,8 @@ class Configs {
 
         const val URL_WEB_SITE_JP = "https://sb.gungho.jp/member/"
         const val URL_WEB_SITE_TW = "http://www.gungho-gamania.com/SB/Bulletins/Bulletin.aspx"
+
+        const val SCREEN_NAME_SB_JP = "SCREEN_SB_JP"
+        const val SCREEN_NAME_SB_TW = "SCREEN_SB_TW"
     }
 }
