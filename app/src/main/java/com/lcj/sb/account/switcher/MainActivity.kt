@@ -36,11 +36,13 @@ class MainActivity : BaseActivity() {
         mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
         setSupportActionBar(mBinding.mainToolBar)
 
-        MobileAds.initialize(mActivity) {
-            val adRequest = AdRequest.Builder().build()
-            mBinding.mainAdView.loadAd(adRequest)
-        }
+        MobileAds.initialize(mActivity)
         requestPermissions()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        reloadAd()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -184,5 +186,10 @@ class MainActivity : BaseActivity() {
             apply()
         }
         mCurrentLang = lang
+    }
+
+    private fun reloadAd() {
+        val adRequest = AdRequest.Builder().build()
+        mBinding.mainAdView.loadAd(adRequest)
     }
 }
