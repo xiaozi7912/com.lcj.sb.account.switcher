@@ -163,6 +163,7 @@ class AccountFragment : BaseFragment() {
             mHandler.post {
                 holder.binding.accountSaveBtn.isEnabled = true
                 holder.binding.accountLoadBtn.isEnabled = true
+                mBinding.gameFab.performClick()
             }
         }.start()
     }
