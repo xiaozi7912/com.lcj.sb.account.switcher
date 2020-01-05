@@ -1,14 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
+        <variable
+            name="model"
+            type="com.lcj.sb.account.switcher.model.CreatePartyModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:padding="5dp">
 
+        <Button
+            android:id="@+id/dungeon_type_5_btn"
+            android:layout_width="53dp"
+            android:layout_height="27dp"
+            android:background="@drawable/selector_dungeon_type_5"
+            android:onClick="@{()->model.onDungeonTypeClick(4)}"
+            app:activated="@{model.dungeonTypeActArray[4]}"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/dungeon_type_4_btn"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/dungeon_type_4_btn"
+            android:layout_width="27dp"
+            android:layout_height="27dp"
+            android:background="@drawable/selector_dungeon_type_4"
+            android:onClick="@{()->model.onDungeonTypeClick(3)}"
+            app:activated="@{model.dungeonTypeActArray[3]}"
+            app:layout_constraintLeft_toRightOf="@+id/dungeon_type_5_btn"
+            app:layout_constraintRight_toLeftOf="@+id/dungeon_type_1_btn"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/dungeon_type_1_btn"
+            android:layout_width="27dp"
+            android:layout_height="27dp"
+            android:background="@drawable/selector_dungeon_type_1"
+            android:onClick="@{()->model.onDungeonTypeClick(0)}"
+            app:activated="@{model.dungeonTypeActArray[0]}"
+            app:layout_constraintLeft_toRightOf="@+id/dungeon_type_4_btn"
+            app:layout_constraintRight_toLeftOf="@+id/dungeon_type_2_btn"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/dungeon_type_2_btn"
+            android:layout_width="27dp"
+            android:layout_height="27dp"
+            android:background="@drawable/selector_dungeon_type_2"
+            android:onClick="@{()->model.onDungeonTypeClick(1)}"
+            app:activated="@{model.dungeonTypeActArray[1]}"
+            app:layout_constraintLeft_toRightOf="@+id/dungeon_type_1_btn"
+            app:layout_constraintRight_toLeftOf="@+id/dungeon_type_3_btn"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/dungeon_type_3_btn"
+            android:layout_width="27dp"
+            android:layout_height="27dp"
+            android:background="@drawable/selector_dungeon_type_3"
+            android:onClick="@{()->model.onDungeonTypeClick(2)}"
+            app:activated="@{model.dungeonTypeActArray[2]}"
+            app:layout_constraintLeft_toRightOf="@+id/dungeon_type_2_btn"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/element_type_1_btn"
+            android:layout_width="22.5dp"
+            android:layout_height="22.5dp"
+            android:background="@drawable/selector_element_type_1"
+            android:onClick="@{()->model.onElementTypeClick(0)}"
+            app:activated="@{model.elementTypeActArray[0]}"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/element_type_2_btn"
+            app:layout_constraintTop_toTopOf="@+id/element_guide_line" />
+
+        <Button
+            android:id="@+id/element_type_2_btn"
+            android:layout_width="22.5dp"
+            android:layout_height="22.5dp"
+            android:background="@drawable/selector_element_type_2"
+            android:onClick="@{()->model.onElementTypeClick(1)}"
+            app:activated="@{model.elementTypeActArray[1]}"
+            app:layout_constraintLeft_toRightOf="@+id/element_type_1_btn"
+            app:layout_constraintRight_toLeftOf="@+id/element_type_3_btn"
+            app:layout_constraintTop_toTopOf="@+id/element_guide_line" />
+
+        <Button
+            android:id="@+id/element_type_3_btn"
+            android:layout_width="22.5dp"
+            android:layout_height="22.5dp"
+            android:background="@drawable/selector_element_type_3"
+            android:onClick="@{()->model.onElementTypeClick(2)}"
+            app:activated="@{model.elementTypeActArray[2]}"
+            app:layout_constraintLeft_toRightOf="@+id/element_type_2_btn"
+            app:layout_constraintRight_toLeftOf="@+id/element_type_4_btn"
+            app:layout_constraintTop_toTopOf="@+id/element_guide_line" />
+
+        <Button
+            android:id="@+id/element_type_4_btn"
+            android:layout_width="22.5dp"
+            android:layout_height="22.5dp"
+            android:background="@drawable/selector_element_type_4"
+            android:onClick="@{()->model.onElementTypeClick(3)}"
+            app:activated="@{model.elementTypeActArray[3]}"
+            app:layout_constraintLeft_toRightOf="@+id/element_type_3_btn"
+            app:layout_constraintRight_toLeftOf="@+id/element_type_5_btn"
+            app:layout_constraintTop_toTopOf="@+id/element_guide_line" />
+
+        <Button
+            android:id="@+id/element_type_5_btn"
+            android:layout_width="22.5dp"
+            android:layout_height="22.5dp"
+            android:background="@drawable/selector_element_type_5"
+            android:onClick="@{()->model.onElementTypeClick(4)}"
+            app:activated="@{model.elementTypeActArray[4]}"
+            app:layout_constraintLeft_toRightOf="@+id/element_type_4_btn"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/element_guide_line" />
+
+        <EditText
+            android:id="@+id/input_edit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@={model.title}"
+            android:textSize="14sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/input_guide_line" />
+
+        <Button
+            android:id="@+id/cancel_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/dialog_button_cancel"
+            android:textSize="14sp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/create_btn"
+            app:layout_constraintTop_toBottomOf="@+id/input_edit" />
+
+        <Button
+            android:id="@+id/create_btn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="新增"
+            android:textSize="14sp"
+            app:layout_constraintLeft_toRightOf="@+id/cancel_btn"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/input_edit" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/element_guide_line"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_begin="35dp" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/input_guide_line"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_begin="65dp" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

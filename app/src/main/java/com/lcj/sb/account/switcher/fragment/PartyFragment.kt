@@ -1,5 +1,6 @@
 package com.lcj.sb.account.switcher.fragment
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,8 +12,10 @@ import com.lcj.sb.account.switcher.adapter.PartyAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
+import com.lcj.sb.account.switcher.databinding.DialogCreatePartyBinding
 import com.lcj.sb.account.switcher.databinding.FragmentPartyBinding
 import com.lcj.sb.account.switcher.model.AccountInfoModel
+import com.lcj.sb.account.switcher.model.CreatePartyModel
 import com.lcj.sb.account.switcher.utils.Configs
 
 class PartyFragment : BaseFragment() {
@@ -40,11 +43,6 @@ class PartyFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Thread {
-            BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
-                    .deleteAll()
-        }.start()
-
         mBinding.filterBtn.setOnClickListener {
             mBinding.model?.onFilterClick()
             Thread {
@@ -61,6 +59,7 @@ class PartyFragment : BaseFragment() {
 
         mBinding.addFab.setOnClickListener {
             Log.i(LOG_TAG, "addFab")
+            showCreatePartyDialog()
         }
     }
 
@@ -75,5 +74,44 @@ class PartyFragment : BaseFragment() {
         BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
                 .partys(mAccount.id)
                 .observe(this, Observer { mAdapter.update(it) })
+    }
+
+    private fun showCreatePartyDialog() {
+        Log.i(LOG_TAG, "addFab")
+        val binding = DialogCreatePartyBinding.inflate(layoutInflater)
+
+        CreatePartyModel().let { model ->
+            binding.model = model
+
+            AlertDialog.Builder(mActivity).apply {
+                setView(binding.root)
+            }.create().let { dialog ->
+                binding.cancelBtn.setOnClickListener { dialog.dismiss() }
+                binding.createBtn.setOnClickListener {
+                    val title = binding.inputEdit.text.toString()
+                    val dungeonType = binding.model?.getSelectedDungeonType()
+                    val elementType = binding.model?.getSelectedElementType()
+                    Log.v(LOG_TAG, "title : $title")
+                    Log.v(LOG_TAG, "dungeonType : $dungeonType")
+                    Log.v(LOG_TAG, "elementType : $elementType")
+
+                    if (dungeonType != -1 && elementType != -1 && title.isNotEmpty()) {
+                        Thread {
+                            BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
+                                    .insert(DungeonParty(
+                                            accountId = mAccount.id,
+                                            dungeonType = dungeonType!!,
+                                            elementType = elementType!!,
+                                            title = title,
+                                            imagePath = title
+                                    ))
+                        }.start()
+                    } else {
+
+                    }
+                }
+                dialog.show()
+            }
+        }
     }
 }

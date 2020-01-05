@@ -4,6 +4,7 @@ import android.app.Activity
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.databinding.ItemDungeonPartyBinding
 
@@ -21,6 +22,29 @@ class PartyAdapter(activity: Activity) : RecyclerView.Adapter<PartyAdapter.ViewH
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = dataList[position]
+
+        when (item.dungeonType) {
+            0 -> R.drawable.ic_dungeon_type_1_p
+            1 -> R.drawable.ic_dungeon_type_2_p
+            2 -> R.drawable.ic_dungeon_type_3_p
+            3 -> R.drawable.ic_dungeon_type_4_p
+            4 -> R.drawable.ic_dungeon_type_5_p
+            else -> R.drawable.ic_dungeon_type_1_p
+        }.let {
+            holder.binding.dungeonTypeImg.setImageResource(it)
+        }
+
+        when (item.elementType) {
+            0 -> R.drawable.ic_element_1_p
+            1 -> R.drawable.ic_element_2_p
+            2 -> R.drawable.ic_element_3_p
+            3 -> R.drawable.ic_element_4_p
+            4 -> R.drawable.ic_element_5_p
+            else -> R.drawable.ic_element_1_p
+        }.let {
+            holder.binding.elementTypeImg.setImageResource(it)
+        }
+
         holder.binding.title.text = item.title
     }
 
