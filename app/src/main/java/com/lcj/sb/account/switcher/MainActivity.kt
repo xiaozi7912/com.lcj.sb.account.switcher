@@ -61,6 +61,8 @@ class MainActivity : BaseActivity() {
         mBinding.mainDrawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
+        mBinding.mainDrawerVersionTv.text = BuildConfig.VERSION_NAME
+
         mBinding.mainToolBar.setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.toolbar_menu_info -> when (mCurrentLang) {
