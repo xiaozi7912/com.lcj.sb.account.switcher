@@ -166,6 +166,8 @@ class AccountFragment : BaseFragment() {
                 mBinding.gameFab.performClick()
             }
         }.start()
+
+        setAccountSelected(account)
     }
 
     private fun onBackupClick(holder: AccountAdapter.ViewHolder, account: Account) {
@@ -186,6 +188,16 @@ class AccountFragment : BaseFragment() {
                     }
                 }
             }
+        }.start()
+    }
+
+    private fun setAccountSelected(account: Account) {
+        Thread {
+            account.selected = true
+            BaseDatabase.getInstance(mActivity)
+                    .accountDAO().deselectAllAccount(account.lang)
+            BaseDatabase.getInstance(mActivity)
+                    .accountDAO().updateAccount(account)
         }.start()
     }
 

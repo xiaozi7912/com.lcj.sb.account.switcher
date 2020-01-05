@@ -45,14 +45,7 @@ class AccountAdapter(private val activity: Activity)
             holder.binding.accountAliasTv.setTextColor(Color.BLACK)
         }
 
-        holder.binding.root.setOnClickListener {
-            currentItem.selected = true
-            Thread {
-                BaseDatabase.getInstance(activity)
-                        .accountDAO().deselectAllAccount(currentItem.lang)
-                BaseDatabase.getInstance(activity)
-                        .accountDAO().updateAccount(currentItem)
-            }.start()
+        holder.binding.accountMoreBtn.setOnClickListener {
             mItemClickCallback?.let { it(holder, currentItem) }
         }
         holder.binding.accountSaveBtn.setOnClickListener {
