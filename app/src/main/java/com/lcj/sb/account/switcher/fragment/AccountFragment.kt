@@ -106,7 +106,7 @@ class AccountFragment : BaseFragment() {
         mAdapter.setLoadButtonClick { holder, account ->
             onLoadClick(holder, account)
         }
-        mBinding.accountList.addItemDecoration(DividerItemDecoration(mActivity, layoutManager.orientation))
+//        mBinding.accountList.addItemDecoration(DividerItemDecoration(mActivity, layoutManager.orientation))
         mBinding.accountList.layoutManager = layoutManager
         mBinding.accountList.adapter = mAdapter
 
