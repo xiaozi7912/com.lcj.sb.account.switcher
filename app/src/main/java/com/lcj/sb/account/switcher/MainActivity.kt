@@ -40,11 +40,6 @@ class MainActivity : BaseActivity() {
         requestPermissions()
     }
 
-    override fun onResume() {
-        super.onResume()
-        reloadAd()
-    }
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.toolbar_menu, menu)
         return true
@@ -91,6 +86,11 @@ class MainActivity : BaseActivity() {
         }
 
         if (!mFirstRun) selectLanguage()
+    }
+
+    override fun reloadAd() {
+        val adRequest = AdRequest.Builder().build()
+        mBinding.mainAdView.loadAd(adRequest)
     }
 
     @AfterPermissionGranted(REQUEST_CODE_WRITE_PERMISSION)
@@ -188,10 +188,5 @@ class MainActivity : BaseActivity() {
             apply()
         }
         mCurrentLang = lang
-    }
-
-    private fun reloadAd() {
-        val adRequest = AdRequest.Builder().build()
-        mBinding.mainAdView.loadAd(adRequest)
     }
 }

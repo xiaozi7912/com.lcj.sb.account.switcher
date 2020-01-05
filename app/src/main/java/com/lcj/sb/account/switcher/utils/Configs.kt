@@ -22,5 +22,7 @@ class Configs {
 
         const val SCREEN_NAME_SB_JP = "SCREEN_SB_JP"
         const val SCREEN_NAME_SB_TW = "SCREEN_SB_TW"
+
+        const val INTENT_KEY_ACCOUNT = "ACCOUNT"
     }
 }

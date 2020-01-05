@@ -16,7 +16,7 @@ import com.lcj.sb.account.switcher.utils.Configs
 /**
  * Created by Larry on 2018-06-18.
  */
-open abstract class BaseActivity : AppCompatActivity() {
+abstract class BaseActivity : AppCompatActivity() {
     val LOG_TAG: String = javaClass.simpleName
     val mActivity: Activity = this
     var mHandler: Handler = Handler()
@@ -44,6 +44,12 @@ open abstract class BaseActivity : AppCompatActivity() {
         Log.i(LOG_TAG, "onStart")
     }
 
+    override fun onResume() {
+        super.onResume()
+        Log.i(LOG_TAG, "onResume")
+        reloadAd()
+    }
+
     fun startWebSite(url: String) {
         Intent(Intent.ACTION_VIEW).let {
             it.data = Uri.parse(url)
@@ -52,4 +58,5 @@ open abstract class BaseActivity : AppCompatActivity() {
     }
 
     abstract fun initView()
+    abstract fun reloadAd()
 }

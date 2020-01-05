@@ -19,12 +19,14 @@ android {
     productFlavors {
         ad_mob_sandbox {
             dimension "admob"
-            resValue "string", "AD_UNIT_ID", '"ca-app-pub-3940256099942544/6300978111"'
+            resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-3940256099942544/6300978111"'
+            resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", '"ca-app-pub-3940256099942544/6300978111"'
         }
 
         ad_mob {
             dimension "admob"
-            resValue "string", "AD_UNIT_ID", '"ca-app-pub-5692319161651426/3653778519"'
+            resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-5692319161651426/3653778519"'
+            resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", '"ca-app-pub-5692319161651426/2028230874"'
         }
     }
     buildTypes {
@@ -71,6 +73,7 @@ dependencies {
     implementation 'androidx.room:room-rxjava2:2.2.3'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.15'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'com.theartofdev.edmodo:android-image-cropper:2.8.0'
     kapt 'androidx.room:room-compiler:2.2.3'
 }
 
