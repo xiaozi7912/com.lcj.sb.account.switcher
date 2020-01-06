@@ -9,7 +9,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.MobileAds
 import com.google.firebase.iid.FirebaseInstanceId
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -34,10 +33,10 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
-        setSupportActionBar(mBinding.mainToolBar)
 
-        MobileAds.initialize(mActivity)
+        setSupportActionBar(mBinding.mainToolBar)
         requestPermissions()
+        reloadAd()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

@@ -10,7 +10,7 @@ import com.lcj.sb.account.switcher.utils.Configs
 
 class AccountInfoActivity : BaseActivity() {
     private lateinit var mBinding: ActivityAccountInfoBinding
-    private  var mAccount: Account? = null
+    private var mAccount: Account? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,6 +18,7 @@ class AccountInfoActivity : BaseActivity() {
 
         setSupportActionBar(mBinding.toolBar)
         initView()
+        reloadAd()
     }
 
     override fun onSupportNavigateUp(): Boolean {

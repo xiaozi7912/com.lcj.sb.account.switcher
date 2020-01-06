@@ -8,6 +8,7 @@ import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -30,6 +31,7 @@ abstract class BaseActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mAuth = FirebaseAuth.getInstance()
         mAnalytics = FirebaseAnalytics.getInstance(mActivity)
+        MobileAds.initialize(mActivity)
 
         PreferenceManager.getDefaultSharedPreferences(mActivity).apply {
             mFirstRun = getBoolean(Configs.PREF_KEY_FIRST_RUN, true)
@@ -47,7 +49,6 @@ abstract class BaseActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Log.i(LOG_TAG, "onResume")
-        reloadAd()
     }
 
     fun startWebSite(url: String) {
