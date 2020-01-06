@@ -7,18 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.lcj.sb.account.switcher.R
-import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ItemAccountListBinding
 import java.text.SimpleDateFormat
 
-class AccountAdapter(private val activity: Activity)
-    : RecyclerView.Adapter<AccountAdapter.ViewHolder>() {
+class AccountAdapter(activity: Activity) : RecyclerView.Adapter<AccountAdapter.ViewHolder>() {
     private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<Account> = emptyList()
-    private var mItemClickCallback: ((ViewHolder, Account) -> Unit)? = null
-    private var mSaveButtonClickCallback: ((ViewHolder, Account) -> Unit)? = null
-    private var mLoadButtonClickCallback: ((ViewHolder, Account) -> Unit)? = null
+    private var mOnClickListener: OnClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemAccountListBinding.inflate(mInflater, parent, false))
@@ -29,37 +25,27 @@ class AccountAdapter(private val activity: Activity)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val currentItem = dataList[position]
-        holder.binding.accountAliasTv.text = currentItem.alias
-        holder.binding.accountPathTv.text = currentItem.folder.substring(currentItem.folder.lastIndexOf("/") + 1)
-        holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(currentItem.updateTime)
+        val item = dataList[position]
+        holder.binding.accountAliasTv.text = item.alias
+        holder.binding.accountPathTv.text = item.folder.substring(item.folder.lastIndexOf("/") + 1)
+        holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(item.updateTime)
         holder.binding.accountPathTv.visibility = View.INVISIBLE
 
-        if (currentItem.selected) {
-            val iconResId = if (currentItem.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_p else R.drawable.ic_launcher_tw_p
+        if (item.selected) {
+            val iconResId = if (item.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_p else R.drawable.ic_launcher_tw_p
             holder.binding.accountIconIv.setImageResource(iconResId)
             holder.binding.accountAliasTv.setTextColor(Color.RED)
         } else {
-            val iconResId = if (currentItem.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_n else R.drawable.ic_launcher_tw_n
+            val iconResId = if (item.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_n else R.drawable.ic_launcher_tw_n
             holder.binding.accountIconIv.setImageResource(iconResId)
             holder.binding.accountAliasTv.setTextColor(Color.BLACK)
         }
 
         holder.binding.root.setOnClickListener {
-            currentItem.selected = true
-            Thread {
-                BaseDatabase.getInstance(activity)
-                        .accountDAO().deselectAllAccount(currentItem.lang)
-                BaseDatabase.getInstance(activity)
-                        .accountDAO().updateAccount(currentItem)
-            }.start()
-            mItemClickCallback?.let { it(holder, currentItem) }
+            mOnClickListener?.onItemClick(holder, item)
         }
-        holder.binding.accountSaveBtn.setOnClickListener {
-            mSaveButtonClickCallback?.let { it(holder, currentItem) }
-        }
-        holder.binding.accountLoadBtn.setOnClickListener {
-            mLoadButtonClickCallback?.let { it(holder, currentItem) }
+        holder.binding.accountMoreBtn.setOnClickListener {
+            mOnClickListener?.onMoreClick(holder, item)
         }
     }
 
@@ -68,22 +54,15 @@ class AccountAdapter(private val activity: Activity)
         notifyDataSetChanged()
     }
 
-    fun setItemClick(callback: (ViewHolder, Account) -> Unit) {
-        mItemClickCallback = callback
+    fun setOnClickListener(listener: OnClickListener) {
+        mOnClickListener = listener
     }
 
-    fun setSaveButtonClick(callback: (ViewHolder, Account) -> Unit) {
-        mSaveButtonClickCallback = callback
-    }
+    class ViewHolder(val binding: ItemAccountListBinding) : RecyclerView.ViewHolder(binding.root)
 
-    fun setLoadButtonClick(callback: (ViewHolder, Account) -> Unit) {
-        mLoadButtonClickCallback = callback
-    }
+    interface OnClickListener {
+        fun onItemClick(holder: ViewHolder, account: Account)
 
-    class ViewHolder(val binding: ItemAccountListBinding) : RecyclerView.ViewHolder(binding.root) {
-        init {
-            binding.accountSaveBtn.visibility = View.GONE
-            binding.accountLoadBtn.visibility = View.GONE
-        }
+        fun onMoreClick(holder: ViewHolder, account: Account)
     }
 }

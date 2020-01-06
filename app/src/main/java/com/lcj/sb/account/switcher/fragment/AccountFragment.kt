@@ -8,8 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.lcj.sb.account.switcher.AccountInfoActivity
 import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.AccountAdapter
@@ -18,7 +18,7 @@ import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.DialogBackupAccountBinding
 import com.lcj.sb.account.switcher.databinding.DialogEditAccountBinding
 import com.lcj.sb.account.switcher.databinding.FragmentAccountBinding
-import com.lcj.sb.account.switcher.model.AccountEditViewModel
+import com.lcj.sb.account.switcher.model.AccountEditModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.FileManager
 import io.reactivex.Observable
@@ -83,30 +83,35 @@ class AccountFragment : BaseFragment() {
         }
 
         mAdapter = AccountAdapter(mActivity)
-        mAdapter.setItemClick { holder, account ->
-            AlertDialog.Builder(mActivity)
-                    .setTitle(account.alias)
-                    .setMessage(String.format(getString(R.string.dialog_folder_path), account.folder))
-                    .setNeutralButton(getString(R.string.dialog_button_edit)) { dialog, which ->
-                        onEditClick(holder, account)
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton(getString(R.string.dialog_button_load)) { dialog, which ->
-                        onLoadClick(holder, account)
-                        dialog.dismiss()
-                    }
-                    .setPositiveButton(getString(R.string.dialog_button_backup)) { dialog, which ->
-                        onBackupClick(holder, account)
-                        dialog.dismiss()
-                    }.create().show()
-        }
-        mAdapter.setSaveButtonClick { holder, account ->
-            onBackupClick(holder, account)
-        }
-        mAdapter.setLoadButtonClick { holder, account ->
-            onLoadClick(holder, account)
-        }
-        mBinding.accountList.addItemDecoration(DividerItemDecoration(mActivity, layoutManager.orientation))
+        mAdapter.setOnClickListener(object : AccountAdapter.OnClickListener {
+            override fun onItemClick(holder: AccountAdapter.ViewHolder, account: Account) {
+                Intent(mActivity, AccountInfoActivity::class.java).let {
+                    it.putExtras(Bundle().apply {
+                        putSerializable(Configs.INTENT_KEY_ACCOUNT, account)
+                    })
+                    startActivity(it)
+                }
+            }
+
+            override fun onMoreClick(holder: AccountAdapter.ViewHolder, account: Account) {
+                AlertDialog.Builder(mActivity)
+                        .setTitle(account.alias)
+                        .setMessage(String.format(getString(R.string.dialog_folder_path), account.folder))
+                        .setNeutralButton(getString(R.string.dialog_button_edit)) { dialog, which ->
+                            onEditClick(holder, account)
+                            dialog.dismiss()
+                        }
+                        .setNegativeButton(getString(R.string.dialog_button_load)) { dialog, which ->
+                            onLoadClick(holder, account)
+                            dialog.dismiss()
+                        }
+                        .setPositiveButton(getString(R.string.dialog_button_backup)) { dialog, which ->
+                            onBackupClick(holder, account)
+                            dialog.dismiss()
+                        }.create().show()
+            }
+        })
+
         mBinding.accountList.layoutManager = layoutManager
         mBinding.accountList.adapter = mAdapter
 
@@ -118,7 +123,7 @@ class AccountFragment : BaseFragment() {
     private fun onEditClick(holder: AccountAdapter.ViewHolder, account: Account) {
         val binding = DialogEditAccountBinding.inflate(layoutInflater)
 
-        AccountEditViewModel(account.alias).let { model ->
+        AccountEditModel(account.alias).let { model ->
             binding.model = model
 
             AlertDialog.Builder(mActivity).apply {
@@ -145,9 +150,6 @@ class AccountFragment : BaseFragment() {
         val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
         val command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
 
-        holder.binding.accountSaveBtn.isEnabled = false
-        holder.binding.accountLoadBtn.isEnabled = false
-
         Thread {
             val process: Process = Runtime.getRuntime().exec(command)
             val buffReader = BufferedReader(InputStreamReader(process.inputStream))
@@ -161,17 +163,14 @@ class AccountFragment : BaseFragment() {
             process.waitFor()
 
             mHandler.post {
-                holder.binding.accountSaveBtn.isEnabled = true
-                holder.binding.accountLoadBtn.isEnabled = true
                 mBinding.gameFab.performClick()
             }
         }.start()
+
+        setAccountSelected(account)
     }
 
     private fun onBackupClick(holder: AccountAdapter.ViewHolder, account: Account) {
-        holder.binding.accountSaveBtn.isEnabled = false
-        holder.binding.accountLoadBtn.isEnabled = false
-
         Thread {
             FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
                 if (finished) {
@@ -180,12 +179,18 @@ class AccountFragment : BaseFragment() {
                         BaseDatabase.getInstance(mActivity).accountDAO()
                                 .updateAccount(it)
                     }
-                    mHandler.post {
-                        holder.binding.accountSaveBtn.isEnabled = true
-                        holder.binding.accountLoadBtn.isEnabled = true
-                    }
                 }
             }
+        }.start()
+    }
+
+    private fun setAccountSelected(account: Account) {
+        Thread {
+            account.selected = true
+            BaseDatabase.getInstance(mActivity)
+                    .accountDAO().deselectAllAccount(account.lang)
+            BaseDatabase.getInstance(mActivity)
+                    .accountDAO().updateAccount(account)
         }.start()
     }
 

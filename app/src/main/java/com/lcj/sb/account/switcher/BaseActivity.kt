@@ -8,6 +8,7 @@ import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.ads.MobileAds
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -16,7 +17,7 @@ import com.lcj.sb.account.switcher.utils.Configs
 /**
  * Created by Larry on 2018-06-18.
  */
-open abstract class BaseActivity : AppCompatActivity() {
+abstract class BaseActivity : AppCompatActivity() {
     val LOG_TAG: String = javaClass.simpleName
     val mActivity: Activity = this
     var mHandler: Handler = Handler()
@@ -30,6 +31,7 @@ open abstract class BaseActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mAuth = FirebaseAuth.getInstance()
         mAnalytics = FirebaseAnalytics.getInstance(mActivity)
+        MobileAds.initialize(mActivity)
 
         PreferenceManager.getDefaultSharedPreferences(mActivity).apply {
             mFirstRun = getBoolean(Configs.PREF_KEY_FIRST_RUN, true)
@@ -44,6 +46,11 @@ open abstract class BaseActivity : AppCompatActivity() {
         Log.i(LOG_TAG, "onStart")
     }
 
+    override fun onResume() {
+        super.onResume()
+        Log.i(LOG_TAG, "onResume")
+    }
+
     fun startWebSite(url: String) {
         Intent(Intent.ACTION_VIEW).let {
             it.data = Uri.parse(url)
@@ -52,4 +59,5 @@ open abstract class BaseActivity : AppCompatActivity() {
     }
 
     abstract fun initView()
+    abstract fun reloadAd()
 }

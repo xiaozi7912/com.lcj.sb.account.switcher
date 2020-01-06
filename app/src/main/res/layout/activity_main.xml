@@ -9,7 +9,8 @@
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/main_drawer_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_main">
 
         <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
@@ -40,7 +41,7 @@
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 ads:adSize="BANNER"
-                ads:adUnitId="@string/AD_UNIT_ID"
+                ads:adUnitId="@string/AD_UNIT_ID_MAIN"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent" />
@@ -52,15 +53,17 @@
             android:layout_gravity="start"
             android:fitsSystemWindows="true">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:padding="5dp">
 
                 <com.lcj.sb.account.switcher.view.DrawerItemView
                     android:id="@+id/main_drawer_item_sb_j"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:src="@drawable/ic_launcher_jp_p"
                     app:title="サモンズボード" />
 
@@ -68,9 +71,19 @@
                     android:id="@+id/main_drawer_item_sb_t"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_sb_j"
                     app:src="@drawable/ic_launcher_tw_p"
                     app:title="召喚圖板" />
-            </LinearLayout>
+
+                <TextView
+                    android:id="@+id/main_drawer_version_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.0.0"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintRight_toRightOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.navigation.NavigationView>
     </androidx.drawerlayout.widget.DrawerLayout>
 </layout>

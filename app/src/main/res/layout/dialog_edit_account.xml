@@ -6,7 +6,7 @@
 
         <variable
             name="model"
-            type="com.lcj.sb.account.switcher.model.AccountEditViewModel" />
+            type="com.lcj.sb.account.switcher.model.AccountEditModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

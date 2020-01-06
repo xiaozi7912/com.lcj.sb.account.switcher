@@ -10,7 +10,9 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp">
+        android:layout_margin="5dp"
+        android:background="@drawable/shape_corner_80ffffff"
+        android:padding="5dp">
 
         <ImageView
             android:id="@+id/account_icon_iv"
@@ -32,7 +34,7 @@
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@+id/account_path_tv"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
-            app:layout_constraintRight_toLeftOf="@+id/account_save_btn"
+            app:layout_constraintRight_toLeftOf="@+id/account_more_btn"
             app:layout_constraintTop_toTopOf="@+id/account_icon_iv" />
 
         <TextView
@@ -46,7 +48,7 @@
             android:textSize="14sp"
             app:layout_constraintBottom_toTopOf="@+id/account_update_time_tv"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
-            app:layout_constraintRight_toLeftOf="@+id/account_save_btn"
+            app:layout_constraintRight_toLeftOf="@+id/account_more_btn"
             app:layout_constraintTop_toBottomOf="@+id/account_alias_tv" />
 
         <TextView
@@ -60,27 +62,18 @@
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@+id/account_icon_iv"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
-            app:layout_constraintRight_toLeftOf="@+id/account_save_btn"
+            app:layout_constraintRight_toLeftOf="@+id/account_more_btn"
             app:layout_constraintTop_toBottomOf="@+id/account_path_tv" />
 
-        <Button
-            android:id="@+id/account_save_btn"
-            android:layout_width="60dp"
-            android:layout_height="0dp"
-            android:text="備份"
-            android:textAllCaps="false"
-            app:layout_constraintBottom_toBottomOf="@+id/account_icon_iv"
-            app:layout_constraintRight_toLeftOf="@+id/account_load_btn"
-            app:layout_constraintTop_toTopOf="@+id/account_icon_iv" />
-
-        <Button
-            android:id="@+id/account_load_btn"
-            android:layout_width="60dp"
-            android:layout_height="0dp"
-            android:text="讀取"
-            android:textAllCaps="false"
-            app:layout_constraintBottom_toBottomOf="@+id/account_icon_iv"
+        <ImageButton
+            android:id="@+id/account_more_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:elevation="2dp"
+            android:src="@drawable/round_more_vert_black_24"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/account_icon_iv" />
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -9,7 +9,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.MobileAds
 import com.google.firebase.iid.FirebaseInstanceId
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -34,14 +33,9 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
+
         setSupportActionBar(mBinding.mainToolBar)
-
-        MobileAds.initialize(mActivity)
         requestPermissions()
-    }
-
-    override fun onResume() {
-        super.onResume()
         reloadAd()
     }
 
@@ -60,6 +54,8 @@ class MainActivity : BaseActivity() {
         val toggle = ActionBarDrawerToggle(mActivity, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name)
         mBinding.mainDrawerLayout.addDrawerListener(toggle)
         toggle.syncState()
+
+        mBinding.mainDrawerVersionTv.text = BuildConfig.VERSION_NAME
 
         mBinding.mainToolBar.setOnMenuItemClickListener {
             when (it.itemId) {
@@ -89,6 +85,11 @@ class MainActivity : BaseActivity() {
         }
 
         if (!mFirstRun) selectLanguage()
+    }
+
+    override fun reloadAd() {
+        val adRequest = AdRequest.Builder().build()
+        mBinding.mainAdView.loadAd(adRequest)
     }
 
     @AfterPermissionGranted(REQUEST_CODE_WRITE_PERMISSION)
@@ -186,10 +187,5 @@ class MainActivity : BaseActivity() {
             apply()
         }
         mCurrentLang = lang
-    }
-
-    private fun reloadAd() {
-        val adRequest = AdRequest.Builder().build()
-        mBinding.mainAdView.loadAd(adRequest)
     }
 }
