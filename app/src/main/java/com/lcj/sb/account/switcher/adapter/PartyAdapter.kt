@@ -1,6 +1,7 @@
 package com.lcj.sb.account.switcher.adapter
 
 import android.app.Activity
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -46,6 +47,7 @@ class PartyAdapter(activity: Activity) : RecyclerView.Adapter<PartyAdapter.ViewH
         }
 
         holder.binding.title.text = item.title
+        holder.binding.partyImage.setImageURI(Uri.parse(item.imagePath))
     }
 
     fun update(dataList: List<DungeonParty>) {
