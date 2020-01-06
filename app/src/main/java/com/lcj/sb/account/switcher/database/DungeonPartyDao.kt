@@ -15,5 +15,8 @@ interface DungeonPartyDao {
     fun deleteAll()
 
     @Query("SELECT * FROM dungeon_party WHERE account_id = :accountId")
-    fun partys(accountId: Int): LiveData<List<DungeonParty>>
+    fun getPartyList(accountId: Int): LiveData<List<DungeonParty>>
+
+    @Query("SELECT * FROM dungeon_party WHERE account_id = :accountId AND dungeon_type IN (:dungeonTypes) AND element_type IN (:elementTypes) AND title LIKE :title")
+    fun getFilterPartyList(accountId: Int, dungeonTypes: List<Int>, elementTypes: List<Int>, title: String): List<DungeonParty>
 }

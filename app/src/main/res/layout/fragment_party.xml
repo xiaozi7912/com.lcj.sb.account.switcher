@@ -148,7 +148,7 @@
                 android:id="@+id/filter_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="搜尋"
+                android:text="檢索"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="@+id/input_edit"
                 app:layout_constraintLeft_toRightOf="@+id/input_edit"

@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -45,28 +44,21 @@ class PartyFragment : BaseFragment() {
         mBinding = FragmentPartyBinding.inflate(inflater, container, false)
         mAccount = arguments?.getSerializable(Configs.INTENT_KEY_ACCOUNT) as Account
 
-        mBinding.model = AccountInfoModel()
+        mBinding.model = AccountInfoModel(mAccount)
         return mBinding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.filterBtn.setOnClickListener {
-            mBinding.model?.onFilterClick()
-            Thread {
-                BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
-                        .insert(DungeonParty(
-                                accountId = mAccount.id,
-                                dungeonType = 0,
-                                elementType = 0,
-                                title = "${System.currentTimeMillis()}",
-                                imagePath = ""
-                        ))
-            }.start()
+            mBinding.model?.onFilterClick(mActivity) { dataList ->
+                dataList?.let {
+                    mHandler.post { mAdapter.update(dataList) }
+                }
+            }
         }
 
         mBinding.addFab.setOnClickListener {
-            Log.i(LOG_TAG, "addFab")
             showCreatePartyDialog()
         }
     }
@@ -80,7 +72,7 @@ class PartyFragment : BaseFragment() {
         mBinding.recyclerView.adapter = mAdapter
 
         BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
-                .partys(mAccount.id)
+                .getPartyList(mAccount.id)
                 .observe(this, Observer { mAdapter.update(it) })
     }
 
@@ -98,7 +90,6 @@ class PartyFragment : BaseFragment() {
     }
 
     private fun showCreatePartyDialog() {
-        Log.i(LOG_TAG, "addFab")
         mCreatePartyBinding = DialogCreatePartyBinding.inflate(layoutInflater)
 
         CreatePartyModel().let { model ->
@@ -126,9 +117,6 @@ class PartyFragment : BaseFragment() {
                     val title = mCreatePartyBinding.inputEdit.text.toString()
                     val dungeonType = mCreatePartyBinding.model?.getSelectedDungeonType()
                     val elementType = mCreatePartyBinding.model?.getSelectedElementType()
-                    Log.v(LOG_TAG, "title : $title")
-                    Log.v(LOG_TAG, "dungeonType : $dungeonType")
-                    Log.v(LOG_TAG, "elementType : $elementType")
 
                     if (dungeonType != -1 && elementType != -1 && title.isNotEmpty()) {
                         Thread {
