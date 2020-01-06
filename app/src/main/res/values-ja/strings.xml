@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">サモンズ：アカツール</string>
+
+    <string name="no_install_game">ゲーム　インストールされてません</string>
+    <string name="google_play_text">Google Play</string>
+    <string name="dialog_button_cancel">取消</string>
+    <string name="dialog_button_backup">バックアップ</string>
+    <string name="dialog_folder_path">フォルダー：%s</string>
+    <string name="dialog_button_edit">変更</string>
+    <string name="dialog_button_load">ロード</string>
+</resources>
