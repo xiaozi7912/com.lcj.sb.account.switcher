@@ -97,16 +97,16 @@ class AccountFragment : BaseFragment() {
                 AlertDialog.Builder(mActivity)
                         .setTitle(account.alias)
                         .setMessage(String.format(getString(R.string.dialog_folder_path), account.folder))
-                        .setNeutralButton(getString(R.string.dialog_button_edit)) { dialog, which ->
+                        .setNeutralButton(getString(R.string.dialog_button_backup)) { dialog, which ->
+                            onBackupClick(holder, account)
+                            dialog.dismiss()
+                        }
+                        .setNegativeButton(getString(R.string.dialog_button_edit)) { dialog, which ->
                             onEditClick(holder, account)
                             dialog.dismiss()
                         }
-                        .setNegativeButton(getString(R.string.dialog_button_load)) { dialog, which ->
+                        .setPositiveButton(getString(R.string.dialog_button_load)) { dialog, which ->
                             onLoadClick(holder, account)
-                            dialog.dismiss()
-                        }
-                        .setPositiveButton(getString(R.string.dialog_button_backup)) { dialog, which ->
-                            onBackupClick(holder, account)
                             dialog.dismiss()
                         }.create().show()
             }
