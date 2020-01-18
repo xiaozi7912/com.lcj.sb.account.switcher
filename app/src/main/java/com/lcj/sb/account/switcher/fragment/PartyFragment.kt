@@ -26,10 +26,7 @@ import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.databinding.DialogCreatePartyBinding
 import com.lcj.sb.account.switcher.databinding.FragmentPartyBinding
-import com.lcj.sb.account.switcher.model.AccountInfoModel
-import com.lcj.sb.account.switcher.model.CreatePartyModel
-import com.lcj.sb.account.switcher.model.DungeonLevelModel
-import com.lcj.sb.account.switcher.model.DungeonStageModel
+import com.lcj.sb.account.switcher.model.*
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.IconUtils
 import com.theartofdev.edmodo.cropper.CropImage
@@ -40,15 +37,26 @@ class PartyFragment : BaseFragment() {
     private lateinit var mAdapter: PartyAdapter
     private lateinit var mCreatePartyBinding: DialogCreatePartyBinding
 
-    private val mDungeonLevelList = arrayListOf(
-            DungeonLevelModel(0, "冥"), DungeonLevelModel(1, "神"), DungeonLevelModel(2, "滅"),
-            DungeonLevelModel(3, "塔"), DungeonLevelModel(4, "魔窟")
-    )
-    private val mDungeonElementList = arrayListOf("火", "水", "木", "光", "暗")
+    private val mFilterLevelList = ArrayList<DungeonLevelModel>().apply {
+        add(0, DungeonLevelModel(99, "全部"))
+        addAll(Configs.DUNGEON_LEVEL_LIST)
+    }
+    private val mFilterElementList = ArrayList<DungeonElementModel>().apply {
+        add(0, DungeonElementModel(99, "全部"))
+        addAll(Configs.DUNGEON_ELEMENT_LIST)
+    }
+    private val mCreateDialogLevelList = ArrayList<DungeonLevelModel>().apply {
+        addAll(Configs.DUNGEON_LEVEL_LIST)
+    }
+    private val mCreateDialogElementList = ArrayList<DungeonElementModel>().apply {
+        addAll(Configs.DUNGEON_ELEMENT_LIST)
+    }
     private val mDungeonStageList = ArrayList<DungeonStageModel>()
     private var mCropImageUri: Uri? = null
-    private var mSelectedLevelModel: DungeonLevelModel = mDungeonLevelList[0]
-    private var mSelectedElementPosition = 0
+    private var mSelectedFilterLevelModel = mFilterLevelList.first()
+    private var mSelectedFilterElementModel = mFilterElementList.first()
+    private var mSelectedLevelModel = mCreateDialogLevelList.first()
+    private var mSelectedElementModel = mCreateDialogElementList.first()
     private var mSelectedStageModel: DungeonStageModel? = null
 
     companion object {
@@ -71,7 +79,31 @@ class PartyFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        mBinding.filterLevelBtn.setOnClickListener {
+            showLevelListDialog(it)
+        }
+        mBinding.filterElementBtn.setOnClickListener {
+            showElementListDialog(it)
+        }
         mBinding.filterBtn.setOnClickListener {
+            mBinding.model?.updateLevelList(when (mSelectedFilterLevelModel.index) {
+                99 -> arrayListOf<Int>().apply {
+                    for (model in Configs.DUNGEON_LEVEL_LIST) {
+                        add(model.index)
+                    }
+                }
+                else -> arrayListOf(mSelectedFilterLevelModel.index)
+            })
+
+            mBinding.model?.updateElementList(when (mSelectedFilterElementModel.index) {
+                99 -> arrayListOf<Int>().apply {
+                    for (model in Configs.DUNGEON_ELEMENT_LIST) {
+                        add(model.index)
+                    }
+                }
+                else -> arrayListOf(mSelectedFilterElementModel.index)
+            })
+
             mBinding.model?.onFilterClick(mActivity) { dataList ->
                 dataList?.let {
                     mHandler.post { mAdapter.update(dataList) }
@@ -87,6 +119,9 @@ class PartyFragment : BaseFragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
+
+        updateFilterLevelView(mFilterLevelList.first())
+        updateFilterElementView(mFilterElementList.first())
 
         mAdapter = PartyAdapter(mActivity)
         mBinding.recyclerView.layoutManager = layoutManager
@@ -110,11 +145,11 @@ class PartyFragment : BaseFragment() {
         }
     }
 
-    private fun getDungeonInfoFromFirebase() {
+    private fun getDungeonInfoFromRemote() {
         val db = FirebaseFirestore.getInstance()
         val collectionPath = mSelectedLevelModel.title
         db.collection("summons_board").document("dungeon").collection(collectionPath)
-                .whereEqualTo("element", mSelectedElementPosition).orderBy("icon", Query.Direction.ASCENDING).get()
+                .whereEqualTo("element", mSelectedElementModel.index).orderBy("icon", Query.Direction.ASCENDING).get()
                 .addOnSuccessListener { result ->
                     mDungeonStageList.clear()
 
@@ -141,15 +176,15 @@ class PartyFragment : BaseFragment() {
 
         CreatePartyModel().let { model ->
             mCreatePartyBinding.model = model
-            updateDungeonLevelView(mDungeonLevelList[0])
-            updateDungeonElementView(0)
-            getDungeonInfoFromFirebase()
+            updateDungeonLevelView(mCreateDialogLevelList.first())
+            updateDungeonElementView(mCreateDialogElementList.first())
+            getDungeonInfoFromRemote()
             AlertDialog.Builder(mActivity, R.style.CustomDialog).create().let { dialog ->
                 mCreatePartyBinding.partyDungeonLevelBtn.setOnClickListener {
-                    onDungeonLevelButtonClick()
+                    showLevelListDialog(it)
                 }
                 mCreatePartyBinding.partyDungeonElementBtn.setOnClickListener {
-                    onDungeonElementButtonClick()
+                    showElementListDialog(it)
                 }
                 mCreatePartyBinding.partyDungeonStageBtn.setOnClickListener {
                     onDungeonStageButtonClick()
@@ -167,29 +202,45 @@ class PartyFragment : BaseFragment() {
                 dialog.show()
                 dialog.setContentView(mCreatePartyBinding.root)
                 dialog.setOnDismissListener {
-                    mSelectedLevelModel = mDungeonLevelList[0]
-                    mSelectedElementPosition = 0
+                    mSelectedLevelModel = mCreateDialogLevelList.first()
+                    mSelectedElementModel = mCreateDialogElementList.first()
                 }
             }
         }
     }
 
-    private fun updateDungeonLevelView(model: DungeonLevelModel) {
-        val levelResId = IconUtils.getInstance(mActivity).getDungeonLevelResId(model.index)
+    private fun updateFilterLevelView(model: DungeonLevelModel) {
+        val iconResId = IconUtils.getInstance(mActivity).getDungeonLevelResId(model.index)
 
-        mCreatePartyBinding.partyDungeonLevelIcon.setImageResource(levelResId)
-        mCreatePartyBinding.partyDungeonLevelText.text = model.title
-        mSelectedLevelModel = model
-        getDungeonInfoFromFirebase()
+        mBinding.filterLevelIcon.setImageResource(iconResId)
+        mBinding.filterLevelText.text = model.title
+        mSelectedFilterLevelModel = model
     }
 
-    private fun updateDungeonElementView(position: Int) {
-        val iconResId = IconUtils.getInstance(mActivity).getDungeonElementResId(position)
+    private fun updateFilterElementView(model: DungeonElementModel) {
+        val iconResId = IconUtils.getInstance(mActivity).getDungeonElementResId(model.index)
+
+        mBinding.filterElementIcon.setImageResource(iconResId)
+        mBinding.filterElementText.text = model.title
+        mSelectedFilterElementModel = model
+    }
+
+    private fun updateDungeonLevelView(model: DungeonLevelModel) {
+        val iconResId = IconUtils.getInstance(mActivity).getDungeonLevelResId(model.index)
+
+        mCreatePartyBinding.partyDungeonLevelIcon.setImageResource(iconResId)
+        mCreatePartyBinding.partyDungeonLevelText.text = model.title
+        mSelectedLevelModel = model
+        getDungeonInfoFromRemote()
+    }
+
+    private fun updateDungeonElementView(model: DungeonElementModel) {
+        val iconResId = IconUtils.getInstance(mActivity).getDungeonElementResId(model.index)
 
         mCreatePartyBinding.partyDungeonElementIcon.setImageResource(iconResId)
-        mCreatePartyBinding.partyDungeonElementText.text = mDungeonElementList[position]
-        mSelectedElementPosition = position
-        getDungeonInfoFromFirebase()
+        mCreatePartyBinding.partyDungeonElementText.text = model.title
+        mSelectedElementModel = model
+        getDungeonInfoFromRemote()
     }
 
     private fun updateDungeonStageView(model: DungeonStageModel?) {
@@ -204,17 +255,23 @@ class PartyFragment : BaseFragment() {
         mSelectedStageModel = model
     }
 
-    private fun onDungeonLevelButtonClick() {
+    private fun showLevelListDialog(view: View) {
         AlertDialog.Builder(mActivity).create().let {
             val rootView = layoutInflater.inflate(R.layout.dialog_recycler_view, null, false)
             val recyclerView: RecyclerView = rootView.findViewById(R.id.recycler_view)
+            val dataList = when (view.id) {
+                R.id.filter_level_btn -> mFilterLevelList
+                R.id.party_dungeon_level_btn -> mCreateDialogLevelList
+                else -> mFilterLevelList
+            }
 
             recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-            recyclerView.adapter = DungeonLevelAdapter(mActivity, mDungeonLevelList).apply {
+            recyclerView.adapter = DungeonLevelAdapter(mActivity, dataList).apply {
                 setCallback { selectedItem, position ->
-                    updateDungeonLevelView(selectedItem)
-                    Log.d(LOG_TAG, "selectedItem : $selectedItem")
-                    Log.d(LOG_TAG, "position : $position")
+                    when (view.id) {
+                        R.id.filter_level_btn -> updateFilterLevelView(selectedItem)
+                        R.id.party_dungeon_level_btn -> updateDungeonLevelView(selectedItem)
+                    }
                     it.dismiss()
                 }
             }
@@ -225,17 +282,23 @@ class PartyFragment : BaseFragment() {
         }
     }
 
-    private fun onDungeonElementButtonClick() {
+    private fun showElementListDialog(view: View) {
         AlertDialog.Builder(mActivity).create().let {
             val rootView = layoutInflater.inflate(R.layout.dialog_recycler_view, null, false)
             val recyclerView: RecyclerView = rootView.findViewById(R.id.recycler_view)
+            val dataList = when (view.id) {
+                R.id.filter_element_btn -> mFilterElementList
+                R.id.party_dungeon_element_btn -> mCreateDialogElementList
+                else -> mFilterElementList
+            }
 
             recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-            recyclerView.adapter = DungeonElementAdapter(mActivity, mDungeonElementList).apply {
+            recyclerView.adapter = DungeonElementAdapter(mActivity, dataList).apply {
                 setCallback { selectedItem, position ->
-                    updateDungeonElementView(position)
-                    Log.d(LOG_TAG, "selectedItem : $selectedItem")
-                    Log.d(LOG_TAG, "position : $position")
+                    when (view.id) {
+                        R.id.filter_element_btn -> updateFilterElementView(selectedItem)
+                        R.id.party_dungeon_element_btn -> updateDungeonElementView(selectedItem)
+                    }
                     it.dismiss()
                 }
             }
@@ -255,8 +318,6 @@ class PartyFragment : BaseFragment() {
             recyclerView.adapter = DungeonStageAdapter(mActivity, mDungeonStageList).apply {
                 setCallback { selectedItem, position ->
                     updateDungeonStageView(selectedItem)
-                    Log.d(LOG_TAG, "selectedItem : $selectedItem")
-                    Log.d(LOG_TAG, "position : $position")
                     it.dismiss()
                 }
             }
@@ -291,7 +352,7 @@ class PartyFragment : BaseFragment() {
                         .insert(DungeonParty(
                                 accountId = mAccount.id,
                                 dungeonType = mSelectedLevelModel.index,
-                                elementType = mSelectedElementPosition,
+                                elementType = mSelectedElementModel.index,
                                 title = mSelectedStageModel?.title!!,
                                 imagePath = mCropImageUri?.path!!,
                                 iconName = mSelectedStageModel?.icon,

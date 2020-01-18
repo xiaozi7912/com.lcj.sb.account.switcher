@@ -1,6 +1,8 @@
 package com.lcj.sb.account.switcher.utils
 
 import android.os.Environment
+import com.lcj.sb.account.switcher.model.DungeonElementModel
+import com.lcj.sb.account.switcher.model.DungeonLevelModel
 
 /**
  * Created by Larry on 2018-06-19.
@@ -25,5 +27,13 @@ class Configs {
         const val SCREEN_NAME_SB_TW = "SCREEN_SB_TW"
 
         const val INTENT_KEY_ACCOUNT = "ACCOUNT"
+
+        val DUNGEON_LEVEL_LIST: ArrayList<DungeonLevelModel> = arrayListOf(
+                DungeonLevelModel(0, "冥"), DungeonLevelModel(1, "神"), DungeonLevelModel(2, "滅"),
+                DungeonLevelModel(3, "塔"), DungeonLevelModel(4, "魔窟")
+        )
+        val DUNGEON_ELEMENT_LIST: ArrayList<DungeonElementModel> = arrayListOf(
+                DungeonElementModel(0, "火"), DungeonElementModel(1, "水"), DungeonElementModel(2, "木"),
+                DungeonElementModel(3, "光"), DungeonElementModel(4, "暗"))
     }
 }

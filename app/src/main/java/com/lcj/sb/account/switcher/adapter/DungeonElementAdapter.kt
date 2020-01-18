@@ -8,11 +8,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.lcj.sb.account.switcher.R
+import com.lcj.sb.account.switcher.model.DungeonElementModel
 import com.lcj.sb.account.switcher.utils.IconUtils
 
-class DungeonElementAdapter(private val activity: Activity, private val dataList: ArrayList<String>) : RecyclerView.Adapter<DungeonElementAdapter.ViewHolder>() {
+class DungeonElementAdapter(private val activity: Activity, private val dataList: ArrayList<DungeonElementModel>) : RecyclerView.Adapter<DungeonElementAdapter.ViewHolder>() {
     private val mInflater = LayoutInflater.from(activity)
-    private var mCallback: ((selectedItem: String, position: Int) -> Unit)? = null
+    private var mCallback: ((selectedItem: DungeonElementModel, position: Int) -> Unit)? = null
 
     override fun getItemCount(): Int {
         return dataList.size
@@ -24,16 +25,16 @@ class DungeonElementAdapter(private val activity: Activity, private val dataList
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val currentItem = dataList[position]
-        val iconResId = IconUtils.getInstance(activity).getDungeonElementResId(position)
+        val iconResId = IconUtils.getInstance(activity).getDungeonElementResId(currentItem.index)
 
         holder.imageView.setImageResource(iconResId)
-        holder.textView.text = currentItem
+        holder.textView.text = currentItem.title
         holder.itemView.setOnClickListener {
             mCallback?.let { it(currentItem, position) }
         }
     }
 
-    fun setCallback(callback: (selectedItem: String, position: Int) -> Unit) {
+    fun setCallback(callback: (selectedItem: DungeonElementModel, position: Int) -> Unit) {
         mCallback = callback
     }
 
