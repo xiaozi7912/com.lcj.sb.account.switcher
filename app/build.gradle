@@ -15,10 +15,12 @@ android {
         versionCode 12
         versionName "0.2.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     productFlavors {
         ad_mob_sandbox {
             dimension "admob"
+            applicationIdSuffix ".dev"
             resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-3940256099942544/6300978111"'
             resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", '"ca-app-pub-3940256099942544/6300978111"'
         }
