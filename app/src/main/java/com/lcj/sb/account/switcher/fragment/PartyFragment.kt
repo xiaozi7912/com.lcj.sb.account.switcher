@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -200,6 +201,8 @@ class PartyFragment : BaseFragment() {
                 }
 
                 dialog.show()
+                dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+                dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
                 dialog.setContentView(mCreatePartyBinding.root)
                 dialog.setOnDismissListener {
                     mSelectedLevelModel = mCreateDialogLevelList.first()
@@ -346,24 +349,28 @@ class PartyFragment : BaseFragment() {
     private fun onCreatePartyButtonClick(dialog: AlertDialog) {
         val remark = mCreatePartyBinding.inputEdit.text.toString()
 
-        if (mCropImageUri != null) {
-            Thread {
-                BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
-                        .insert(DungeonParty(
-                                accountId = mAccount.id,
-                                dungeonType = mSelectedLevelModel.index,
-                                elementType = mSelectedElementModel.index,
-                                title = mSelectedStageModel?.title!!,
-                                imagePath = mCropImageUri?.path!!,
-                                iconName = mSelectedStageModel?.icon,
-                                eventTitle = mSelectedStageModel?.event_title,
-                                monsterName = mSelectedStageModel?.monster_name!!,
-                                remark = remark
-                        ))
-                dialog.dismiss()
-            }.start()
+        if (mSelectedStageModel != null) {
+            if (mCropImageUri != null) {
+                Thread {
+                    BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
+                            .insert(DungeonParty(
+                                    accountId = mAccount.id,
+                                    dungeonType = mSelectedLevelModel.index,
+                                    elementType = mSelectedElementModel.index,
+                                    title = mSelectedStageModel?.title!!,
+                                    imagePath = mCropImageUri?.path!!,
+                                    iconName = mSelectedStageModel?.icon,
+                                    eventTitle = mSelectedStageModel?.event_title,
+                                    monsterName = mSelectedStageModel?.monster_name!!,
+                                    remark = remark
+                            ))
+                    dialog.dismiss()
+                }.start()
+            } else {
+                Toast.makeText(mActivity, "請選取圖片", Toast.LENGTH_SHORT).show()
+            }
         } else {
-            Toast.makeText(mActivity, "請選取圖片", Toast.LENGTH_SHORT).show()
+            Toast.makeText(mActivity, "請選擇關卡", Toast.LENGTH_SHORT).show()
         }
     }
 }

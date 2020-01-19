@@ -21,9 +21,9 @@ class IconUtils(val context: Context) {
 
     fun getDungeonLevelResId(index: Int): Int {
         return when (index) {
-            0 -> 0
+            0 -> R.drawable.ic_dungeon_level_2
             1 -> R.drawable.ic_dungeon_level_1
-            2 -> R.drawable.ic_dungeon_level_2
+            2 -> R.drawable.ic_dungeon_level_5
             3 -> R.drawable.ic_dungeon_level_3
             4 -> R.drawable.ic_dungeon_level_4
             else -> 0

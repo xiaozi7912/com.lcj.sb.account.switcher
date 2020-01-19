@@ -29,7 +29,7 @@ class Configs {
         const val INTENT_KEY_ACCOUNT = "ACCOUNT"
 
         val DUNGEON_LEVEL_LIST: ArrayList<DungeonLevelModel> = arrayListOf(
-                DungeonLevelModel(0, "冥"), DungeonLevelModel(1, "神"), DungeonLevelModel(2, "滅"),
+                DungeonLevelModel(2, "冥"), DungeonLevelModel(1, "神"), DungeonLevelModel(0, "滅"),
                 DungeonLevelModel(3, "塔"), DungeonLevelModel(4, "魔窟")
         )
         val DUNGEON_ELEMENT_LIST: ArrayList<DungeonElementModel> = arrayListOf(

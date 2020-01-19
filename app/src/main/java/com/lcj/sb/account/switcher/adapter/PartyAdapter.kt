@@ -23,7 +23,7 @@ class PartyAdapter(val activity: Activity) : RecyclerView.Adapter<PartyAdapter.V
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val currentItem = dataList[position]
-        val dungeonResId = IconUtils.getInstance(activity).getDungeonResId(currentItem.iconName!!)
+        val dungeonResId = IconUtils.getInstance(activity).getDungeonResId(currentItem.iconName ?: "")
         val levelResId = IconUtils.getInstance(activity).getDungeonLevelResId(currentItem.dungeonType)
         val elementResId = IconUtils.getInstance(activity).getDungeonElementResId(currentItem.elementType)
 
