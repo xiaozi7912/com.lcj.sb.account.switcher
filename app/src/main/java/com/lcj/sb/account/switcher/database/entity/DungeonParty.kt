@@ -14,5 +14,9 @@ data class DungeonParty(
         @ColumnInfo(name = "dungeon_type") var dungeonType: Int,
         @ColumnInfo(name = "element_type") var elementType: Int,
         var title: String,
-        @ColumnInfo(name = "image_path") var imagePath: String
+        @ColumnInfo(name = "image_path") var imagePath: String,
+        @ColumnInfo(name = "icon_name") var iconName: String? = null,
+        @ColumnInfo(name = "event_title") var eventTitle: String? = null,
+        @ColumnInfo(name = "monster_name") var monsterName: String,
+        var remark: String
 )

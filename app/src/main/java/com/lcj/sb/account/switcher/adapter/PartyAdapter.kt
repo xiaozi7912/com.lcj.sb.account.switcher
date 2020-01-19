@@ -5,11 +5,11 @@ import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.databinding.ItemDungeonPartyBinding
+import com.lcj.sb.account.switcher.utils.IconUtils
 
-class PartyAdapter(activity: Activity) : RecyclerView.Adapter<PartyAdapter.ViewHolder>() {
+class PartyAdapter(val activity: Activity) : RecyclerView.Adapter<PartyAdapter.ViewHolder>() {
     private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<DungeonParty> = emptyList()
 
@@ -22,32 +22,15 @@ class PartyAdapter(activity: Activity) : RecyclerView.Adapter<PartyAdapter.ViewH
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = dataList[position]
+        val currentItem = dataList[position]
+        val dungeonResId = IconUtils.getInstance(activity).getDungeonResId(currentItem.iconName ?: "")
+        val levelResId = IconUtils.getInstance(activity).getDungeonLevelResId(currentItem.dungeonType)
+        val elementResId = IconUtils.getInstance(activity).getDungeonElementResId(currentItem.elementType)
 
-        when (item.dungeonType) {
-            0 -> R.drawable.ic_dungeon_type_1_p
-            1 -> R.drawable.ic_dungeon_type_2_p
-            2 -> R.drawable.ic_dungeon_type_3_p
-            3 -> R.drawable.ic_dungeon_type_4_p
-            4 -> R.drawable.ic_dungeon_type_5_p
-            else -> R.drawable.ic_dungeon_type_1_p
-        }.let {
-            holder.binding.dungeonTypeImg.setImageResource(it)
-        }
-
-        when (item.elementType) {
-            0 -> R.drawable.ic_element_1_p
-            1 -> R.drawable.ic_element_2_p
-            2 -> R.drawable.ic_element_3_p
-            3 -> R.drawable.ic_element_4_p
-            4 -> R.drawable.ic_element_5_p
-            else -> R.drawable.ic_element_1_p
-        }.let {
-            holder.binding.elementTypeImg.setImageResource(it)
-        }
-
-        holder.binding.title.text = item.title
-        holder.binding.partyImage.setImageURI(Uri.parse(item.imagePath))
+        holder.binding.dungeonIconIv.setImageResource(dungeonResId)
+        holder.binding.elementTypeImg.setImageResource(elementResId)
+        holder.binding.title.text = String.format("%s - %s", currentItem.title, currentItem.monsterName)
+        holder.binding.partyImage.setImageURI(Uri.parse(currentItem.imagePath))
     }
 
     fun update(dataList: List<DungeonParty>) {

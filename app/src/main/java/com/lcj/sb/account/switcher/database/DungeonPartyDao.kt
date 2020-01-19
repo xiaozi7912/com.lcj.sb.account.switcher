@@ -17,6 +17,6 @@ interface DungeonPartyDao {
     @Query("SELECT * FROM dungeon_party WHERE account_id = :accountId")
     fun getPartyList(accountId: Int): LiveData<List<DungeonParty>>
 
-    @Query("SELECT * FROM dungeon_party WHERE account_id = :accountId AND dungeon_type IN (:dungeonTypes) AND element_type IN (:elementTypes) AND title LIKE :title")
+    @Query("SELECT * FROM dungeon_party WHERE account_id = :accountId AND dungeon_type IN (:dungeonTypes) AND element_type IN (:elementTypes) AND (title LIKE :title OR monster_name LIKE :title OR remark LIKE :title)")
     fun getFilterPartyList(accountId: Int, dungeonTypes: List<Int>, elementTypes: List<Int>, title: String): List<DungeonParty>
 }

@@ -9,28 +9,27 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:background="@drawable/shape_corner_80b58e52"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/shape_corner_80ffffff"
         android:orientation="vertical"
         android:padding="5dp">
 
         <ImageView
-            android:id="@+id/dungeon_type_img"
-            android:layout_width="27dp"
-            android:layout_height="27dp"
-            android:src="@drawable/ic_dungeon_type_1_p"
+            android:id="@+id/dungeon_icon_iv"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_summon_391"
+            app:layout_constraintBottom_toBottomOf="@+id/party_image"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@+id/party_image" />
 
         <ImageView
             android:id="@+id/element_type_img"
-            android:layout_width="22.5dp"
-            android:layout_height="22.5dp"
-            android:layout_marginLeft="10dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/ic_element_1_p"
-            app:layout_constraintBottom_toBottomOf="@+id/dungeon_type_img"
-            app:layout_constraintLeft_toRightOf="@+id/dungeon_type_img"
-            app:layout_constraintTop_toTopOf="@+id/dungeon_type_img" />
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/title"
@@ -40,18 +39,19 @@
             android:text="0000000000"
             android:textColor="@android:color/black"
             android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="@+id/dungeon_type_img"
+            app:layout_constraintBottom_toBottomOf="@+id/element_type_img"
             app:layout_constraintLeft_toRightOf="@+id/element_type_img"
-            app:layout_constraintTop_toTopOf="@+id/dungeon_type_img" />
+            app:layout_constraintTop_toTopOf="@+id/element_type_img" />
 
         <ImageView
             android:id="@+id/party_image"
             android:layout_width="0dp"
-            android:layout_height="68dp"
-            android:layout_marginTop="5dp"
+            android:layout_height="60dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
             android:src="@drawable/round_add_photo_alternate_black_24"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintLeft_toRightOf="@+id/dungeon_icon_iv"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/dungeon_type_img" />
+            app:layout_constraintTop_toBottomOf="@+id/element_type_img" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
