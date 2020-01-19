@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.utils.Configs
 
@@ -24,6 +25,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
     protected lateinit var mAuth: FirebaseAuth
     protected lateinit var mAnalytics: FirebaseAnalytics
+    protected lateinit var mRemoteConfig: FirebaseRemoteConfig
     protected lateinit var mCurrentLang: Account.Language
     protected var mFirstRun = false
 
@@ -31,6 +33,7 @@ abstract class BaseActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mAuth = FirebaseAuth.getInstance()
         mAnalytics = FirebaseAnalytics.getInstance(mActivity)
+        mRemoteConfig = FirebaseRemoteConfig.getInstance()
         MobileAds.initialize(mActivity)
 
         PreferenceManager.getDefaultSharedPreferences(mActivity).apply {

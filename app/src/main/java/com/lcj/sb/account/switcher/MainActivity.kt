@@ -1,20 +1,27 @@
 package com.lcj.sb.account.switcher
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.Log
 import android.view.Menu
+import android.view.View
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.ads.AdRequest
 import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.google.gson.Gson
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.fragment.AccountFragment
+import com.lcj.sb.account.switcher.model.RemoteConfigModel
 import com.lcj.sb.account.switcher.utils.Configs
+import com.lcj.sb.account.switcher.utils.PackageUtils
 import com.lcj.sb.account.switcher.view.DrawerItemView
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
@@ -34,9 +41,15 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
 
+        initRemoteConfig()
         setSupportActionBar(mBinding.mainToolBar)
         requestPermissions()
         reloadAd()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        fetchRemoteConfig()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -67,6 +80,11 @@ class MainActivity : BaseActivity() {
             false
         }
 
+        mBinding.mainDrawerItemSbJ.setDownloadAPKButtonClickListener(View.OnClickListener {
+            startActivity(Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse(Configs.URL_APK_JP)
+            })
+        })
         mBinding.mainDrawerItemSbJ.setOnClickListener {
             val currentItem = it as DrawerItemView
             val anotherItem = mBinding.mainDrawerItemSbT
@@ -98,7 +116,7 @@ class MainActivity : BaseActivity() {
 
         if (EasyPermissions.hasPermissions(mActivity, *perms)) {
 //            AccountInfoManager.getInstance().readAccountInfoFile()
-            getFirebaseInstanceId()
+            getFCMInstanceId()
             if (mFirstRun) loadExistsBackup()
             initView()
         } else {
@@ -106,7 +124,57 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun getFirebaseInstanceId() {
+    private fun initRemoteConfig() {
+        Log.i(LOG_TAG, "initRemoteConfig")
+        val configSetting = FirebaseRemoteConfigSettings.Builder()
+                .setMinimumFetchIntervalInSeconds(1800)
+                .build()
+        mRemoteConfig.setConfigSettingsAsync(configSetting)
+    }
+
+    private fun fetchRemoteConfig() {
+        Log.i(LOG_TAG, "fetchRemoteConfig")
+        updateDownloadAPKButton()
+        mRemoteConfig.fetchAndActivate()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        task.result?.let {
+                            if (it) updateDownloadAPKButton()
+                        }
+                    } else {
+                        task.exception?.printStackTrace()
+                    }
+                }
+    }
+
+    private fun updateDownloadAPKButton() {
+        Log.i(LOG_TAG, "updateDownloadAPKButton")
+        val strConfigs = mRemoteConfig.getString("sb_configs")
+        val remoteConfig = Gson().fromJson(strConfigs, RemoteConfigModel::class.java)
+        var currentJPCode = PackageUtils.getInstance(mActivity).getVersionCode(Configs.PREFIX_NAME_SB_JP)
+        var currentTWCode = PackageUtils.getInstance(mActivity).getVersionCode(Configs.PREFIX_NAME_SB_TW)
+
+        if (BuildConfig.DEBUG) {
+            currentJPCode--
+            currentTWCode--
+        }
+
+        if (remoteConfig != null) {
+            if (remoteConfig.versionCodeJP > currentJPCode) {
+                mBinding.mainDrawerItemSbJ.setDownloadAPKButtonVisibility(true)
+            } else {
+                mBinding.mainDrawerItemSbJ.setDownloadAPKButtonVisibility(false)
+            }
+
+            if (remoteConfig.versionCodeTW > currentTWCode) {
+                mBinding.mainDrawerItemSbT.setDownloadAPKButtonVisibility(false)
+            } else {
+                mBinding.mainDrawerItemSbT.setDownloadAPKButtonVisibility(false)
+            }
+        }
+    }
+
+    private fun getFCMInstanceId() {
         FirebaseInstanceId.getInstance().instanceId
                 .addOnSuccessListener {
                     Log.i(LOG_TAG, "addOnSuccessListener")
