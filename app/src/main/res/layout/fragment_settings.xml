@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="5dp"
+        android:background="@drawable/shape_corner_80ffffff"
+        android:padding="5dp">
+
+        <View
+            android:id="@+id/settings_google_account_bg"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:background="@drawable/shape_corner_80b58e52"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/settings_sign_in_account_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:lines="1" android:ellipsize="end"
+            android:text="0000000000"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="@+id/settings_google_account_bg"
+            app:layout_constraintLeft_toLeftOf="@+id/settings_google_account_bg"
+            app:layout_constraintRight_toLeftOf="@+id/sign_in_button"
+            app:layout_constraintTop_toTopOf="@+id/settings_google_account_bg" />
+
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/sign_in_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            app:layout_constraintBottom_toBottomOf="@+id/settings_google_account_bg"
+            app:layout_constraintRight_toRightOf="@+id/settings_google_account_bg"
+            app:layout_constraintTop_toTopOf="@+id/settings_google_account_bg" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

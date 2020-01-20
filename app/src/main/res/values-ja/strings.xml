@@ -2,6 +2,10 @@
 <resources>
     <string name="app_name">サモンズ：アカツール</string>
 
+    <string name="main_drawer_item_sb_j">サモンズボード</string>
+    <string name="main_drawer_item_sb_t">召喚圖板</string>
+    <string name="main_drawer_item_settings">セッティング</string>
+
     <string name="no_install_game">ゲーム　インストールされてません</string>
     <string name="google_play_text">Google Play</string>
     <string name="dialog_button_cancel">取消</string>

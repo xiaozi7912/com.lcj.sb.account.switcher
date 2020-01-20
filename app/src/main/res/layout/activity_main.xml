@@ -65,7 +65,7 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:src="@drawable/ic_launcher_jp_p"
-                    app:title="サモンズボード" />
+                    app:title="@string/main_drawer_item_sb_j" />
 
                 <com.lcj.sb.account.switcher.view.DrawerItemView
                     android:id="@+id/main_drawer_item_sb_t"
@@ -74,7 +74,15 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_sb_j"
                     app:src="@drawable/ic_launcher_tw_p"
-                    app:title="召喚圖板" />
+                    app:title="@string/main_drawer_item_sb_t" />
+
+                <com.lcj.sb.account.switcher.view.DrawerItemView
+                    android:id="@+id/main_drawer_item_settings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_sb_t"
+                    app:title="@string/main_drawer_item_settings" />
 
                 <TextView
                     android:id="@+id/main_drawer_version_tv"

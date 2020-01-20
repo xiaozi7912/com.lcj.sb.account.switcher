@@ -19,6 +19,7 @@ import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.fragment.AccountFragment
+import com.lcj.sb.account.switcher.fragment.SettingsFragment
 import com.lcj.sb.account.switcher.model.RemoteConfigModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.PackageUtils
@@ -101,6 +102,9 @@ class MainActivity : BaseActivity() {
             anotherItem.setImageRes(R.drawable.ic_launcher_jp_n)
             onDrawerItemSBClick(currentItem.getTitle(), Account.Language.TW)
         }
+        mBinding.mainDrawerItemSettings.setOnClickListener {
+            showSettings()
+        }
 
         if (!mFirstRun) selectLanguage()
     }
@@ -171,6 +175,8 @@ class MainActivity : BaseActivity() {
             } else {
                 mBinding.mainDrawerItemSbT.setDownloadAPKButtonVisibility(false)
             }
+
+            mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
         }
     }
 
@@ -255,5 +261,13 @@ class MainActivity : BaseActivity() {
             apply()
         }
         mCurrentLang = lang
+    }
+
+    private fun showSettings() {
+        val ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.main_frame_layout, SettingsFragment.newInstance())
+        ft.commit()
+
+        mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
     }
 }

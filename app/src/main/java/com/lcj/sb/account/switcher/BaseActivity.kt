@@ -9,7 +9,6 @@ import android.preference.PreferenceManager
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.MobileAds
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -24,7 +23,6 @@ abstract class BaseActivity : AppCompatActivity() {
     var mHandler: Handler = Handler()
 
     protected lateinit var mAuth: FirebaseAuth
-    protected lateinit var mAnalytics: FirebaseAnalytics
     protected lateinit var mRemoteConfig: FirebaseRemoteConfig
     protected lateinit var mCurrentLang: Account.Language
     protected var mFirstRun = false
@@ -32,7 +30,6 @@ abstract class BaseActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mAuth = FirebaseAuth.getInstance()
-        mAnalytics = FirebaseAnalytics.getInstance(mActivity)
         mRemoteConfig = FirebaseRemoteConfig.getInstance()
         MobileAds.initialize(mActivity)
 
@@ -40,8 +37,6 @@ abstract class BaseActivity : AppCompatActivity() {
             mFirstRun = getBoolean(Configs.PREF_KEY_FIRST_RUN, true)
             mCurrentLang = Account.Language.valueOf(getString(Configs.PREF_KEY_LANGUAGE, "JP")!!)
         }
-        Log.v(LOG_TAG, "onCreate mAnalytics.appInstanceId : ${mAnalytics.appInstanceId}")
-        Log.v(LOG_TAG, "onCreate mAnalytics.firebaseInstanceId : ${mAnalytics.firebaseInstanceId}")
     }
 
     override fun onStart() {
