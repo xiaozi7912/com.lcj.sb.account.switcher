@@ -149,8 +149,8 @@ class PartyFragment : BaseFragment() {
     private fun getDungeonInfoFromRemote() {
         val db = FirebaseFirestore.getInstance()
         val collectionPath = mSelectedLevelModel.title
-        db.collection("summons_board").document("dungeon").collection(collectionPath)
-                .whereEqualTo("element", mSelectedElementModel.index).orderBy("icon", Query.Direction.ASCENDING).get()
+        db.document("/summons_board/dungeon").collection(collectionPath)
+                .whereEqualTo("element", mSelectedElementModel.index).orderBy("number", Query.Direction.ASCENDING).get()
                 .addOnSuccessListener { result ->
                     mDungeonStageList.clear()
 
