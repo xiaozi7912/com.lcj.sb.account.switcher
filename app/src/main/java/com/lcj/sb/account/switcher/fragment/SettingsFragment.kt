@@ -2,7 +2,6 @@ package com.lcj.sb.account.switcher.fragment
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,11 +18,11 @@ import com.lcj.sb.account.switcher.utils.Configs
 class SettingsFragment : BaseFragment() {
     private lateinit var mBinding: FragmentSettingsBinding
 
-    private val REQUEST_CODE_SIGN_IN = 1001
-
     private lateinit var mSignInClient: GoogleSignInClient
 
     companion object {
+        const val REQUEST_CODE_SIGN_IN = 1001
+
         fun newInstance(): SettingsFragment {
             return SettingsFragment()
         }
@@ -37,9 +36,7 @@ class SettingsFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.signInButton.setOnClickListener {
-            if (!checkLastSignedInAccount()) {
-                startActivityForResult(mSignInClient.signInIntent, REQUEST_CODE_SIGN_IN)
-            }
+            startActivityForResult(mSignInClient.signInIntent, REQUEST_CODE_SIGN_IN)
         }
     }
 
@@ -77,14 +74,30 @@ class SettingsFragment : BaseFragment() {
                 .addOnSuccessListener { account ->
                     updateAccountUI(account)
                 }
-                .addOnFailureListener { e ->
-                    e.printStackTrace()
-                    Log.e(LOG_TAG, "Unable to sign in.", e)
+                .addOnFailureListener { err ->
+                    err.printStackTrace()
                 }
     }
 
     private fun updateAccountUI(account: GoogleSignInAccount?) {
-        mBinding.settingsSignInAccountTv.text = account?.displayName
-        Log.d(LOG_TAG, "Signed in as " + account?.email)
+        if (account != null) {
+            if (checkGrantedScopes(account, arrayOf(DriveScopes.DRIVE_APPDATA, DriveScopes.DRIVE_FILE))) {
+                mBinding.settingsSignInAccountTv.text = account.displayName
+            } else {
+                mBinding.settingsSignInAccountTv.text = "權限不足，請重新登入"
+            }
+        } else {
+            mBinding.settingsSignInAccountTv.text = "尚未綁定Google帳號"
+        }
+    }
+
+    private fun checkGrantedScopes(account: GoogleSignInAccount, scopes: Array<String>): Boolean {
+        val scopeSize = scopes.size
+        var count = 0
+
+        account.grantedScopes.forEach {
+            if (scopes.contains(it.scopeUri)) count++
+        }
+        return (count == scopeSize)
     }
 }
