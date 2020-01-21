@@ -46,6 +46,10 @@ class DrawerItemView : LinearLayout {
         }
     }
 
+    fun setImageAlpha(alpha: Float) {
+        mIconView.alpha = alpha
+    }
+
     fun setImageRes(resId: Int) {
         mIconView.setImageResource(resId)
     }

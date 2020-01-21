@@ -82,6 +82,7 @@
                     android:layout_height="wrap_content"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_sb_t"
+                    app:src="@drawable/round_settings_applications_black_36"
                     app:title="@string/main_drawer_item_settings" />
 
                 <TextView

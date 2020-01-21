@@ -80,7 +80,6 @@ class MainActivity : BaseActivity() {
             }
             false
         }
-
         mBinding.mainDrawerItemSbJ.setDownloadAPKButtonClickListener(View.OnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW).apply {
                 data = Uri.parse(Configs.URL_APK_JP)
@@ -88,22 +87,27 @@ class MainActivity : BaseActivity() {
         })
         mBinding.mainDrawerItemSbJ.setOnClickListener {
             val currentItem = it as DrawerItemView
-            val anotherItem = mBinding.mainDrawerItemSbT
 
             currentItem.setImageRes(R.drawable.ic_launcher_jp_p)
-            anotherItem.setImageRes(R.drawable.ic_launcher_tw_n)
+            mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
+            mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
             onDrawerItemSBClick(currentItem.getTitle(), Account.Language.JP)
         }
         mBinding.mainDrawerItemSbT.setOnClickListener {
             val currentItem = it as DrawerItemView
-            val anotherItem = mBinding.mainDrawerItemSbJ
 
             currentItem.setImageRes(R.drawable.ic_launcher_tw_p)
-            anotherItem.setImageRes(R.drawable.ic_launcher_jp_n)
+            mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
+            mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
             onDrawerItemSBClick(currentItem.getTitle(), Account.Language.TW)
         }
         mBinding.mainDrawerItemSettings.setOnClickListener {
-            showSettings()
+            val currentItem = it as DrawerItemView
+
+            currentItem.setImageAlpha(1.0f)
+            mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
+            mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
+            showSettings(currentItem.getTitle())
         }
 
         if (!mFirstRun) selectLanguage()
@@ -263,7 +267,9 @@ class MainActivity : BaseActivity() {
         mCurrentLang = lang
     }
 
-    private fun showSettings() {
+    private fun showSettings(title: String) {
+        supportActionBar!!.title = title
+
         val ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.main_frame_layout, SettingsFragment.newInstance())
         ft.commit()
