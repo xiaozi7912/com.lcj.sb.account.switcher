@@ -17,12 +17,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.text.SimpleDateFormat
 
-class LocalBackupFragment : BaseFragment() {
+class LocalSyncFragment : BaseFragment() {
     private lateinit var mBinding: FragmentLocalBackupBinding
 
     companion object {
-        fun newInstance(): LocalBackupFragment {
-            return LocalBackupFragment()
+        fun newInstance(): LocalSyncFragment {
+            return LocalSyncFragment()
         }
     }
 
@@ -41,44 +41,31 @@ class LocalBackupFragment : BaseFragment() {
         super.onActivityCreated(savedInstanceState)
         BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_LOCAL_BACKUP, LOG_TAG)
 
-        updateSyncJPView()
-        updateSyncTWView()
+        updateSyncView(Account.Language.JP)
+        updateSyncView(Account.Language.TW)
     }
 
-    private fun updateSyncJPView() {
-        Log.i(LOG_TAG, "updateSyncJPView")
-        val type = FolderSync.Type.LOCAL.ordinal
-        val lang = Account.Language.JP.ordinal
+    private fun updateSyncView(lang: Account.Language) {
+        val type = FolderSync.Type.LOCAL
+        val sdf = SimpleDateFormat("yyyy-mm-dd HH:mm:ss")
 
-        BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type, lang)
+        val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSuccess { entity ->
+                .subscribe({ entity ->
                     entity?.let {
-                        mBinding.settingsSbJSyncTimeTv.text = SimpleDateFormat("yyyy-mm-dd HH:mm:ss").format(it.updateTime)
+                        when (lang) {
+                            Account.Language.JP -> mBinding.settingsSbJSyncTimeTv.text = sdf.format(it.updateTime)
+                            Account.Language.TW -> mBinding.settingsSbTSyncTimeTv.text = sdf.format(it.updateTime)
+                        }
                     }
-                }.subscribe()
-    }
-
-    private fun updateSyncTWView() {
-        Log.i(LOG_TAG, "updateSyncTWView")
-        val type = FolderSync.Type.LOCAL.ordinal
-        val lang = Account.Language.TW.ordinal
-
-        BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type, lang)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSuccess { entity ->
-                    entity?.let {
-                        mBinding.settingsSbTSyncTimeTv.text = SimpleDateFormat("yyyy-mm-dd HH:mm:ss").format(it.updateTime)
-                    }
-                }.subscribe()
+                }, { err -> err.printStackTrace() })
     }
 
     private fun onSyncJPButtonClick() {
         Log.i(LOG_TAG, "onSyncJPButtonClick")
         FileManager.syncBackupFolder(mActivity, Account.Language.JP) {
-            updateSyncJPView()
+            updateSyncView(Account.Language.JP)
             Toast.makeText(mActivity, "同步成功！", Toast.LENGTH_SHORT).show()
         }
     }
@@ -86,7 +73,7 @@ class LocalBackupFragment : BaseFragment() {
     private fun onSyncTWButtonClick() {
         Log.i(LOG_TAG, "onSyncTWButtonClick")
         FileManager.syncBackupFolder(mActivity, Account.Language.TW) {
-            updateSyncTWView()
+            updateSyncView(Account.Language.TW)
             Toast.makeText(mActivity, "同步成功！", Toast.LENGTH_SHORT).show()
         }
     }

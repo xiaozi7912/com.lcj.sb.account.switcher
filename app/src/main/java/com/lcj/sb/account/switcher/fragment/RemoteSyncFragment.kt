@@ -15,14 +15,14 @@ import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.databinding.FragmentRemoteBackupBinding
 import com.lcj.sb.account.switcher.utils.Configs
 
-class RemoteBackupFragment : BaseFragment() {
+class RemoteSyncFragment : BaseFragment() {
     private lateinit var mBinding: FragmentRemoteBackupBinding
 
     private lateinit var mSignInClient: GoogleSignInClient
 
     companion object {
-        fun newInstance(): RemoteBackupFragment {
-            return RemoteBackupFragment()
+        fun newInstance(): RemoteSyncFragment {
+            return RemoteSyncFragment()
         }
     }
 

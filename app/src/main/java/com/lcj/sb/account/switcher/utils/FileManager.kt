@@ -63,14 +63,14 @@ class FileManager {
                         val db = BaseDatabase.getInstance(context)
                         val currentTime = System.currentTimeMillis()
 
-                        db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal).subscribe { entity ->
-                            if (entity == null) {
-                                db.folderSyncDAO().insert(FolderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal, currentTime))
-                            } else {
-                                entity.updateTime = currentTime
-                                db.folderSyncDAO().update(entity)
-                            }
-                        }
+                        db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
+                                .subscribe({ entity ->
+                                    entity!!.updateTime = currentTime
+                                    db.folderSyncDAO().update(entity!!)
+                                }, { err ->
+                                    err.printStackTrace()
+                                    db.folderSyncDAO().insert(FolderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal, currentTime))
+                                })
                     }
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
