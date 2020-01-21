@@ -15,7 +15,6 @@ import com.google.android.gms.ads.AdRequest
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.gson.Gson
-import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.fragment.AccountFragment
@@ -26,9 +25,6 @@ import com.lcj.sb.account.switcher.utils.PackageUtils
 import com.lcj.sb.account.switcher.view.DrawerItemView
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
-import java.io.File
-import java.io.FileFilter
-import java.util.regex.Pattern
 
 
 class MainActivity : BaseActivity() {
@@ -110,7 +106,11 @@ class MainActivity : BaseActivity() {
             showSettings(currentItem.getTitle())
         }
 
-        if (!mFirstRun) selectLanguage()
+        if (mFirstRun) {
+            mBinding.mainDrawerLayout.openDrawer(GravityCompat.START)
+        } else {
+            selectLanguage()
+        }
     }
 
     override fun reloadAd() {
@@ -123,9 +123,7 @@ class MainActivity : BaseActivity() {
         val perms = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
         if (EasyPermissions.hasPermissions(mActivity, *perms)) {
-//            AccountInfoManager.getInstance().readAccountInfoFile()
             getFCMInstanceId()
-            if (mFirstRun) loadExistsBackup()
             initView()
         } else {
             EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
@@ -199,48 +197,6 @@ class MainActivity : BaseActivity() {
                 }
     }
 
-    private fun loadExistsBackup() {
-        Thread {
-            File(Configs.PATH_APP_DATA).apply {
-                listFiles(FileFilter {
-                    val pattern = Pattern.compile("jp\\.gungho\\.bm\\.\\w+")
-                    pattern.matcher(it.name).matches()
-                }).sorted().forEach {
-                    Log.v(LOG_TAG, "it.name : ${it.name}")
-                    val currentTime = System.currentTimeMillis()
-                    BaseDatabase.getInstance(mActivity).accountDAO()
-                            .insertAccount(Account(
-                                    alias = it.name,
-                                    folder = it.absolutePath,
-                                    lang = Account.Language.JP.ordinal,
-                                    createTime = currentTime,
-                                    updateTime = currentTime))
-                }
-
-                listFiles(FileFilter {
-                    val pattern = Pattern.compile("com\\.ghg\\.sb\\.\\w+")
-                    pattern.matcher(it.name).matches()
-                }).sorted().forEach {
-                    Log.v(LOG_TAG, "it.name : ${it.name}")
-                    val currentTime = System.currentTimeMillis()
-                    BaseDatabase.getInstance(mActivity).accountDAO()
-                            .insertAccount(Account(
-                                    alias = it.name,
-                                    folder = it.absolutePath,
-                                    lang = Account.Language.TW.ordinal,
-                                    createTime = currentTime,
-                                    updateTime = currentTime))
-                }
-
-                PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
-                    putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
-                    apply()
-                }
-                mHandler.post { selectLanguage() }
-            }
-        }.start()
-    }
-
     private fun selectLanguage() {
         when (mCurrentLang) {
             Account.Language.JP -> {
@@ -261,6 +217,7 @@ class MainActivity : BaseActivity() {
 
         mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
         PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+            putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
             putString(Configs.PREF_KEY_LANGUAGE, lang.name)
             apply()
         }

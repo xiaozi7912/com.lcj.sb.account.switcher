@@ -13,4 +13,7 @@
     <string name="dialog_folder_path">フォルダー：%s</string>
     <string name="dialog_button_edit">変更</string>
     <string name="dialog_button_load">ロード</string>
+
+    <string name="settings_tab_local_backup_title">Local</string>
+    <string name="settings_tab_remote_backup_title">Cloud</string>
 </resources>

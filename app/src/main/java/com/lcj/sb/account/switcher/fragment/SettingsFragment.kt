@@ -5,24 +5,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.Scope
-import com.google.api.services.drive.DriveScopes
+import com.google.android.material.tabs.TabLayoutMediator
 import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.R
+import com.lcj.sb.account.switcher.adapter.SettingsPagerAdapter
 import com.lcj.sb.account.switcher.databinding.FragmentSettingsBinding
 import com.lcj.sb.account.switcher.utils.Configs
 
 class SettingsFragment : BaseFragment() {
     private lateinit var mBinding: FragmentSettingsBinding
-
-    private lateinit var mSignInClient: GoogleSignInClient
+    private lateinit var mTabTitleArray: Array<String>
 
     companion object {
-        const val REQUEST_CODE_SIGN_IN = 1001
-
         fun newInstance(): SettingsFragment {
             return SettingsFragment()
         }
@@ -35,69 +29,21 @@ class SettingsFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mBinding.signInButton.setOnClickListener {
-            startActivityForResult(mSignInClient.signInIntent, REQUEST_CODE_SIGN_IN)
-        }
+        mTabTitleArray = arrayOf(resources.getString(R.string.settings_tab_local_backup_title), resources.getString(R.string.settings_tab_remote_backup_title))
+
+        mBinding.settingsPager.adapter = SettingsPagerAdapter(this)
+        TabLayoutMediator(mBinding.settingsTabLayout, mBinding.settingsPager) { tab, position ->
+            tab.text = mTabTitleArray[position]
+        }.attach()
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_NAME_SETTINGS, LOG_TAG)
-        initGoogleSignIn()
-        checkLastSignedInAccount()
+        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SETTINGS, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            REQUEST_CODE_SIGN_IN -> handleSignInResult(data)
-            else -> {
-            }
-        }
-    }
 
-    private fun initGoogleSignIn() {
-        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestScopes(Scope(DriveScopes.DRIVE_FILE), Scope(DriveScopes.DRIVE_APPDATA))
-                .build().let { mSignInClient = GoogleSignIn.getClient(activity!!, it) }
-    }
-
-    private fun checkLastSignedInAccount(): Boolean {
-        val account = GoogleSignIn.getLastSignedInAccount(mActivity)
-        updateAccountUI(account)
-        return (account != null)
-    }
-
-    private fun handleSignInResult(result: Intent?) {
-        GoogleSignIn.getSignedInAccountFromIntent(result)
-                .addOnSuccessListener { account ->
-                    updateAccountUI(account)
-                }
-                .addOnFailureListener { err ->
-                    err.printStackTrace()
-                }
-    }
-
-    private fun updateAccountUI(account: GoogleSignInAccount?) {
-        if (account != null) {
-            if (checkGrantedScopes(account, arrayOf(DriveScopes.DRIVE_APPDATA, DriveScopes.DRIVE_FILE))) {
-                mBinding.settingsSignInAccountTv.text = account.displayName
-            } else {
-                mBinding.settingsSignInAccountTv.text = "權限不足，請重新登入"
-            }
-        } else {
-            mBinding.settingsSignInAccountTv.text = "尚未綁定Google帳號"
-        }
-    }
-
-    private fun checkGrantedScopes(account: GoogleSignInAccount, scopes: Array<String>): Boolean {
-        val scopeSize = scopes.size
-        var count = 0
-
-        account.grantedScopes.forEach {
-            if (scopes.contains(it.scopeUri)) count++
-        }
-        return (count == scopeSize)
     }
 }

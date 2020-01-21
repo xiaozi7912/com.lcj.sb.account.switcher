@@ -74,11 +74,11 @@ class AccountFragment : BaseFragment() {
         when (mCurrentLang) {
             Account.Language.JP -> {
                 mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
-                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_NAME_SB_JP, LOG_TAG)
+                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SB_JP, LOG_TAG)
             }
             Account.Language.TW -> {
                 mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
-                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_NAME_SB_TW, LOG_TAG)
+                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SB_TW, LOG_TAG)
             }
         }
 
@@ -116,7 +116,7 @@ class AccountFragment : BaseFragment() {
         mBinding.accountList.adapter = mAdapter
 
         BaseDatabase.getInstance(mActivity).accountDAO()
-                .loadAccounts(mCurrentLang.ordinal)
+                .accounts(mCurrentLang.ordinal)
                 .observe(this, Observer { mAdapter.update(it) })
     }
 
@@ -177,7 +177,7 @@ class AccountFragment : BaseFragment() {
                     account.let {
                         it.updateTime = System.currentTimeMillis()
                         BaseDatabase.getInstance(mActivity).accountDAO()
-                                .updateAccount(it)
+                                .update(it)
                     }
                 }
             }
@@ -188,9 +188,9 @@ class AccountFragment : BaseFragment() {
         Thread {
             account.selected = true
             BaseDatabase.getInstance(mActivity)
-                    .accountDAO().deselectAllAccount(account.lang)
+                    .accountDAO().deselectAll(account.lang)
             BaseDatabase.getInstance(mActivity)
-                    .accountDAO().updateAccount(account)
+                    .accountDAO().update(account)
         }.start()
     }
 
@@ -225,7 +225,7 @@ class AccountFragment : BaseFragment() {
                         )
                         BaseDatabase.getInstance(mActivity)
                                 .accountDAO()
-                                .insertAccount(account)
+                                .insert(account)
 
                         if (exists) FileManager.backupFolder(mGameFolderPath, destPath) { current, total, finished ->
                             binding.backupProgressBar.max = total

@@ -23,7 +23,7 @@ data class AccountEditModel(val alias: String) : BaseObservable() {
 
             Thread {
                 BaseDatabase.getInstance(context).accountDAO()
-                        .updateAccount(account)
+                        .update(account)
             }.start()
         }
     }

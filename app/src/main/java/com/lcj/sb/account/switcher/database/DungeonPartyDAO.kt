@@ -7,7 +7,7 @@ import androidx.room.Query
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
 
 @Dao
-interface DungeonPartyDao {
+interface DungeonPartyDAO {
     @Insert
     fun insert(dungeonParty: DungeonParty)
 
