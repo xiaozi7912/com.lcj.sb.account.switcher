@@ -47,7 +47,7 @@ class LocalSyncFragment : BaseFragment() {
 
     private fun updateSyncView(lang: Account.Language) {
         val type = FolderSync.Type.LOCAL
-        val sdf = SimpleDateFormat("yyyy-mm-dd HH:mm:ss")
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
         val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
                 .subscribeOn(Schedulers.io())
