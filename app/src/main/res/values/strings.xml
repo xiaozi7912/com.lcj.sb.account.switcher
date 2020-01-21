@@ -13,6 +13,6 @@
     <string name="dialog_button_edit">修改</string>
     <string name="dialog_button_load">讀取</string>
 
-    <string name="settings_tab_local_backup_title">本機備份</string>
-    <string name="settings_tab_remote_backup_title">雲端備份</string>
+    <string name="settings_tab_local_backup_title">本機同步</string>
+    <string name="settings_tab_remote_backup_title">雲端同步</string>
 </resources>
