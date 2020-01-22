@@ -21,7 +21,8 @@ class ZipManager {
                     origin = BufferedInputStream(fis, 10 * 1024)
 
                     origin.use { origin ->
-                        val entry = ZipEntry("files/${file.substring(file.lastIndexOf("/") + 1)}")
+                        val rootFolderName = zipFile.substring(zipFile.lastIndexOf("/") + 1, zipFile.lastIndexOf("."))
+                        val entry = ZipEntry("${rootFolderName}/files/${file.substring(file.lastIndexOf("/") + 1)}")
                         out.putNextEntry(entry)
 
                         var count: Int
