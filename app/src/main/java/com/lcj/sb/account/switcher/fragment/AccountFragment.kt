@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.lcj.sb.account.switcher.AccountInfoActivity
@@ -30,7 +31,6 @@ import java.io.InputStreamReader
 class AccountFragment : BaseFragment() {
     private lateinit var mBinding: FragmentAccountBinding
     private lateinit var mAdapter: AccountAdapter
-    private lateinit var mAlertDialog: AlertDialog
     private lateinit var mGameFolderPath: String
 
     companion object {
@@ -121,14 +121,11 @@ class AccountFragment : BaseFragment() {
     }
 
     private fun onEditClick(holder: AccountAdapter.ViewHolder, account: Account) {
-        val binding = DialogEditAccountBinding.inflate(layoutInflater)
-
         AccountEditModel(account.alias).let { model ->
+            val binding = DialogEditAccountBinding.inflate(layoutInflater)
             binding.model = model
 
-            AlertDialog.Builder(mActivity).apply {
-                setView(binding.root)
-            }.create().let { dialog ->
+            AlertDialog.Builder(mActivity, R.style.CustomDialog).create().let { dialog ->
                 binding.editAccountAliasEdit.setText(account.alias)
 
                 binding.editAccountCancelBtn.setOnClickListener {
@@ -139,7 +136,13 @@ class AccountFragment : BaseFragment() {
                     model.onEditClick(mActivity, account)
                     dialog.dismiss()
                 }
+
                 dialog.show()
+                dialog.window?.apply {
+                    clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+                    setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+                }
+                dialog.setContentView(binding.root)
             }
         }
     }
@@ -176,8 +179,7 @@ class AccountFragment : BaseFragment() {
                 if (finished) {
                     account.let {
                         it.updateTime = System.currentTimeMillis()
-                        BaseDatabase.getInstance(mActivity).accountDAO()
-                                .update(it)
+                        BaseDatabase.getInstance(mActivity).accountDAO().update(it)
                     }
                 }
             }
@@ -187,58 +189,58 @@ class AccountFragment : BaseFragment() {
     private fun setAccountSelected(account: Account) {
         Thread {
             account.selected = true
-            BaseDatabase.getInstance(mActivity)
-                    .accountDAO().deselectAll(account.lang)
-            BaseDatabase.getInstance(mActivity)
-                    .accountDAO().update(account)
+            BaseDatabase.getInstance(mActivity).accountDAO().deselectAll(account.lang)
+            BaseDatabase.getInstance(mActivity).accountDAO().update(account)
         }.start()
     }
 
     private fun showBackupAccountDialog() {
-        val builder = AlertDialog.Builder(mActivity)
-        val binding = DialogBackupAccountBinding.inflate(layoutInflater)
+        AlertDialog.Builder(mActivity, R.style.CustomDialog).create().let { dialog ->
+            val binding = DialogBackupAccountBinding.inflate(layoutInflater)
 
-        builder.setView(binding.root)
-        mAlertDialog = builder.create()
-        mAlertDialog.show()
+            binding.backupCancelBtn.setOnClickListener {
+                dialog.dismiss()
+            }
+            binding.backupSubmitBtn.setOnClickListener {
+                val currentTime = System.currentTimeMillis()
+                val destPath = when (mCurrentLang) {
+                    Account.Language.JP -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP, currentTime)
+                    Account.Language.TW -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW, currentTime)
+                }
 
-        binding.backupCancelBtn.setOnClickListener {
-            mAlertDialog.dismiss()
-        }
-        binding.backupSubmitBtn.setOnClickListener {
-            val currentTime = System.currentTimeMillis()
-            val destPath = when (mCurrentLang) {
-                Account.Language.JP -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP, currentTime)
-                Account.Language.TW -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW, currentTime)
+                it.isEnabled = false
+                Observable.just(FileManager.isFolderExists(mGameFolderPath))
+                        .subscribeOn(Schedulers.io())
+                        .doOnNext { exists ->
+                            val account = Account(
+                                    alias = binding.backupInputEt.text.toString(),
+                                    folder = destPath,
+                                    lang = mCurrentLang.ordinal,
+                                    createTime = currentTime,
+                                    updateTime = currentTime
+                            )
+                            BaseDatabase.getInstance(mActivity).accountDAO().insert(account)
+
+                            if (exists) FileManager.backupFolder(mGameFolderPath, destPath) { current, total, finished ->
+                                binding.backupProgressBar.max = total
+                                binding.backupProgressBar.progress = current
+                            }
+                        }
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe { dialog.dismiss() }
             }
 
-            it.isEnabled = false
-            Observable.just(FileManager.isFolderExists(mGameFolderPath))
-                    .subscribeOn(Schedulers.io())
-                    .doOnNext { exists ->
-                        val account = Account(
-                                alias = binding.backupInputEt.text.toString(),
-                                folder = destPath,
-                                lang = mCurrentLang.ordinal,
-                                createTime = currentTime,
-                                updateTime = currentTime
-                        )
-                        BaseDatabase.getInstance(mActivity)
-                                .accountDAO()
-                                .insert(account)
-
-                        if (exists) FileManager.backupFolder(mGameFolderPath, destPath) { current, total, finished ->
-                            binding.backupProgressBar.max = total
-                            binding.backupProgressBar.progress = current
-                        }
-                    }
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe { mAlertDialog.dismiss() }
+            dialog.show()
+            dialog.window?.apply {
+                clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+                setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            }
+            dialog.setContentView(binding.root)
         }
     }
 
     private fun showErrorNoInstalled(packageName: String) {
-        mAlertDialog = AlertDialog.Builder(mActivity)
+        AlertDialog.Builder(mActivity)
                 .setMessage(R.string.no_install_game)
                 .setPositiveButton(R.string.google_play_text) { dialog, which ->
                     val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -248,9 +250,7 @@ class AccountFragment : BaseFragment() {
                     startActivity(intent)
                 }
                 .setNegativeButton(R.string.dialog_button_cancel) { dialog, which ->
-                    mAlertDialog.dismiss()
-                }
-                .create()
-        mAlertDialog.show()
+                    dialog.dismiss()
+                }.create().show()
     }
 }
