@@ -57,9 +57,8 @@ class RemoteSyncFragment : BaseFragment() {
         mBinding.signInButton.setOnClickListener {
             startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
         }
-        mBinding.settingsSbJSyncBtn.setOnClickListener {
-            onSyncJPButtonClick()
-        }
+        mBinding.settingsSbJSyncBtn.setOnClickListener { onSyncJPButtonClick() }
+        mBinding.settingsSbTSyncBtn.setOnClickListener { onSyncTWButtonClick() }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -143,11 +142,11 @@ class RemoteSyncFragment : BaseFragment() {
                 }, { err -> err.printStackTrace() })
     }
 
-    private fun onSyncJPButtonClick() {
+    private fun startUploadAccounts(lang: Account.Language) {
         val signedInAccount = checkLastSignedInAccount()
         if (signedInAccount != null) {
             AccountUploadDialog.getInstance(mActivity).show()
-            FileManager.getFolderList(Account.Language.JP) { folderList ->
+            FileManager.getFolderList(lang) { folderList ->
                 val folderSize = folderList.size
                 var currentUploadIndex = 0
                 AccountUploadDialog.getInstance(mActivity).setFileName("")
@@ -163,9 +162,8 @@ class RemoteSyncFragment : BaseFragment() {
                             "path" to "${mActivity.externalCacheDir?.absolutePath}/${folder.name}.zip")
                     val fileList = ArrayList<String>()
 
-                    filesFile?.listFiles()?.forEach { file ->
-                        fileList.add(file.absolutePath)
-                    }
+                    filesFile?.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
+
                     if (fileList.size > 0) {
                         ZipManager.zip(fileList, hashZipFile["path"]!!)
 
@@ -232,7 +230,6 @@ class RemoteSyncFragment : BaseFragment() {
                 val db = BaseDatabase.getInstance(mActivity)
                 val currentTime = System.currentTimeMillis()
                 val type = FolderSync.Type.REMOTE
-                val lang = Account.Language.JP
                 db.folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
                         .subscribe({ entity ->
                             entity!!.updateTime = currentTime
@@ -251,5 +248,13 @@ class RemoteSyncFragment : BaseFragment() {
         } else {
             Toast.makeText(mActivity, "請先綁定帳號！", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun onSyncJPButtonClick() {
+        startUploadAccounts(Account.Language.JP)
+    }
+
+    private fun onSyncTWButtonClick() {
+        startUploadAccounts(Account.Language.TW)
     }
 }
