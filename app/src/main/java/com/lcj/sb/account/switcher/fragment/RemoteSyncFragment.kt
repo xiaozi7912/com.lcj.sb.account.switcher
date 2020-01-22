@@ -5,15 +5,35 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
+import com.google.api.client.extensions.android.http.AndroidHttp
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.http.FileContent
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BuildConfig
+import com.lcj.sb.account.switcher.database.BaseDatabase
+import com.lcj.sb.account.switcher.database.entity.Account
+import com.lcj.sb.account.switcher.database.entity.FolderSync
 import com.lcj.sb.account.switcher.databinding.FragmentRemoteBackupBinding
 import com.lcj.sb.account.switcher.utils.Configs
+import com.lcj.sb.account.switcher.utils.FileManager
+import com.lcj.sb.account.switcher.utils.ZipManager
+import com.lcj.sb.account.switcher.view.ProgressDialog
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class RemoteSyncFragment : BaseFragment() {
     private lateinit var mBinding: FragmentRemoteBackupBinding
@@ -36,13 +56,19 @@ class RemoteSyncFragment : BaseFragment() {
         mBinding.signInButton.setOnClickListener {
             startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
         }
+        mBinding.settingsSbJSyncBtn.setOnClickListener {
+            onSyncJPButtonClick()
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
+
         initGoogleSignIn()
         checkLastSignedInAccount()
+        updateSyncView(Account.Language.JP)
+        updateSyncView(Account.Language.TW)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -61,10 +87,10 @@ class RemoteSyncFragment : BaseFragment() {
                 .build().let { mSignInClient = GoogleSignIn.getClient(activity!!, it) }
     }
 
-    private fun checkLastSignedInAccount(): Boolean {
+    private fun checkLastSignedInAccount(): GoogleSignInAccount? {
         val account = GoogleSignIn.getLastSignedInAccount(mActivity)
         updateAccountUI(account)
-        return (account != null)
+        return account
     }
 
     private fun handleSignInResult(result: Intent?) {
@@ -97,5 +123,103 @@ class RemoteSyncFragment : BaseFragment() {
             if (scopes.contains(it.scopeUri)) count++
         }
         return (count == scopeSize)
+    }
+
+    private fun updateSyncView(lang: Account.Language) {
+        val type = FolderSync.Type.REMOTE
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+
+        val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ entity ->
+                    entity?.let {
+                        when (lang) {
+                            Account.Language.JP -> mBinding.settingsSbJSyncTimeTv.text = sdf.format(it.updateTime)
+                            Account.Language.TW -> mBinding.settingsSbTSyncTimeTv.text = sdf.format(it.updateTime)
+                        }
+                    }
+                }, { err -> err.printStackTrace() })
+    }
+
+    private fun onSyncJPButtonClick() {
+        val signedInAccount = checkLastSignedInAccount()
+        if (signedInAccount != null) {
+            ProgressDialog.newInstance(mActivity).show()
+            FileManager.getFolderList(Account.Language.JP) { folderList ->
+                for (folder in folderList) {
+                    val folderPath = folder.absolutePath
+                    val filesPath = String.format("%s/%s", folderPath, "files")
+                    val filesFile: File? = File(filesPath)
+                    val hashZipFile = hashMapOf(
+                            "name" to "${folder.name}.zip",
+                            "path" to "${mActivity.externalCacheDir?.absolutePath}/${folder.name}.zip")
+                    val fileList = ArrayList<String>()
+
+                    filesFile?.listFiles()?.forEach { file ->
+                        fileList.add(file.absolutePath)
+                    }
+                    if (fileList.size > 0) {
+                        ZipManager.zip(fileList, hashZipFile["path"]!!)
+
+                        val credential = GoogleAccountCredential.usingOAuth2(activity, setOf(DriveScopes.DRIVE_FILE)).apply {
+                            selectedAccount = signedInAccount.account
+                        }
+                        val driveService = Drive.Builder(
+                                AndroidHttp.newCompatibleTransport(),
+                                GsonFactory(), credential)
+                                .build()
+                        try {
+                            val queryFolder = driveService.files().list()
+                                    .setQ("name='${BuildConfig.APPLICATION_ID}'")
+                                    .execute()
+                            val queryFile = driveService.files().list()
+                                    .setQ("name='${hashZipFile["name"]}'")
+                                    .execute()
+                            val folderFile = if (queryFolder.files.size == 0) {
+                                driveService.files().create(com.google.api.services.drive.model.File().apply {
+                                    name = BuildConfig.APPLICATION_ID
+                                    mimeType = "application/vnd.google-apps.folder"
+                                }).execute()
+                            } else {
+                                queryFolder.files.first()
+                            }
+
+                            driveService.files().create(com.google.api.services.drive.model.File().apply {
+                                parents = Collections.singletonList(folderFile.id)
+                                name = hashZipFile["name"]
+                            }, FileContent("application/zip", File(hashZipFile["path"]))).execute()
+
+                            queryFile.files.forEach {
+                                driveService.files().delete(it.id).execute()
+                            }
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+
+                val db = BaseDatabase.getInstance(mActivity)
+                val currentTime = System.currentTimeMillis()
+                val type = FolderSync.Type.REMOTE
+                val lang = Account.Language.JP
+                db.folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
+                        .subscribe({ entity ->
+                            entity!!.updateTime = currentTime
+                            db.folderSyncDAO().update(entity)
+                            updateSyncView(lang)
+                        }, { err ->
+                            err.printStackTrace()
+                            db.folderSyncDAO().insert(FolderSync(type.ordinal, lang.ordinal, currentTime))
+                            updateSyncView(lang)
+                        })
+                mHandler.post {
+                    ProgressDialog.newInstance(mActivity).dismiss()
+                    Toast.makeText(mActivity, "檔案上傳完成！", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(mActivity, "請先綁定帳號！", Toast.LENGTH_SHORT).show()
+        }
     }
 }

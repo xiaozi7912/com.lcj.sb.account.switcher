@@ -128,5 +128,22 @@ class FileManager {
                 }
             }
         }
+
+        fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
+            val result = arrayListOf<File>()
+            val d = Observable.just(File(Configs.PATH_APP_DATA))
+                    .flatMap { Observable.fromArray(*it.listFiles()) }
+                    .filter {
+                        Pattern.compile(when (lang) {
+                            Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
+                            Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
+                        }).matcher(it.name).matches()
+                    }.sorted()
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ file ->
+                        Log.d(LOG_TAG, "file.absolutePath : ${file.absolutePath}")
+                        result.add(file)
+                    }, { err -> err.printStackTrace() }, { callback(result) })
+        }
     }
 }
