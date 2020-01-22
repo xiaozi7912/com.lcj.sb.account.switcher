@@ -13,6 +13,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.googleapis.media.MediaHttpUploader
 import com.google.api.client.http.FileContent
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
@@ -26,7 +27,7 @@ import com.lcj.sb.account.switcher.databinding.FragmentRemoteBackupBinding
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.FileManager
 import com.lcj.sb.account.switcher.utils.ZipManager
-import com.lcj.sb.account.switcher.view.ProgressDialog
+import com.lcj.sb.account.switcher.view.AccountUploadDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.io.File
@@ -145,8 +146,14 @@ class RemoteSyncFragment : BaseFragment() {
     private fun onSyncJPButtonClick() {
         val signedInAccount = checkLastSignedInAccount()
         if (signedInAccount != null) {
-            ProgressDialog.newInstance(mActivity).show()
+            AccountUploadDialog.getInstance(mActivity).show()
             FileManager.getFolderList(Account.Language.JP) { folderList ->
+                val folderSize = folderList.size
+                var currentUploadIndex = 0
+                AccountUploadDialog.getInstance(mActivity).setFileName("")
+                AccountUploadDialog.getInstance(mActivity).setFileCount(currentUploadIndex, folderSize)
+                AccountUploadDialog.getInstance(mActivity).setProgress(0)
+
                 for (folder in folderList) {
                     val folderPath = folder.absolutePath
                     val filesPath = String.format("%s/%s", folderPath, "files")
@@ -188,7 +195,30 @@ class RemoteSyncFragment : BaseFragment() {
                             driveService.files().create(com.google.api.services.drive.model.File().apply {
                                 parents = Collections.singletonList(folderFile.id)
                                 name = hashZipFile["name"]
-                            }, FileContent("application/zip", File(hashZipFile["path"]))).execute()
+                            }, FileContent("application/zip", File(hashZipFile["path"]!!))).apply {
+                                mediaHttpUploader.chunkSize = (1 * 1024 * 1024)
+                                mediaHttpUploader.setProgressListener {
+                                    when (it.uploadState) {
+                                        MediaHttpUploader.UploadState.INITIATION_STARTED -> {
+                                            currentUploadIndex++
+                                            mHandler.post {
+                                                AccountUploadDialog.getInstance(mActivity).setFileName(hashZipFile["name"]!!)
+                                                AccountUploadDialog.getInstance(mActivity).setFileCount(currentUploadIndex, folderSize)
+                                                AccountUploadDialog.getInstance(mActivity).setProgress(0)
+                                            }
+                                        }
+                                        MediaHttpUploader.UploadState.INITIATION_COMPLETE -> {
+                                        }
+                                        MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> {
+                                            val percent = it.progress * 100
+                                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(percent.toInt()) }
+                                        }
+                                        MediaHttpUploader.UploadState.MEDIA_COMPLETE -> {
+                                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(100) }
+                                        }
+                                    }
+                                }
+                            }.execute()
 
                             queryFile.files.forEach {
                                 driveService.files().delete(it.id).execute()
@@ -214,7 +244,7 @@ class RemoteSyncFragment : BaseFragment() {
                             updateSyncView(lang)
                         })
                 mHandler.post {
-                    ProgressDialog.newInstance(mActivity).dismiss()
+                    AccountUploadDialog.getInstance(mActivity).dismiss()
                     Toast.makeText(mActivity, "檔案上傳完成！", Toast.LENGTH_SHORT).show()
                 }
             }
