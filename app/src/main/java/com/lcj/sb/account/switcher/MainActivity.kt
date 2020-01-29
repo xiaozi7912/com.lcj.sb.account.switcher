@@ -18,6 +18,7 @@ import com.google.gson.Gson
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.fragment.AccountFragment
+import com.lcj.sb.account.switcher.fragment.AccountsFragment
 import com.lcj.sb.account.switcher.fragment.SettingsFragment
 import com.lcj.sb.account.switcher.model.RemoteConfigModel
 import com.lcj.sb.account.switcher.utils.Configs
@@ -67,11 +68,15 @@ class MainActivity : BaseActivity() {
 
         mBinding.mainDrawerVersionTv.text = BuildConfig.VERSION_NAME
 
-        mBinding.mainToolBar.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.toolbar_menu_info -> when (mCurrentLang) {
-                    Account.Language.JP -> startWebSite(Configs.URL_WEB_SITE_JP)
-                    Account.Language.TW -> startWebSite(Configs.URL_WEB_SITE_TW)
+        mBinding.mainToolBar.setOnMenuItemClickListener { view ->
+            PreferenceManager.getDefaultSharedPreferences(mActivity).let {
+                val lang = Account.Language.valueOf(it.getString(Configs.PREF_KEY_LANGUAGE, "JP")!!)
+
+                when (view.itemId) {
+                    R.id.toolbar_menu_info -> when (lang) {
+                        Account.Language.JP -> startWebSite(Configs.URL_WEB_SITE_JP)
+                        Account.Language.TW -> startWebSite(Configs.URL_WEB_SITE_TW)
+                    }
                 }
             }
             false
@@ -81,6 +86,7 @@ class MainActivity : BaseActivity() {
                 data = Uri.parse(Configs.URL_APK_JP)
             })
         })
+
         mBinding.mainDrawerItemSbJ.setOnClickListener {
             val currentItem = it as DrawerItemView
 
@@ -97,20 +103,26 @@ class MainActivity : BaseActivity() {
             mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
             onDrawerItemSBClick(currentItem.getTitle(), Account.Language.TW)
         }
+        mBinding.mainDrawerItemAccounts.setOnClickListener {
+            val currentItem = it as DrawerItemView
+
+            currentItem.setImageAlpha(1.0f)
+            mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
+            mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
+            mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
+            showAccounts(currentItem.getTitle())
+        }
         mBinding.mainDrawerItemSettings.setOnClickListener {
             val currentItem = it as DrawerItemView
 
             currentItem.setImageAlpha(1.0f)
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
+            mBinding.mainDrawerItemAccounts.setImageAlpha(0.5f)
             showSettings(currentItem.getTitle())
         }
 
-        if (mFirstRun) {
-            mBinding.mainDrawerLayout.openDrawer(GravityCompat.START)
-        } else {
-            selectLanguage()
-        }
+        mBinding.mainDrawerItemAccounts.performClick()
     }
 
     override fun reloadAd() {
@@ -178,6 +190,7 @@ class MainActivity : BaseActivity() {
                 mBinding.mainDrawerItemSbT.setDownloadAPKButtonVisibility(false)
             }
 
+            mBinding.mainDrawerItemAccounts.setDownloadAPKButtonVisibility(false)
             mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
         }
     }
@@ -222,6 +235,16 @@ class MainActivity : BaseActivity() {
             apply()
         }
         mCurrentLang = lang
+    }
+
+    private fun showAccounts(title: String) {
+        supportActionBar!!.title = title
+
+        val ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.main_frame_layout, AccountsFragment.newInstance())
+        ft.commit()
+
+        mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
     }
 
     private fun showSettings(title: String) {

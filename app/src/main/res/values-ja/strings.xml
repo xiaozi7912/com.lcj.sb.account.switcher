@@ -4,6 +4,7 @@
 
     <string name="main_drawer_item_sb_j">サモンズボード</string>
     <string name="main_drawer_item_sb_t">召喚圖板</string>
+    <string name="main_drawer_item_accounts">アカウント</string>
     <string name="main_drawer_item_settings">セッティング</string>
 
     <string name="no_install_game">ゲーム　インストールされてません</string>

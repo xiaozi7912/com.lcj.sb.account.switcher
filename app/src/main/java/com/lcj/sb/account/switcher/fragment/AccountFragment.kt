@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,10 +33,19 @@ class AccountFragment : BaseFragment() {
     private lateinit var mBinding: FragmentAccountBinding
     private lateinit var mAdapter: AccountAdapter
     private lateinit var mGameFolderPath: String
+    private lateinit var mDisplayLang: Account.Language
 
     companion object {
         fun newInstance(): AccountFragment {
             return AccountFragment()
+        }
+
+        fun newInstance(lang: Account.Language): AccountFragment {
+            return AccountFragment().apply {
+                arguments = Bundle().apply {
+                    putInt(Configs.PREF_KEY_LANGUAGE, lang.ordinal)
+                }
+            }
         }
     }
 
@@ -46,6 +56,8 @@ class AccountFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        mDisplayLang = Account.Language.values()[arguments?.getInt(Configs.PREF_KEY_LANGUAGE)!!]
+
         mBinding.addFab.setOnClickListener {
             getPackageName().let {
                 if (FileManager.isPackageInstalled(it, mActivity)) {
@@ -70,17 +82,6 @@ class AccountFragment : BaseFragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-
-        when (mCurrentLang) {
-            Account.Language.JP -> {
-                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
-                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SB_JP, LOG_TAG)
-            }
-            Account.Language.TW -> {
-                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
-                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SB_TW, LOG_TAG)
-            }
-        }
 
         mAdapter = AccountAdapter(mActivity)
         mAdapter.setOnClickListener(object : AccountAdapter.OnClickListener {
@@ -116,8 +117,28 @@ class AccountFragment : BaseFragment() {
         mBinding.accountList.adapter = mAdapter
 
         BaseDatabase.getInstance(mActivity).accountDAO()
-                .accounts(mCurrentLang.ordinal)
+                .accounts(mDisplayLang.ordinal)
                 .observe(this, Observer { mAdapter.update(it) })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        when (mDisplayLang) {
+            Account.Language.JP -> {
+                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
+                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SB_JP, LOG_TAG)
+            }
+            Account.Language.TW -> {
+                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
+                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SB_TW, LOG_TAG)
+            }
+        }
+
+        PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+            putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
+            putString(Configs.PREF_KEY_LANGUAGE, mDisplayLang.name)
+            apply()
+        }
     }
 
     private fun onEditClick(holder: AccountAdapter.ViewHolder, account: Account) {
@@ -203,7 +224,7 @@ class AccountFragment : BaseFragment() {
             }
             binding.backupSubmitBtn.setOnClickListener {
                 val currentTime = System.currentTimeMillis()
-                val destPath = when (mCurrentLang) {
+                val destPath = when (mDisplayLang) {
                     Account.Language.JP -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP, currentTime)
                     Account.Language.TW -> String.format("%s/%s.%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW, currentTime)
                 }
@@ -215,7 +236,7 @@ class AccountFragment : BaseFragment() {
                             val account = Account(
                                     alias = binding.backupInputEt.text.toString(),
                                     folder = destPath,
-                                    lang = mCurrentLang.ordinal,
+                                    lang = mDisplayLang.ordinal,
                                     createTime = currentTime,
                                     updateTime = currentTime
                             )
