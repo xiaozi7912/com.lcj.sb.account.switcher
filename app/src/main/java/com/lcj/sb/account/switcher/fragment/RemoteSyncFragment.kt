@@ -57,6 +57,11 @@ class RemoteSyncFragment : BaseFragment() {
         mBinding.signInButton.setOnClickListener {
             startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
         }
+        mBinding.signOutButton.setOnClickListener {
+            mSignInClient.signOut().addOnCompleteListener {
+                checkLastSignedInAccount()
+            }
+        }
         mBinding.settingsSbJSyncBtn.setOnClickListener { onSyncJPButtonClick() }
         mBinding.settingsSbTSyncBtn.setOnClickListener { onSyncTWButtonClick() }
     }
@@ -105,12 +110,16 @@ class RemoteSyncFragment : BaseFragment() {
 
     private fun updateAccountUI(account: GoogleSignInAccount?) {
         if (account != null) {
+            mBinding.signInButton.visibility = View.INVISIBLE
+            mBinding.signOutButton.visibility = View.VISIBLE
             if (checkGrantedScopes(account, arrayOf(DriveScopes.DRIVE_APPDATA, DriveScopes.DRIVE_FILE))) {
                 mBinding.settingsSignInAccountTv.text = account.displayName
             } else {
                 mBinding.settingsSignInAccountTv.text = "權限不足，請重新登入"
             }
         } else {
+            mBinding.signInButton.visibility = View.VISIBLE
+            mBinding.signOutButton.visibility = View.INVISIBLE
             mBinding.settingsSignInAccountTv.text = "尚未綁定Google帳號"
         }
     }
