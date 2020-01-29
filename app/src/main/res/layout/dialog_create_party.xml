@@ -9,151 +9,156 @@
             type="com.lcj.sb.account.switcher.model.CreatePartyModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/ic_button_1"
-        android:padding="20dp">
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
-        <RelativeLayout
-            android:id="@+id/party_dungeon_level_root"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/party_dungeon_element_root"
-            app:layout_constraintTop_toTopOf="parent">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="350dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_dialog"
+            android:padding="20dp">
 
-            <Button
-                android:id="@+id/party_dungeon_level_btn"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <ImageView
-                android:id="@+id/party_dungeon_level_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="10dp"
-                android:elevation="10dp"
-                android:src="@drawable/ic_dungeon_level_1" />
-
-            <TextView
-                android:id="@+id/party_dungeon_level_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:elevation="10dp"
-                android:text="0000000000" />
-        </RelativeLayout>
-
-
-        <RelativeLayout
-            android:id="@+id/party_dungeon_element_root"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            app:layout_constraintLeft_toRightOf="@+id/party_dungeon_level_root"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <Button
-                android:id="@+id/party_dungeon_element_btn"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <ImageView
-                android:id="@+id/party_dungeon_element_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="10dp"
-                android:elevation="10dp"
-                android:src="@drawable/ic_element_1_p" />
-
-            <TextView
-                android:id="@+id/party_dungeon_element_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:elevation="10dp"
-                android:text="0000000000" />
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/party_dungeon_stage_root"
-            android:layout_width="0dp"
-            android:layout_height="72dp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/stage_guide_line">
-
-            <Button
-                android:id="@+id/party_dungeon_stage_btn"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <ImageView
-                android:id="@+id/party_dungeon_stage_icon"
-                android:layout_width="48dp"
+            <RelativeLayout
+                android:id="@+id/party_dungeon_level_root"
+                android:layout_width="0dp"
                 android:layout_height="48dp"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="10dp"
-                android:elevation="10dp"
-                android:src="@drawable/ic_summon_391" />
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@+id/party_dungeon_element_root"
+                app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/party_dungeon_stage_text"
+                <Button
+                    android:id="@+id/party_dungeon_level_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <ImageView
+                    android:id="@+id/party_dungeon_level_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="10dp"
+                    android:elevation="10dp"
+                    android:src="@drawable/ic_dungeon_level_1" />
+
+                <TextView
+                    android:id="@+id/party_dungeon_level_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:elevation="10dp"
+                    android:text="0000000000" />
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/party_dungeon_element_root"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                app:layout_constraintLeft_toRightOf="@+id/party_dungeon_level_root"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <Button
+                    android:id="@+id/party_dungeon_element_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <ImageView
+                    android:id="@+id/party_dungeon_element_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="10dp"
+                    android:elevation="10dp"
+                    android:src="@drawable/ic_element_1_p" />
+
+                <TextView
+                    android:id="@+id/party_dungeon_element_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:elevation="10dp"
+                    android:text="0000000000" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/party_dungeon_stage_root"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/stage_guide_line">
+
+                <Button
+                    android:id="@+id/party_dungeon_stage_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <ImageView
+                    android:id="@+id/party_dungeon_stage_icon"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="10dp"
+                    android:elevation="10dp"
+                    android:src="@drawable/ic_summon_391" />
+
+                <TextView
+                    android:id="@+id/party_dungeon_stage_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:elevation="10dp"
+                    android:text="0000000000" />
+            </RelativeLayout>
+
+            <EditText
+                android:id="@+id/input_edit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:lines="1"
+                android:text="@={model.title}"
+                android:textSize="14sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/party_dungeon_stage_root" />
+
+            <ImageView
+                android:id="@+id/party_iv"
+                android:layout_width="0dp"
+                android:layout_height="68dp"
+                android:src="@drawable/round_add_photo_alternate_black_24"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/input_edit" />
+
+            <Button
+                android:id="@+id/cancel_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/dialog_button_cancel"
+                android:textSize="14sp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@+id/create_btn"
+                app:layout_constraintTop_toBottomOf="@+id/party_iv" />
+
+            <Button
+                android:id="@+id/create_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="新增"
+                android:textSize="14sp"
+                app:layout_constraintLeft_toRightOf="@+id/cancel_btn"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/party_iv" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/stage_guide_line"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:elevation="10dp"
-                android:text="0000000000" />
-        </RelativeLayout>
-
-        <EditText
-            android:id="@+id/input_edit"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:lines="1"
-            android:text="@={model.title}"
-            android:textSize="14sp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/party_dungeon_stage_root" />
-
-        <ImageView
-            android:id="@+id/party_iv"
-            android:layout_width="0dp"
-            android:layout_height="68dp"
-            android:src="@drawable/round_add_photo_alternate_black_24"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/input_edit" />
-
-        <Button
-            android:id="@+id/cancel_btn"
-            android:layout_width="128dp"
-            android:layout_height="wrap_content"
-            android:text="@string/dialog_button_cancel"
-            android:textSize="14sp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/create_btn"
-            app:layout_constraintTop_toBottomOf="@+id/party_iv" />
-
-        <Button
-            android:id="@+id/create_btn"
-            android:layout_width="128dp"
-            android:layout_height="wrap_content"
-            android:text="新增"
-            android:textSize="14sp"
-            app:layout_constraintLeft_toRightOf="@+id/cancel_btn"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/party_iv" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/stage_guide_line"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_begin="55dp" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                android:orientation="horizontal"
+                app:layout_constraintGuide_begin="55dp" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </RelativeLayout>
 </layout>

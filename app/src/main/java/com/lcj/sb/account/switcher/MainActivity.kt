@@ -15,19 +15,16 @@ import com.google.android.gms.ads.AdRequest
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.gson.Gson
-import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.fragment.AccountFragment
+import com.lcj.sb.account.switcher.fragment.SettingsFragment
 import com.lcj.sb.account.switcher.model.RemoteConfigModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.PackageUtils
 import com.lcj.sb.account.switcher.view.DrawerItemView
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
-import java.io.File
-import java.io.FileFilter
-import java.util.regex.Pattern
 
 
 class MainActivity : BaseActivity() {
@@ -79,7 +76,6 @@ class MainActivity : BaseActivity() {
             }
             false
         }
-
         mBinding.mainDrawerItemSbJ.setDownloadAPKButtonClickListener(View.OnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW).apply {
                 data = Uri.parse(Configs.URL_APK_JP)
@@ -87,22 +83,34 @@ class MainActivity : BaseActivity() {
         })
         mBinding.mainDrawerItemSbJ.setOnClickListener {
             val currentItem = it as DrawerItemView
-            val anotherItem = mBinding.mainDrawerItemSbT
 
             currentItem.setImageRes(R.drawable.ic_launcher_jp_p)
-            anotherItem.setImageRes(R.drawable.ic_launcher_tw_n)
+            mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
+            mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
             onDrawerItemSBClick(currentItem.getTitle(), Account.Language.JP)
         }
         mBinding.mainDrawerItemSbT.setOnClickListener {
             val currentItem = it as DrawerItemView
-            val anotherItem = mBinding.mainDrawerItemSbJ
 
             currentItem.setImageRes(R.drawable.ic_launcher_tw_p)
-            anotherItem.setImageRes(R.drawable.ic_launcher_jp_n)
+            mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
+            mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
             onDrawerItemSBClick(currentItem.getTitle(), Account.Language.TW)
         }
+        mBinding.mainDrawerItemSettings.setOnClickListener {
+            val currentItem = it as DrawerItemView
 
-        if (!mFirstRun) selectLanguage()
+            currentItem.setImageAlpha(1.0f)
+            mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
+            mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
+            showSettings(currentItem.getTitle())
+        }
+
+        if (mFirstRun) {
+            mBinding.mainDrawerLayout.openDrawer(GravityCompat.START)
+        } else {
+            selectLanguage()
+        }
     }
 
     override fun reloadAd() {
@@ -115,9 +123,7 @@ class MainActivity : BaseActivity() {
         val perms = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
         if (EasyPermissions.hasPermissions(mActivity, *perms)) {
-//            AccountInfoManager.getInstance().readAccountInfoFile()
             getFCMInstanceId()
-            if (mFirstRun) loadExistsBackup()
             initView()
         } else {
             EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
@@ -171,6 +177,8 @@ class MainActivity : BaseActivity() {
             } else {
                 mBinding.mainDrawerItemSbT.setDownloadAPKButtonVisibility(false)
             }
+
+            mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
         }
     }
 
@@ -187,48 +195,6 @@ class MainActivity : BaseActivity() {
                 .addOnCompleteListener {
                     Log.i(LOG_TAG, "addOnCompleteListener")
                 }
-    }
-
-    private fun loadExistsBackup() {
-        Thread {
-            File(Configs.PATH_APP_DATA).apply {
-                listFiles(FileFilter {
-                    val pattern = Pattern.compile("jp\\.gungho\\.bm\\.\\w+")
-                    pattern.matcher(it.name).matches()
-                }).sorted().forEach {
-                    Log.v(LOG_TAG, "it.name : ${it.name}")
-                    val currentTime = System.currentTimeMillis()
-                    BaseDatabase.getInstance(mActivity).accountDAO()
-                            .insertAccount(Account(
-                                    alias = it.name,
-                                    folder = it.absolutePath,
-                                    lang = Account.Language.JP.ordinal,
-                                    createTime = currentTime,
-                                    updateTime = currentTime))
-                }
-
-                listFiles(FileFilter {
-                    val pattern = Pattern.compile("com\\.ghg\\.sb\\.\\w+")
-                    pattern.matcher(it.name).matches()
-                }).sorted().forEach {
-                    Log.v(LOG_TAG, "it.name : ${it.name}")
-                    val currentTime = System.currentTimeMillis()
-                    BaseDatabase.getInstance(mActivity).accountDAO()
-                            .insertAccount(Account(
-                                    alias = it.name,
-                                    folder = it.absolutePath,
-                                    lang = Account.Language.TW.ordinal,
-                                    createTime = currentTime,
-                                    updateTime = currentTime))
-                }
-
-                PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
-                    putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
-                    apply()
-                }
-                mHandler.post { selectLanguage() }
-            }
-        }.start()
     }
 
     private fun selectLanguage() {
@@ -251,9 +217,20 @@ class MainActivity : BaseActivity() {
 
         mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
         PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+            putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
             putString(Configs.PREF_KEY_LANGUAGE, lang.name)
             apply()
         }
         mCurrentLang = lang
+    }
+
+    private fun showSettings(title: String) {
+        supportActionBar!!.title = title
+
+        val ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.main_frame_layout, SettingsFragment.newInstance())
+        ft.commit()
+
+        mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
     }
 }

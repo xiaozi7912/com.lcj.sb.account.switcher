@@ -9,8 +9,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.lcj.sb.account.switcher.BuildConfig
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
+import com.lcj.sb.account.switcher.database.entity.FolderSync
 
-@Database(entities = [Account::class, DungeonParty::class], version = 3)
+@Database(entities = [Account::class, DungeonParty::class, FolderSync::class], version = 4)
 abstract class BaseDatabase : RoomDatabase() {
     companion object {
         private const val DB_NAME: String = BuildConfig.APPLICATION_ID + ".db"
@@ -18,7 +19,7 @@ abstract class BaseDatabase : RoomDatabase() {
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                val command = "CREATE TABLE dungeon_party (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,account_id INTEGER NOT NULL,dungeon_type INTEGER NOT NULL,element_type INTEGER NOT NULL,title TEXT NOT NULL,image_path TEXT NOT NULL,FOREIGN KEY (account_id) REFERENCES accounts(id)  ON DELETE CASCADE)"
+                val command = "CREATE TABLE dungeon_party (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,account_id INTEGER NOT NULL,dungeon_type INTEGER NOT NULL,element_type INTEGER NOT NULL,title TEXT NOT NULL,image_path TEXT NOT NULL,FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE)"
                 database.execSQL(command)
             }
         }
@@ -39,6 +40,13 @@ abstract class BaseDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                val command = "CREATE TABLE tbl_folder_sync (type INTEGER NOT NULL,lang INTEGER NOT NULL,update_time INTEGER NOT NULL,PRIMARY KEY (type,lang))"
+                database.execSQL(command)
+            }
+        }
+
         fun getInstance(context: Context): BaseDatabase {
             if (instance == null) {
                 instance = create(context)
@@ -50,10 +58,12 @@ abstract class BaseDatabase : RoomDatabase() {
             return Room.databaseBuilder(context, BaseDatabase::class.java, DB_NAME)
                     .addMigrations(MIGRATION_1_2)
                     .addMigrations(MIGRATION_2_3)
+                    .addMigrations(MIGRATION_3_4)
                     .build()
         }
     }
 
-    abstract fun accountDAO(): AccountDao
-    abstract fun dungeonPartyDAO(): DungeonPartyDao
+    abstract fun accountDAO(): AccountDAO
+    abstract fun dungeonPartyDAO(): DungeonPartyDAO
+    abstract fun folderSyncDAO(): FolderSyncDAO
 }

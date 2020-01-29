@@ -2,6 +2,10 @@
 <resources>
     <string name="app_name">サモンズ：アカツール</string>
 
+    <string name="main_drawer_item_sb_j">サモンズボード</string>
+    <string name="main_drawer_item_sb_t">召喚圖板</string>
+    <string name="main_drawer_item_settings">セッティング</string>
+
     <string name="no_install_game">ゲーム　インストールされてません</string>
     <string name="google_play_text">Google Play</string>
     <string name="dialog_button_cancel">取消</string>
@@ -9,4 +13,7 @@
     <string name="dialog_folder_path">フォルダー：%s</string>
     <string name="dialog_button_edit">変更</string>
     <string name="dialog_button_load">ロード</string>
+
+    <string name="settings_tab_local_backup_title">Local</string>
+    <string name="settings_tab_remote_backup_title">Cloud</string>
 </resources>

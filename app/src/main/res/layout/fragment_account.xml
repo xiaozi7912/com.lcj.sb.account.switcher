@@ -23,7 +23,7 @@
             android:layout_marginRight="16dp"
             android:layout_marginBottom="80dp"
             android:src="@drawable/round_add_white_24"
-            app:layout_behavior=".behavior.FabScrollBehavior" />
+            app:layout_behavior="com.lcj.sb.account.switcher.behavior.FabScrollBehavior" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/game_fab"
@@ -32,6 +32,6 @@
             android:layout_gravity="end|bottom"
             android:layout_margin="16dp"
             android:src="@drawable/round_games_white_24"
-            app:layout_behavior=".behavior.FabScrollBehavior" />
+            app:layout_behavior="com.lcj.sb.account.switcher.behavior.FabScrollBehavior" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

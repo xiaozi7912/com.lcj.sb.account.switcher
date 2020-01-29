@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">召喚圖板：帳號工具</string>
 
+    <string name="main_drawer_item_sb_j">サモンズボード</string>
+    <string name="main_drawer_item_sb_t">召喚圖板</string>
+    <string name="main_drawer_item_settings">設定</string>
+
     <string name="no_install_game">尚未安裝遊戲</string>
     <string name="google_play_text">Google Play</string>
     <string name="dialog_button_cancel">取消</string>
@@ -8,4 +12,7 @@
     <string name="dialog_folder_path">資料夾：%s</string>
     <string name="dialog_button_edit">修改</string>
     <string name="dialog_button_load">讀取</string>
+
+    <string name="settings_tab_local_backup_title">本機同步</string>
+    <string name="settings_tab_remote_backup_title">雲端同步</string>
 </resources>

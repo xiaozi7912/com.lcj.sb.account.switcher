@@ -9,29 +9,32 @@ import java.util.zip.ZipOutputStream
 
 class ZipManager {
 
-    fun zip(files: ArrayList<String>, zipFIle: String){
-        var origin: BufferedInputStream
-        val out = ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFIle)))
+    companion object {
+        fun zip(files: ArrayList<String>, zipFile: String) {
+            var origin: BufferedInputStream
+            val out = ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile)))
 
-        out.use { out ->
-            val data = ByteArray(10 * 1024)
-            for (file in files) {
-                val fis = FileInputStream(file)
-                origin = BufferedInputStream(fis, 10 * 1024)
+            out.use { out ->
+                val data = ByteArray(10 * 1024)
+                for (file in files) {
+                    val fis = FileInputStream(file)
+                    origin = BufferedInputStream(fis, 10 * 1024)
 
-                origin.use { origin ->
-                    val entry = ZipEntry("files/${file.substring(file.lastIndexOf("/") + 1)}")
-                    out.putNextEntry(entry)
+                    origin.use { origin ->
+                        val rootFolderName = zipFile.substring(zipFile.lastIndexOf("/") + 1, zipFile.lastIndexOf("."))
+                        val entry = ZipEntry("${rootFolderName}/files/${file.substring(file.lastIndexOf("/") + 1)}")
+                        out.putNextEntry(entry)
 
-                    var count: Int
-                    do {
-                        count = origin.read(data, 0, 10 * 1024)
-                        if (count != -1) out.write(data, 0, count)
-                    } while (count != -1)
+                        var count: Int
+                        do {
+                            count = origin.read(data, 0, 10 * 1024)
+                            if (count != -1) out.write(data, 0, count)
+                        } while (count != -1)
+                    }
                 }
             }
         }
-    }
 
-    fun unZip(){}
+        fun unZip() {}
+    }
 }

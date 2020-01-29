@@ -122,7 +122,7 @@ class AccountListAdapter() : RecyclerView.Adapter<AccountListAdapter.ViewHolder>
                     }
                 }
 
-                ZipManager().zip(fileList, zipFilePath)
+                ZipManager.zip(fileList, zipFilePath)
 
                 val file = Uri.fromFile(File(zipFilePath))
                 val storage = FirebaseStorage.getInstance()

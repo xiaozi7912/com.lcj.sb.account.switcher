@@ -149,8 +149,8 @@ class PartyFragment : BaseFragment() {
     private fun getDungeonInfoFromRemote() {
         val db = FirebaseFirestore.getInstance()
         val collectionPath = mSelectedLevelModel.title
-        db.collection("summons_board").document("dungeon").collection(collectionPath)
-                .whereEqualTo("element", mSelectedElementModel.index).orderBy("icon", Query.Direction.ASCENDING).get()
+        db.document("/summons_board/dungeon").collection(collectionPath)
+                .whereEqualTo("element", mSelectedElementModel.index).orderBy("number", Query.Direction.ASCENDING).get()
                 .addOnSuccessListener { result ->
                     mDungeonStageList.clear()
 
@@ -201,8 +201,10 @@ class PartyFragment : BaseFragment() {
                 }
 
                 dialog.show()
-                dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-                dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+                dialog.window?.apply {
+                    clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+                    setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+                }
                 dialog.setContentView(mCreatePartyBinding.root)
                 dialog.setOnDismissListener {
                     mSelectedLevelModel = mCreateDialogLevelList.first()

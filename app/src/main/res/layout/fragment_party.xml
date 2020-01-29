@@ -104,7 +104,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
-                android:src="@drawable/round_search_black_36"
+                android:src="@drawable/selector_filter_btn"
                 app:layout_constraintBottom_toBottomOf="@+id/input_edit"
                 app:layout_constraintLeft_toRightOf="@+id/input_edit"
                 app:layout_constraintRight_toRightOf="parent"
@@ -133,7 +133,7 @@
                 android:layout_marginRight="16dp"
                 android:layout_marginBottom="16dp"
                 android:src="@drawable/round_add_white_24"
-                app:layout_behavior=".behavior.FabScrollBehavior" />
+                app:layout_behavior="com.lcj.sb.account.switcher.behavior.FabScrollBehavior" />
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -3,13 +3,20 @@ package com.lcj.sb.account.switcher.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import com.lcj.sb.account.switcher.database.BaseDatabase
+import com.lcj.sb.account.switcher.database.entity.Account
+import com.lcj.sb.account.switcher.database.entity.FolderSync
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import java.io.*
+import java.util.regex.Pattern
 
 
 class FileManager {
     companion object {
-        const val LOG_TAG = "FileManager"
-        const val BUFFER_SIZE = 512
+        private const val LOG_TAG = "FileManager"
+        private const val BUFFER_SIZE = 512
 
         fun isPackageInstalled(packageName: String, context: Context): Boolean {
             return try {
@@ -29,10 +36,50 @@ class FileManager {
             return false
         }
 
+        fun syncBackupFolder(context: Context, lang: Account.Language, callback: () -> Unit) {
+            Observable.just(File(Configs.PATH_APP_DATA))
+                    .flatMap { Observable.fromArray(*it.listFiles()) }
+                    .filter {
+                        Pattern.compile(when (lang) {
+                            Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
+                            Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
+                        }).matcher(it.name).matches()
+                    }.sorted()
+                    .doOnNext {
+                        val db = BaseDatabase.getInstance(context)
+                        val currentTime = System.currentTimeMillis()
+                        val existsAccount = db.accountDAO().account(it.absolutePath)
+
+                        if (existsAccount == null) {
+                            db.accountDAO().insert(Account(
+                                    alias = it.name,
+                                    folder = it.absolutePath,
+                                    lang = lang.ordinal,
+                                    createTime = currentTime,
+                                    updateTime = currentTime))
+                        }
+                    }
+                    .doOnComplete {
+                        val db = BaseDatabase.getInstance(context)
+                        val currentTime = System.currentTimeMillis()
+
+                        db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
+                                .subscribe({ entity ->
+                                    entity!!.updateTime = currentTime
+                                    db.folderSyncDAO().update(entity!!)
+                                }, { err ->
+                                    err.printStackTrace()
+                                    db.folderSyncDAO().insert(FolderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal, currentTime))
+                                })
+                    }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnComplete { callback() }
+                    .subscribe()
+        }
+
         fun backupFolder(resPath: String, destPath: String, callback: (Int, Int, Boolean) -> Unit) {
             Log.i(LOG_TAG, "backupFolder")
-            Log.v(LOG_TAG, "backupFolder resPath : $resPath")
-            Log.v(LOG_TAG, "backupFolder destPath : $destPath")
             val resDir = File(resPath)
             val destDir = File(destPath)
             val destFilesDir = File(String.format("%s/files", destPath))
@@ -43,12 +90,10 @@ class FileManager {
 
             resDir.listFiles(FileFilter { it.name == "files" })
                     .forEach { file ->
-                        Log.v(LOG_TAG, "backupFolder absolutePath : ${file.absolutePath}")
                         val fileList = file.listFiles(FileFilter { it.isFile })
                         var current = 0
                         val totalSize = fileList.size
                         fileList.forEach {
-                            Log.v(LOG_TAG, "backupFolder absolutePath : ${it.absolutePath}")
                             copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
                             current++
                             callback(current, totalSize, (current == totalSize))
@@ -58,8 +103,6 @@ class FileManager {
 
         private fun copyFile(resFile: String, destFile: String) {
             Log.i(LOG_TAG, "copyFile")
-            Log.v(LOG_TAG, "copyFile resFile : $resFile")
-            Log.v(LOG_TAG, "copyFile destFile : $destFile")
             var bis: BufferedInputStream? = null
             var bos: BufferedOutputStream? = null
 
@@ -84,6 +127,23 @@ class FileManager {
                     e.printStackTrace()
                 }
             }
+        }
+
+        fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
+            val result = arrayListOf<File>()
+            val d = Observable.just(File(Configs.PATH_APP_DATA))
+                    .flatMap { Observable.fromArray(*it.listFiles()) }
+                    .filter {
+                        Pattern.compile(when (lang) {
+                            Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
+                            Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
+                        }).matcher(it.name).matches()
+                    }.sorted()
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ file ->
+                        Log.d(LOG_TAG, "file.absolutePath : ${file.absolutePath}")
+                        result.add(file)
+                    }, { err -> err.printStackTrace() }, { callback(result) })
         }
     }
 }
