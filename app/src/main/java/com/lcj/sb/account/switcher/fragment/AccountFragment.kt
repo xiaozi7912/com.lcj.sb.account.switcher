@@ -123,6 +123,8 @@ class AccountFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
+        mActivity.invalidateOptionsMenu()
+
         when (mDisplayLang) {
             Account.Language.JP -> {
                 mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)

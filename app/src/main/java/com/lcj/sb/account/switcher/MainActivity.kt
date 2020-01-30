@@ -30,6 +30,7 @@ import pub.devrel.easypermissions.EasyPermissions
 
 class MainActivity : BaseActivity() {
     private lateinit var mBinding: ActivityMainBinding
+    private var mSelectedFunctionId = 0
 
     companion object {
         const val REQUEST_CODE_WRITE_PERMISSION = 1001
@@ -45,26 +46,32 @@ class MainActivity : BaseActivity() {
         reloadAd()
     }
 
-    override fun onResume() {
-        super.onResume()
-        fetchRemoteConfig()
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        if (!menu?.hasVisibleItems()!!) menuInflater.inflate(R.menu.toolbar_menu, menu)
+        return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.toolbar_menu, menu)
-        return true
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        return when (mSelectedFunctionId) {
+            R.id.main_drawer_item_accounts -> {
+                updateDownloadAPKButton(menu)
+                true
+            }
+            R.id.main_drawer_item_settings -> false
+            else -> super.onPrepareOptionsMenu(menu)
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
     }
 
     override fun initView() {
-        val toggle = ActionBarDrawerToggle(mActivity, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name)
-        mBinding.mainDrawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
+        ActionBarDrawerToggle(mActivity, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name).let {
+            mBinding.mainDrawerLayout.addDrawerListener(it)
+            it.syncState()
+        }
 
         mBinding.mainDrawerVersionTv.text = BuildConfig.VERSION_NAME
 
@@ -76,6 +83,15 @@ class MainActivity : BaseActivity() {
                     R.id.toolbar_menu_info -> when (lang) {
                         Account.Language.JP -> startWebSite(Configs.URL_WEB_SITE_JP)
                         Account.Language.TW -> startWebSite(Configs.URL_WEB_SITE_TW)
+                    }
+                    R.id.toolbar_menu_download -> when (lang) {
+                        Account.Language.JP -> {
+                            startActivity(Intent(Intent.ACTION_VIEW).apply {
+                                data = Uri.parse(Configs.URL_APK_JP)
+                            })
+                        }
+                        Account.Language.TW -> {
+                        }
                     }
                 }
             }
@@ -107,6 +123,7 @@ class MainActivity : BaseActivity() {
             val currentItem = it as DrawerItemView
 
             currentItem.setImageAlpha(1.0f)
+            mSelectedFunctionId = it.id
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
             mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
@@ -116,6 +133,7 @@ class MainActivity : BaseActivity() {
             val currentItem = it as DrawerItemView
 
             currentItem.setImageAlpha(1.0f)
+            mSelectedFunctionId = it.id
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
             mBinding.mainDrawerItemAccounts.setImageAlpha(0.5f)
@@ -143,56 +161,53 @@ class MainActivity : BaseActivity() {
     }
 
     private fun initRemoteConfig() {
-        Log.i(LOG_TAG, "initRemoteConfig")
         val configSetting = FirebaseRemoteConfigSettings.Builder()
                 .setMinimumFetchIntervalInSeconds(1800)
                 .build()
         mRemoteConfig.setConfigSettingsAsync(configSetting)
     }
 
-    private fun fetchRemoteConfig() {
-        Log.i(LOG_TAG, "fetchRemoteConfig")
-        updateDownloadAPKButton()
-        mRemoteConfig.fetchAndActivate()
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        task.result?.let {
-                            if (it) updateDownloadAPKButton()
+    private fun updateDownloadAPKButton(menu: Menu?) {
+        mRemoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val strConfigs = mRemoteConfig.getString("sb_configs")
+                val remoteConfig = Gson().fromJson(strConfigs, RemoteConfigModel::class.java)
+                var currentJPCode = PackageUtils.getInstance(mActivity).getVersionCode(Configs.PREFIX_NAME_SB_JP)
+                var currentTWCode = PackageUtils.getInstance(mActivity).getVersionCode(Configs.PREFIX_NAME_SB_TW)
+
+                if (BuildConfig.DEBUG) {
+                    currentJPCode--
+                    currentTWCode--
+                }
+
+                if (remoteConfig != null) {
+                    PreferenceManager.getDefaultSharedPreferences(mActivity).let {
+                        val lang = Account.Language.valueOf(it.getString(Configs.PREF_KEY_LANGUAGE, "JP")!!)
+
+                        when (lang) {
+                            Account.Language.JP -> {
+                                if (remoteConfig.versionCodeJP > currentJPCode) {
+                                    menu?.findItem(R.id.toolbar_menu_download)?.setVisible(true)
+                                } else {
+                                    menu?.findItem(R.id.toolbar_menu_download)?.setVisible(false)
+                                }
+                            }
+                            Account.Language.TW -> {
+                                if (remoteConfig.versionCodeTW > currentTWCode) {
+                                    menu?.findItem(R.id.toolbar_menu_download)?.setVisible(false)
+                                } else {
+                                    menu?.findItem(R.id.toolbar_menu_download)?.setVisible(false)
+                                }
+                            }
                         }
-                    } else {
-                        task.exception?.printStackTrace()
                     }
                 }
-    }
-
-    private fun updateDownloadAPKButton() {
-        Log.i(LOG_TAG, "updateDownloadAPKButton")
-        val strConfigs = mRemoteConfig.getString("sb_configs")
-        val remoteConfig = Gson().fromJson(strConfigs, RemoteConfigModel::class.java)
-        var currentJPCode = PackageUtils.getInstance(mActivity).getVersionCode(Configs.PREFIX_NAME_SB_JP)
-        var currentTWCode = PackageUtils.getInstance(mActivity).getVersionCode(Configs.PREFIX_NAME_SB_TW)
-
-        if (BuildConfig.DEBUG) {
-            currentJPCode--
-            currentTWCode--
-        }
-
-        if (remoteConfig != null) {
-            if (remoteConfig.versionCodeJP > currentJPCode) {
-                mBinding.mainDrawerItemSbJ.setDownloadAPKButtonVisibility(true)
             } else {
-                mBinding.mainDrawerItemSbJ.setDownloadAPKButtonVisibility(false)
+                task.exception?.printStackTrace()
             }
-
-            if (remoteConfig.versionCodeTW > currentTWCode) {
-                mBinding.mainDrawerItemSbT.setDownloadAPKButtonVisibility(false)
-            } else {
-                mBinding.mainDrawerItemSbT.setDownloadAPKButtonVisibility(false)
-            }
-
-            mBinding.mainDrawerItemAccounts.setDownloadAPKButtonVisibility(false)
-            mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
         }
+        mBinding.mainDrawerItemAccounts.setDownloadAPKButtonVisibility(false)
+        mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
     }
 
     private fun getFCMInstanceId() {
@@ -201,11 +216,9 @@ class MainActivity : BaseActivity() {
                     Log.i(LOG_TAG, "addOnSuccessListener")
                     Log.v(LOG_TAG, "addOnSuccessListener it.id : ${it.id}")
                     Log.v(LOG_TAG, "addOnSuccessListener it.token : ${it.token}")
-                }
-                .addOnFailureListener {
+                }.addOnFailureListener {
                     Log.i(LOG_TAG, "addOnFailureListener")
-                }
-                .addOnCompleteListener {
+                }.addOnCompleteListener {
                     Log.i(LOG_TAG, "addOnCompleteListener")
                 }
     }
@@ -245,6 +258,7 @@ class MainActivity : BaseActivity() {
         ft.commit()
 
         mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
+        invalidateOptionsMenu()
     }
 
     private fun showSettings(title: String) {
@@ -255,5 +269,6 @@ class MainActivity : BaseActivity() {
         ft.commit()
 
         mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
+        invalidateOptionsMenu()
     }
 }
