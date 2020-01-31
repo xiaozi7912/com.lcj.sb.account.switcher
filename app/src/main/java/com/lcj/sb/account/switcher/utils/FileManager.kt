@@ -20,6 +20,11 @@ class FileManager {
         fun onError()
     }
 
+    interface LoadCallback {
+        fun onCompleted()
+        fun onError()
+    }
+
     companion object {
         private const val LOG_TAG = "FileManager"
         private const val BUFFER_SIZE = 512
@@ -113,6 +118,45 @@ class FileManager {
             }
         }
 
+        fun loadFolder(resPath: String, destPath: String, callback: LoadCallback) {
+            Thread {
+                val command: String = String.format("cp -a %s %s", resPath, destPath)
+                try {
+                    val process: Process = Runtime.getRuntime().exec(command)
+                    val buffReader = BufferedReader(InputStreamReader(process.inputStream))
+                    var readLine: String?
+
+                    do {
+                        readLine = buffReader.readLine()
+                    } while (readLine != null)
+
+                    buffReader.close()
+                    process.waitFor()
+                    callback.onCompleted()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    callback.onError()
+                }
+            }.start()
+        }
+
+        fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
+            val result = arrayListOf<File>()
+            val d = Observable.just(File(Configs.PATH_APP_DATA))
+                    .flatMap { Observable.fromArray(*it.listFiles()) }
+                    .filter {
+                        Pattern.compile(when (lang) {
+                            Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
+                            Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
+                        }).matcher(it.name).matches()
+                    }.sorted()
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ file ->
+                        Log.d(LOG_TAG, "file.absolutePath : ${file.absolutePath}")
+                        result.add(file)
+                    }, { err -> err.printStackTrace() }, { callback(result) })
+        }
+
         private fun copyFile(resFile: String, destFile: String) {
             Log.i(LOG_TAG, "copyFile")
             var bis: BufferedInputStream? = null
@@ -139,23 +183,6 @@ class FileManager {
                     e.printStackTrace()
                 }
             }
-        }
-
-        fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
-            val result = arrayListOf<File>()
-            val d = Observable.just(File(Configs.PATH_APP_DATA))
-                    .flatMap { Observable.fromArray(*it.listFiles()) }
-                    .filter {
-                        Pattern.compile(when (lang) {
-                            Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
-                            Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
-                        }).matcher(it.name).matches()
-                    }.sorted()
-                    .subscribeOn(Schedulers.io())
-                    .subscribe({ file ->
-                        Log.d(LOG_TAG, "file.absolutePath : ${file.absolutePath}")
-                        result.add(file)
-                    }, { err -> err.printStackTrace() }, { callback(result) })
         }
     }
 }

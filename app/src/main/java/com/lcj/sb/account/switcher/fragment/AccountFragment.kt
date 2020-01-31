@@ -27,8 +27,6 @@ import com.lcj.sb.account.switcher.utils.FileManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 class AccountFragment : BaseFragment() {
     private lateinit var mBinding: FragmentAccountBinding
@@ -175,25 +173,16 @@ class AccountFragment : BaseFragment() {
         val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
         val srcFolder: String = String.format("%s/%s", account.folder, "files")
         val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
-        val command: String = String.format("cp -a %s %s", srcFolder, dstFolder)
 
-        Thread {
-            val process: Process = Runtime.getRuntime().exec(command)
-            val buffReader = BufferedReader(InputStreamReader(process.inputStream))
-            var readLine: String?
-
-            do {
-                readLine = buffReader.readLine()
-            } while (readLine != null)
-
-            buffReader.close()
-            process.waitFor()
-
-            mHandler.post {
-                mBinding.gameFab.performClick()
+        FileManager.loadFolder(srcFolder, dstFolder, object : FileManager.LoadCallback {
+            override fun onCompleted() {
+                mHandler.post { mBinding.gameFab.performClick() }
             }
-        }.start()
 
+            override fun onError() {
+
+            }
+        })
         setAccountSelected(account)
     }
 
