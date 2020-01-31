@@ -14,6 +14,12 @@ import java.util.regex.Pattern
 
 
 class FileManager {
+    interface BackupCallback {
+        fun onProcess(current: Int, total: Int)
+        fun onCompleted()
+        fun onError()
+    }
+
     companion object {
         private const val LOG_TAG = "FileManager"
         private const val BUFFER_SIZE = 512
@@ -78,27 +84,33 @@ class FileManager {
                     .subscribe()
         }
 
-        fun backupFolder(resPath: String, destPath: String, callback: (Int, Int, Boolean) -> Unit) {
+        fun backupFolder(resPath: String, destPath: String, callback: BackupCallback) {
             Log.i(LOG_TAG, "backupFolder")
             val resDir = File(resPath)
             val destDir = File(destPath)
             val destFilesDir = File(String.format("%s/files", destPath))
+            val resFileList = resDir.listFiles()
 
             destDir.mkdir()
             destFilesDir.mkdir()
             destFilesDir.setLastModified(System.currentTimeMillis())
 
-            resDir.listFiles(FileFilter { it.name == "files" })
-                    .forEach { file ->
-                        val fileList = file.listFiles(FileFilter { it.isFile })
-                        var current = 0
-                        val totalSize = fileList.size
-                        fileList.forEach {
-                            copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
-                            current++
-                            callback(current, totalSize, (current == totalSize))
-                        }
+            if (resFileList != null) {
+                resFileList.filter { it.name == "files" }.forEach { file ->
+                    val fileList = file.listFiles(FileFilter { it.isFile })
+                    var current = 0
+                    val totalSize = fileList.size
+
+                    fileList.forEach {
+                        copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
+                        current++
+                        callback.onProcess(current, totalSize)
                     }
+                    callback.onCompleted()
+                }
+            } else {
+                callback.onError()
+            }
         }
 
         private fun copyFile(resFile: String, destFile: String) {

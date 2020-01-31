@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.lcj.sb.account.switcher.AccountInfoActivity
@@ -198,14 +199,21 @@ class AccountFragment : BaseFragment() {
 
     private fun onBackupClick(holder: AccountAdapter.ViewHolder, account: Account) {
         Thread {
-            FileManager.backupFolder(mGameFolderPath, account.folder) { current, total, finished ->
-                if (finished) {
+            FileManager.backupFolder(mGameFolderPath, account.folder, object : FileManager.BackupCallback {
+                override fun onProcess(current: Int, total: Int) {
+                }
+
+                override fun onCompleted() {
                     account.let {
                         it.updateTime = System.currentTimeMillis()
                         BaseDatabase.getInstance(mActivity).accountDAO().update(it)
                     }
                 }
-            }
+
+                override fun onError() {
+                    mHandler.post { Toast.makeText(mActivity, "遊戲資料夾內沒有資料，請先開啟遊戲！", Toast.LENGTH_SHORT).show() }
+                }
+            })
         }.start()
     }
 
@@ -235,18 +243,30 @@ class AccountFragment : BaseFragment() {
                 Observable.just(FileManager.isFolderExists(mGameFolderPath))
                         .subscribeOn(Schedulers.io())
                         .doOnNext { exists ->
-                            val account = Account(
-                                    alias = binding.backupInputEt.text.toString(),
-                                    folder = destPath,
-                                    lang = mDisplayLang.ordinal,
-                                    createTime = currentTime,
-                                    updateTime = currentTime
-                            )
-                            BaseDatabase.getInstance(mActivity).accountDAO().insert(account)
+                            if (exists) {
+                                val account = Account(
+                                        alias = binding.backupInputEt.text.toString(),
+                                        folder = destPath,
+                                        lang = mDisplayLang.ordinal,
+                                        createTime = currentTime,
+                                        updateTime = currentTime
+                                )
+                                BaseDatabase.getInstance(mActivity).accountDAO().insert(account)
 
-                            if (exists) FileManager.backupFolder(mGameFolderPath, destPath) { current, total, finished ->
-                                binding.backupProgressBar.max = total
-                                binding.backupProgressBar.progress = current
+                                FileManager.backupFolder(mGameFolderPath, destPath, object : FileManager.BackupCallback {
+                                    override fun onProcess(current: Int, total: Int) {
+                                        binding.backupProgressBar.max = total
+                                        binding.backupProgressBar.progress = current
+                                    }
+
+                                    override fun onCompleted() {
+                                    }
+
+                                    override fun onError() {
+                                    }
+                                })
+                            } else {
+                                mHandler.post { Toast.makeText(mActivity, "遊戲資料夾內沒有資料，請先開啟遊戲！", Toast.LENGTH_SHORT).show() }
                             }
                         }
                         .observeOn(AndroidSchedulers.mainThread())
