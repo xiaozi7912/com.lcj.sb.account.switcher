@@ -68,6 +68,10 @@ class FileManager {
                                     lang = lang.ordinal,
                                     createTime = currentTime,
                                     updateTime = currentTime))
+                        } else {
+                            db.accountDAO().update(existsAccount.apply {
+                                hidden = false
+                            })
                         }
                     }
                     .doOnComplete {

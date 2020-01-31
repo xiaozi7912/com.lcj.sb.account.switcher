@@ -33,7 +33,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:hint="帳號說明"
+                android:hint="@string/backup_input_et_hint"
                 android:textColor="#ffffff"
                 android:textColorHint="#ffffff"
                 android:textSize="16sp"

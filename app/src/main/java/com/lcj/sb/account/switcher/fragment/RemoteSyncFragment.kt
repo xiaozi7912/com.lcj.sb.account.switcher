@@ -26,7 +26,6 @@ import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
 import com.lcj.sb.account.switcher.databinding.FragmentRemoteBackupBinding
 import com.lcj.sb.account.switcher.utils.Configs
-import com.lcj.sb.account.switcher.utils.FileManager
 import com.lcj.sb.account.switcher.utils.ZipManager
 import com.lcj.sb.account.switcher.view.AccountUploadDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -160,24 +159,30 @@ class RemoteSyncFragment : BaseFragment() {
         val signedInAccount = checkLastSignedInAccount()
         if (signedInAccount != null) {
             AccountUploadDialog.getInstance(mActivity).show()
-            FileManager.getFolderList(lang) { folderList ->
-                val folderSize = folderList.size
-                var currentUploadIndex = 0
-                AccountUploadDialog.getInstance(mActivity).setFileName("")
-                AccountUploadDialog.getInstance(mActivity).setFileCount(currentUploadIndex, folderSize)
-                AccountUploadDialog.getInstance(mActivity).setProgress(0)
+            Thread {
+                val db = BaseDatabase.getInstance(mActivity)
+                val currentTime = System.currentTimeMillis()
+                val type = FolderSync.Type.REMOTE
+                var folderSize: Int
 
-                for (folder in folderList) {
-                    val folderPath = folder.absolutePath
+                db.accountDAO().accounts(lang.ordinal, false).apply {
+                    folderSize = size
+                    mHandler.post {
+                        AccountUploadDialog.getInstance(mActivity).setFileName("")
+                        AccountUploadDialog.getInstance(mActivity).setFileCount(0, folderSize)
+                        AccountUploadDialog.getInstance(mActivity).setProgress(0)
+                    }
+                }.forEachIndexed { index, account ->
+                    val folderPath = account.folder
                     val filesPath = String.format("%s/%s", folderPath, "files")
                     val filesFile: File? = File(filesPath)
+                    val folderName = account.folder.substring(account.folder.lastIndexOf("/") + 1)
                     val hashZipFile = hashMapOf(
-                            "name" to "${folder.name}.zip",
-                            "path" to "${mActivity.externalCacheDir?.absolutePath}/${folder.name}.zip")
+                            "name" to "${folderName}.zip",
+                            "path" to "${mActivity.externalCacheDir?.absolutePath}/${folderName}.zip")
                     val fileList = ArrayList<String>()
 
                     filesFile?.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
-
                     if (fileList.size > 0) {
                         ZipManager.zip(fileList, hashZipFile["path"]!!)
 
@@ -212,10 +217,9 @@ class RemoteSyncFragment : BaseFragment() {
                                 mediaHttpUploader.setProgressListener {
                                     when (it.uploadState) {
                                         MediaHttpUploader.UploadState.INITIATION_STARTED -> {
-                                            currentUploadIndex++
                                             mHandler.post {
                                                 AccountUploadDialog.getInstance(mActivity).setFileName(hashZipFile["name"]!!)
-                                                AccountUploadDialog.getInstance(mActivity).setFileCount(currentUploadIndex, folderSize)
+                                                AccountUploadDialog.getInstance(mActivity).setFileCount((index + 1), folderSize)
                                                 AccountUploadDialog.getInstance(mActivity).setProgress(0)
                                             }
                                         }
@@ -227,6 +231,8 @@ class RemoteSyncFragment : BaseFragment() {
                                         }
                                         MediaHttpUploader.UploadState.MEDIA_COMPLETE -> {
                                             mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(100) }
+                                        }
+                                        else -> {
                                         }
                                     }
                                 }
@@ -241,9 +247,6 @@ class RemoteSyncFragment : BaseFragment() {
                     }
                 }
 
-                val db = BaseDatabase.getInstance(mActivity)
-                val currentTime = System.currentTimeMillis()
-                val type = FolderSync.Type.REMOTE
                 db.folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
                         .subscribe({ entity ->
                             entity!!.updateTime = currentTime
@@ -258,7 +261,7 @@ class RemoteSyncFragment : BaseFragment() {
                     AccountUploadDialog.getInstance(mActivity).dismiss()
                     Snackbar.make(mContentView, getString(R.string.file_upload_completed), Snackbar.LENGTH_SHORT).show()
                 }
-            }
+            }.start()
         } else {
             Snackbar.make(mContentView, getString(R.string.no_google_account_association), Snackbar.LENGTH_SHORT).show()
         }

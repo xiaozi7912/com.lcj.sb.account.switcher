@@ -12,6 +12,7 @@ data class Account(
         var folder: String,
         var lang: Int,
         var selected: Boolean = false,
+        var hidden: Boolean = false,
         @ColumnInfo(name = "create_time") var createTime: Long,
         @ColumnInfo(name = "update_time") var updateTime: Long
 ) : Serializable {

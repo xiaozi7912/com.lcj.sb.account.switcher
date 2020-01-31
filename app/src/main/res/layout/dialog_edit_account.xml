@@ -34,7 +34,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:hint="帳號說明"
+                android:hint="@string/edit_account_alias_edit_hint"
                 android:text='@={model.editAlias , default="edit_account_alias_edit"}'
                 android:textColor="#ffffff"
                 android:textColorHint="#ffffff"
