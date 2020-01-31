@@ -200,7 +200,7 @@ class AccountFragment : BaseFragment() {
                 }
 
                 override fun onError() {
-                    mHandler.post { Toast.makeText(mActivity, "遊戲資料夾內沒有資料，請先開啟遊戲！", Toast.LENGTH_SHORT).show() }
+                    mHandler.post { Toast.makeText(mActivity, getString(R.string.game_folder_not_exists), Toast.LENGTH_SHORT).show() }
                 }
             })
         }.start()
@@ -261,7 +261,7 @@ class AccountFragment : BaseFragment() {
                                     }
                                 })
                             } else {
-                                mHandler.post { Toast.makeText(mActivity, "遊戲資料夾內沒有資料，請先開啟遊戲！", Toast.LENGTH_SHORT).show() }
+                                mHandler.post { Toast.makeText(mActivity, getString(R.string.game_folder_not_exists), Toast.LENGTH_SHORT).show() }
                             }
                         }
                         .observeOn(AndroidSchedulers.mainThread())

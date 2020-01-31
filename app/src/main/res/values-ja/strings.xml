@@ -14,6 +14,7 @@
     <string name="dialog_folder_path">フォルダー：%s</string>
     <string name="dialog_button_edit">変更</string>
     <string name="dialog_button_load">ロード</string>
+    <string name="game_folder_not_exists">遊戲資料夾內沒有資料，請先開啟遊戲！</string>
 
     <string name="settings_tab_local_backup_title">Local</string>
     <string name="settings_tab_remote_backup_title">Cloud</string>
