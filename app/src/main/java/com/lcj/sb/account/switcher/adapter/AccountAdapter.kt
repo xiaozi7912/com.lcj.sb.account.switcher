@@ -34,11 +34,9 @@ class AccountAdapter(activity: Activity) : RecyclerView.Adapter<AccountAdapter.V
         if (item.selected) {
             val iconResId = if (item.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_p else R.drawable.ic_launcher_tw_p
             holder.binding.accountIconIv.setImageResource(iconResId)
-            holder.binding.accountAliasTv.setTextColor(Color.RED)
         } else {
             val iconResId = if (item.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_n else R.drawable.ic_launcher_tw_n
             holder.binding.accountIconIv.setImageResource(iconResId)
-            holder.binding.accountAliasTv.setTextColor(Color.BLACK)
         }
 
         holder.binding.root.setOnClickListener {

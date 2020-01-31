@@ -11,9 +11,9 @@
         android:layout_height="wrap_content">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="350dp"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@drawable/bg_dialog_3"
             android:padding="20dp">
 
             <TextView
@@ -32,46 +32,44 @@
                 android:id="@+id/backup_input_et"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
                 android:hint="@string/backup_input_et_hint"
                 android:textColor="#ffffff"
                 android:textColorHint="#ffffff"
                 android:textSize="16sp"
+                app:layout_constraintBottom_toTopOf="@+id/backup_progress_bar"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/backup_title_tv" />
-
-            <Button
-                android:id="@+id/backup_cancel_btn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/dialog_button_cancel"
-                android:textAllCaps="false"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toLeftOf="@+id/backup_submit_btn"
-                app:layout_constraintTop_toBottomOf="@+id/backup_input_et" />
-
-            <Button
-                android:id="@+id/backup_submit_btn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/dialog_button_backup"
-                android:textAllCaps="false"
-                app:layout_constraintLeft_toRightOf="@+id/backup_cancel_btn"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/backup_input_et" />
 
             <ProgressBar
                 android:id="@+id/backup_progress_bar"
                 style="@style/Widget.AppCompat.ProgressBar.Horizontal"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                app:layout_constraintBottom_toTopOf="@+id/backup_cancel_btn"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/backup_cancel_btn" />
+                app:layout_constraintTop_toBottomOf="@+id/backup_input_et" />
+
+            <Button
+                android:id="@+id/backup_cancel_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/dialog_button_cancel"
+                android:textAllCaps="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toLeftOf="@+id/backup_submit_btn" />
+
+            <Button
+                android:id="@+id/backup_submit_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/dialog_button_backup"
+                android:textAllCaps="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/backup_cancel_btn"
+                app:layout_constraintRight_toRightOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </RelativeLayout>
 </layout>

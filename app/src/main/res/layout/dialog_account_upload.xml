@@ -7,22 +7,24 @@
     </data>
 
     <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="131dp"
-            android:background="@drawable/bg_dialog"
+            android:layout_height="150dp"
+            android:background="@drawable/bg_dialog_3"
             android:padding="20dp">
 
             <TextView
                 android:id="@+id/account_upload_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:lines="1"
                 android:text="上傳中：檔名"
                 android:textColor="#ffffff"
-                android:textSize="14sp"
+                android:textSize="16sp"
                 app:layout_constraintBottom_toTopOf="@+id/account_upload_file_count_tv"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
