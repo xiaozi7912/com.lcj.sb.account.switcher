@@ -133,6 +133,7 @@
                 android:layout_marginRight="16dp"
                 android:layout_marginBottom="16dp"
                 android:src="@drawable/round_add_white_24"
+                app:fabSize="mini"
                 app:layout_behavior="com.lcj.sb.account.switcher.behavior.FabScrollBehavior" />
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
