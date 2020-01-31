@@ -23,11 +23,13 @@ class Configs {
         const val URL_WEB_SITE_TW = "http://www.gungho-gamania.com/SB/Bulletins/Bulletin.aspx"
         const val URL_APK_JP = "https://lcj.page.link/7Yoh"
 
+        const val SCREEN_ACCOUNTS = "SCREEN_ACCOUNTS"
         const val SCREEN_SB_JP = "SCREEN_SB_JP"
         const val SCREEN_SB_TW = "SCREEN_SB_TW"
         const val SCREEN_SETTINGS = "SCREEN_SETTINGS"
         const val SCREEN_LOCAL_BACKUP = "SCREEN_LOCAL_BACKUP"
         const val SCREEN_REMOTE_BACKUP = "SCREEN_REMOTE_BACKUP"
+        const val SCREEN_PARTY = "SCREEN_PARTY"
 
         const val REQUEST_CODE_GOOGLE_SIGN_IN: Int = 1001
         const val INTENT_KEY_ACCOUNT = "ACCOUNT"

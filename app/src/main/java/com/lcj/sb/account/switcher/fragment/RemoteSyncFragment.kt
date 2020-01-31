@@ -68,12 +68,16 @@ class RemoteSyncFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
 
         initGoogleSignIn()
         checkLastSignedInAccount()
         updateSyncView(Account.Language.JP)
         updateSyncView(Account.Language.TW)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

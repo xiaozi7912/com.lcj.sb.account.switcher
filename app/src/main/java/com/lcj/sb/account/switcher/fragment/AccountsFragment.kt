@@ -9,9 +9,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.AccountsPagerAdapter
-import com.lcj.sb.account.switcher.adapter.SettingsPagerAdapter
 import com.lcj.sb.account.switcher.databinding.FragmentAccountsBinding
-import com.lcj.sb.account.switcher.databinding.FragmentSettingsBinding
 import com.lcj.sb.account.switcher.utils.Configs
 
 class AccountsFragment : BaseFragment() {
@@ -41,11 +39,10 @@ class AccountsFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SETTINGS, LOG_TAG)
+        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_ACCOUNTS, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
     }
 }

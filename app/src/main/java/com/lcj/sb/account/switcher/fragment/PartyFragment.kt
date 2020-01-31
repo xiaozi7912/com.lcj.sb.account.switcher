@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.DungeonElementAdapter
 import com.lcj.sb.account.switcher.adapter.DungeonLevelAdapter
@@ -131,6 +132,11 @@ class PartyFragment : BaseFragment() {
         BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
                 .getPartyList(mAccount.id)
                 .observe(this, Observer { mAdapter.update(it) })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_PARTY, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
