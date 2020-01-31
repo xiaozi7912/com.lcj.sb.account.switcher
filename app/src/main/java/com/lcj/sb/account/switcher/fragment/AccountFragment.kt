@@ -233,8 +233,14 @@ class AccountFragment : BaseFragment() {
                         .subscribeOn(Schedulers.io())
                         .doOnNext { exists ->
                             if (exists) {
+                                val alias = if (binding.backupInputEt.text.isNotEmpty()) {
+                                    binding.backupInputEt.text.toString()
+                                } else {
+                                    destPath.substring(destPath.lastIndexOf("/") + 1)
+                                }
+
                                 val account = Account(
-                                        alias = binding.backupInputEt.text.toString(),
+                                        alias = alias,
                                         folder = destPath,
                                         lang = mDisplayLang.ordinal,
                                         createTime = currentTime,
