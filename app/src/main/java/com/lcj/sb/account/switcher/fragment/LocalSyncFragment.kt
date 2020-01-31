@@ -5,8 +5,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import com.google.android.material.snackbar.Snackbar
 import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
@@ -70,7 +71,7 @@ class LocalSyncFragment : BaseFragment() {
         Log.i(LOG_TAG, "onSyncJPButtonClick")
         FileManager.syncBackupFolder(mActivity, Account.Language.JP) {
             updateSyncView(Account.Language.JP)
-            Toast.makeText(mActivity, "同步成功！", Toast.LENGTH_SHORT).show()
+            Snackbar.make(mContentView, getString(R.string.sync_account_completed), Snackbar.LENGTH_SHORT).show()
         }
     }
 
@@ -78,7 +79,7 @@ class LocalSyncFragment : BaseFragment() {
         Log.i(LOG_TAG, "onSyncTWButtonClick")
         FileManager.syncBackupFolder(mActivity, Account.Language.TW) {
             updateSyncView(Account.Language.TW)
-            Toast.makeText(mActivity, "同步成功！", Toast.LENGTH_SHORT).show()
+            Snackbar.make(mContentView, getString(R.string.sync_account_completed), Snackbar.LENGTH_SHORT).show()
         }
     }
 }

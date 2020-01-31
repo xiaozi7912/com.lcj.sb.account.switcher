@@ -17,4 +17,7 @@
 
     <string name="settings_tab_local_backup_title">本機同步</string>
     <string name="settings_tab_remote_backup_title">雲端同步</string>
+    <string name="sync_account_completed">同步成功！</string>
+    <string name="file_upload_completed">檔案上傳完成！</string>
+    <string name="no_google_account_association">請先綁定帳號！</string>
 </resources>

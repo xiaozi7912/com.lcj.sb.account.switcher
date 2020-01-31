@@ -16,10 +16,10 @@ import com.lcj.sb.account.switcher.utils.Configs
  */
 open class BaseFragment : Fragment() {
     val LOG_TAG: String = javaClass.simpleName
-    lateinit var mActivity: Activity
     var mHandler: Handler = Handler()
+    lateinit var mActivity: Activity
 
-    var mRootView: View? = null
+    lateinit var mContentView: View
 
     protected lateinit var mCurrentLang: Account.Language
     protected lateinit var mCurrentUser: FirebaseUser
@@ -33,6 +33,7 @@ open class BaseFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         Log.i(LOG_TAG, "onActivityCreated")
         mActivity = activity!!
+        mContentView = mActivity.findViewById(android.R.id.content)
 
         PreferenceManager.getDefaultSharedPreferences(mActivity).apply {
             mCurrentLang = Account.Language.valueOf(getString(Configs.PREF_KEY_LANGUAGE, Account.Language.JP.name)!!)

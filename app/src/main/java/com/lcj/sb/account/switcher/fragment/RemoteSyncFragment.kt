@@ -5,12 +5,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
+import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.media.MediaHttpUploader
@@ -20,6 +20,7 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.BuildConfig
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
@@ -255,11 +256,11 @@ class RemoteSyncFragment : BaseFragment() {
                         })
                 mHandler.post {
                     AccountUploadDialog.getInstance(mActivity).dismiss()
-                    Toast.makeText(mActivity, "檔案上傳完成！", Toast.LENGTH_SHORT).show()
+                    Snackbar.make(mContentView, getString(R.string.file_upload_completed), Snackbar.LENGTH_SHORT).show()
                 }
             }
         } else {
-            Toast.makeText(mActivity, "請先綁定帳號！", Toast.LENGTH_SHORT).show()
+            Snackbar.make(mContentView, getString(R.string.no_google_account_association), Snackbar.LENGTH_SHORT).show()
         }
     }
 

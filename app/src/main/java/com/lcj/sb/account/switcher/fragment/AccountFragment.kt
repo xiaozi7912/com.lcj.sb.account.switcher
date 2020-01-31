@@ -9,9 +9,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.lcj.sb.account.switcher.AccountInfoActivity
 import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.R
@@ -200,7 +200,7 @@ class AccountFragment : BaseFragment() {
                 }
 
                 override fun onError() {
-                    mHandler.post { Toast.makeText(mActivity, getString(R.string.game_folder_not_exists), Toast.LENGTH_SHORT).show() }
+                    mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
                 }
             })
         }.start()
@@ -261,7 +261,7 @@ class AccountFragment : BaseFragment() {
                                     }
                                 })
                             } else {
-                                mHandler.post { Toast.makeText(mActivity, getString(R.string.game_folder_not_exists), Toast.LENGTH_SHORT).show() }
+                                mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
                             }
                         }
                         .observeOn(AndroidSchedulers.mainThread())
