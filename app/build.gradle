@@ -23,12 +23,14 @@ android {
             applicationIdSuffix ".dev"
             resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-3940256099942544/6300978111"'
             resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", '"ca-app-pub-3940256099942544/6300978111"'
+            resValue "string", "AD_UNIT_ID_LOCAL_SYNC_LIST", '"ca-app-pub-3940256099942544/6300978111"'
         }
 
         ad_mob {
             dimension "admob"
             resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-5692319161651426/3653778519"'
             resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", '"ca-app-pub-5692319161651426/2028230874"'
+            resValue "string", "AD_UNIT_ID_LOCAL_SYNC_LIST", '"ca-app-pub-5692319161651426/9678336202"'
         }
     }
     buildTypes {

@@ -1,5 +1,6 @@
 package com.lcj.sb.account.switcher.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,6 +10,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.BaseFragment
 import com.lcj.sb.account.switcher.R
+import com.lcj.sb.account.switcher.activity.LocalSyncListActivity
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
@@ -35,7 +37,9 @@ class LocalSyncFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        mBinding.settingsSbJRoot.setOnClickListener { showLocalSyncList(Account.Language.JP) }
         mBinding.settingsSbJSyncBtn.setOnClickListener { onSyncJPButtonClick() }
+        mBinding.settingsSbTRoot.setOnClickListener { showLocalSyncList(Account.Language.TW) }
         mBinding.settingsSbTSyncBtn.setOnClickListener { onSyncTWButtonClick() }
     }
 
@@ -66,6 +70,12 @@ class LocalSyncFragment : BaseFragment() {
                         }
                     }
                 }, { err -> err.printStackTrace() })
+    }
+
+    private fun showLocalSyncList(lang: Account.Language) {
+        startActivity(Intent(mActivity, LocalSyncListActivity::class.java).apply {
+            putExtra(Configs.INTENT_KEY_LANGUAGE, lang.ordinal)
+        })
     }
 
     private fun onSyncJPButtonClick() {
