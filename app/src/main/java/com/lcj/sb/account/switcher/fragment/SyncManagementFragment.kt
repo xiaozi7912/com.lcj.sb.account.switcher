@@ -12,13 +12,13 @@ import com.lcj.sb.account.switcher.adapter.SettingsPagerAdapter
 import com.lcj.sb.account.switcher.databinding.FragmentSettingsBinding
 import com.lcj.sb.account.switcher.utils.Configs
 
-class SettingsFragment : BaseFragment() {
+class SyncManagementFragment : BaseFragment() {
     private lateinit var mBinding: FragmentSettingsBinding
     private lateinit var mTabTitleArray: Array<String>
 
     companion object {
-        fun newInstance(): SettingsFragment {
-            return SettingsFragment()
+        fun newInstance(): SyncManagementFragment {
+            return SyncManagementFragment()
         }
     }
 

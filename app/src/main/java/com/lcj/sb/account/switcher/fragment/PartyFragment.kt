@@ -136,7 +136,7 @@ class PartyFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_PARTY, LOG_TAG)
+        BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_PARTY, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

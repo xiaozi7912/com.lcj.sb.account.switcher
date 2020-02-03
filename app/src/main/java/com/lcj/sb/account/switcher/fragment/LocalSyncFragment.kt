@@ -47,7 +47,7 @@ class LocalSyncFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_LOCAL_BACKUP, LOG_TAG)
+        BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_LOCAL_BACKUP, LOG_TAG)
     }
 
     private fun updateSyncView(lang: Account.Language) {

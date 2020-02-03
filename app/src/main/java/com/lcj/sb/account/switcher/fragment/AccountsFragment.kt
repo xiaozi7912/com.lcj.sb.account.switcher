@@ -39,7 +39,7 @@ class AccountsFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_ACCOUNTS, LOG_TAG)
+        BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_ACCOUNTS, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

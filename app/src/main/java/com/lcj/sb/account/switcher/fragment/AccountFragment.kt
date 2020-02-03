@@ -114,11 +114,11 @@ class AccountFragment : BaseFragment() {
         when (mDisplayLang) {
             Account.Language.JP -> {
                 mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
-                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SB_JP, LOG_TAG)
+                BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_SB_JP, LOG_TAG)
             }
             Account.Language.TW -> {
                 mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
-                BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_SB_TW, LOG_TAG)
+                BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_SB_TW, LOG_TAG)
             }
         }
 

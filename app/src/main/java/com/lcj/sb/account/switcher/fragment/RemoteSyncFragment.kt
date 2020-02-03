@@ -77,7 +77,7 @@ class RemoteSyncFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
+        BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

@@ -20,6 +20,7 @@ import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.fragment.AccountFragment
 import com.lcj.sb.account.switcher.fragment.AccountsFragment
 import com.lcj.sb.account.switcher.fragment.SettingsFragment
+import com.lcj.sb.account.switcher.fragment.SyncManagementFragment
 import com.lcj.sb.account.switcher.model.RemoteConfigModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.PackageUtils
@@ -126,8 +127,20 @@ class MainActivity : BaseActivity() {
             mSelectedFunctionId = it.id
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
+            mBinding.mainDrawerItemSyncManagement.setImageAlpha(0.5f)
             mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
             showAccounts(currentItem.getTitle())
+        }
+        mBinding.mainDrawerItemSyncManagement.setOnClickListener {
+            val currentItem = it as DrawerItemView
+
+            currentItem.setImageAlpha(1.0f)
+            mSelectedFunctionId = it.id
+            mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
+            mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
+            mBinding.mainDrawerItemAccounts.setImageAlpha(0.5f)
+            mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
+            showSyncManagement(currentItem.getTitle())
         }
         mBinding.mainDrawerItemSettings.setOnClickListener {
             val currentItem = it as DrawerItemView
@@ -137,6 +150,7 @@ class MainActivity : BaseActivity() {
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
             mBinding.mainDrawerItemAccounts.setImageAlpha(0.5f)
+            mBinding.mainDrawerItemSyncManagement.setImageAlpha(0.5f)
             showSettings(currentItem.getTitle())
         }
 
@@ -207,6 +221,7 @@ class MainActivity : BaseActivity() {
             }
         }
         mBinding.mainDrawerItemAccounts.setDownloadAPKButtonVisibility(false)
+        mBinding.mainDrawerItemSyncManagement.setDownloadAPKButtonVisibility(false)
         mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
     }
 
@@ -255,6 +270,17 @@ class MainActivity : BaseActivity() {
 
         val ft = supportFragmentManager.beginTransaction()
         ft.replace(R.id.main_frame_layout, AccountsFragment.newInstance())
+        ft.commit()
+
+        mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
+        invalidateOptionsMenu()
+    }
+
+    private fun showSyncManagement(title: String) {
+        supportActionBar!!.title = title
+
+        val ft = supportFragmentManager.beginTransaction()
+        ft.replace(R.id.main_frame_layout, SyncManagementFragment.newInstance())
         ft.commit()
 
         mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)

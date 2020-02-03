@@ -89,11 +89,21 @@
                     app:title="@string/main_drawer_item_accounts" />
 
                 <com.lcj.sb.account.switcher.view.DrawerItemView
-                    android:id="@+id/main_drawer_item_settings"
+                    android:id="@+id/main_drawer_item_sync_management"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_accounts"
+                    app:src="@drawable/round_sync_black_36"
+                    app:title="@string/main_drawer_item_sync_management" />
+
+                <com.lcj.sb.account.switcher.view.DrawerItemView
+                    android:id="@+id/main_drawer_item_settings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_sync_management"
                     app:src="@drawable/round_settings_applications_black_36"
                     app:title="@string/main_drawer_item_settings" />
 

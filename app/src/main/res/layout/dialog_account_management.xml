@@ -53,6 +53,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="@string/account_remove_button"
+                android:visibility="gone"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toLeftOf="@+id/account_backup_button"
                 app:layout_constraintTop_toTopOf="@+id/account_button_line" />
