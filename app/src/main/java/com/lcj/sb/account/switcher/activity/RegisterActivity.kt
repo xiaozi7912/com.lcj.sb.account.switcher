@@ -1,10 +1,11 @@
-package com.lcj.sb.account.switcher
+package com.lcj.sb.account.switcher.activity
 
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.auth.FirebaseAuth
+import com.lcj.sb.account.switcher.BaseActivity
+import com.lcj.sb.account.switcher.R
 
 class RegisterActivity : BaseActivity() {
     private lateinit var mEmailInputEditText: TextInputEditText

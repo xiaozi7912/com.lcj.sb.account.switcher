@@ -12,8 +12,9 @@ import android.view.WindowManager
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import com.lcj.sb.account.switcher.AccountInfoActivity
+import com.lcj.sb.account.switcher.activity.AccountInfoActivity
 import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BaseFragment
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.AccountAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase

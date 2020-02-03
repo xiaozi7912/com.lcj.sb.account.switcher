@@ -19,6 +19,7 @@ import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BaseFragment
 import com.lcj.sb.account.switcher.BuildConfig
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.BaseDatabase

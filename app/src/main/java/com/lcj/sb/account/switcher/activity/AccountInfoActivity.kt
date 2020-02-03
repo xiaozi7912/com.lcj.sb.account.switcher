@@ -1,8 +1,10 @@
-package com.lcj.sb.account.switcher
+package com.lcj.sb.account.switcher.activity
 
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.ads.AdRequest
+import com.lcj.sb.account.switcher.BaseActivity
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ActivityAccountInfoBinding
 import com.lcj.sb.account.switcher.fragment.PartyFragment

@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.tabs.TabLayoutMediator
 import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BaseFragment
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.AccountsPagerAdapter
 import com.lcj.sb.account.switcher.databinding.FragmentAccountsBinding

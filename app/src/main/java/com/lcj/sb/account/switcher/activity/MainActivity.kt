@@ -1,4 +1,4 @@
-package com.lcj.sb.account.switcher
+package com.lcj.sb.account.switcher.activity
 
 import android.Manifest
 import android.content.Intent
@@ -15,6 +15,9 @@ import com.google.android.gms.ads.AdRequest
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.gson.Gson
+import com.lcj.sb.account.switcher.BaseActivity
+import com.lcj.sb.account.switcher.BuildConfig
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ActivityMainBinding
 import com.lcj.sb.account.switcher.fragment.AccountFragment

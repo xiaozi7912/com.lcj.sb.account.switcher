@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BaseFragment
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.DungeonElementAdapter
 import com.lcj.sb.account.switcher.adapter.DungeonLevelAdapter

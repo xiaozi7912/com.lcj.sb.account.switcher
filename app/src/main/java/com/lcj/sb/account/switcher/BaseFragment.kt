@@ -1,4 +1,4 @@
-package com.lcj.sb.account.switcher.fragment
+package com.lcj.sb.account.switcher
 
 import android.app.Activity
 import android.os.Bundle
