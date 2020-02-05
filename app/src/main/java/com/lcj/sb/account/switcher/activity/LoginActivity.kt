@@ -55,7 +55,7 @@ class LoginActivity : BaseActivity() {
         }
     }
 
-    override fun reloadAd() {
+    override fun initAdMob() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

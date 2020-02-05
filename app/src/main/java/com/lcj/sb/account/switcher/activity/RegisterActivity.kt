@@ -15,7 +15,6 @@ class RegisterActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
-
     }
 
     override fun initView() {
@@ -46,7 +45,7 @@ class RegisterActivity : BaseActivity() {
         }
     }
 
-    override fun reloadAd() {
+    override fun initAdMob() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

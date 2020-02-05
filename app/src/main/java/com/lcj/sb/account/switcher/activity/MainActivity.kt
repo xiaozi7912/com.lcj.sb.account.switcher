@@ -44,10 +44,9 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
 
-        initRemoteConfig()
         setSupportActionBar(mBinding.mainToolBar)
+        initRemoteConfig()
         requestPermissions()
-        reloadAd()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -160,7 +159,7 @@ class MainActivity : BaseActivity() {
         mBinding.mainDrawerItemAccounts.performClick()
     }
 
-    override fun reloadAd() {
+    override fun initAdMob() {
         val adRequest = AdRequest.Builder().build()
         mBinding.mainAdView.loadAd(adRequest)
     }

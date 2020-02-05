@@ -32,7 +32,6 @@ import io.reactivex.schedulers.Schedulers
 
 class AccountFragment : BaseFragment() {
     private lateinit var mBinding: FragmentAccountBinding
-    private lateinit var mAdapter: AccountAdapter
     private lateinit var mGameFolderPath: String
     private lateinit var mDisplayLang: Account.Language
 
@@ -82,10 +81,8 @@ class AccountFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-
-        mAdapter = AccountAdapter(mActivity)
-        mAdapter.setOnClickListener(object : AccountAdapter.OnClickListener {
+        val adapter = AccountAdapter(mActivity)
+        adapter.setOnClickListener(object : AccountAdapter.OnClickListener {
             override fun onItemClick(holder: AccountAdapter.ViewHolder, account: Account) {
                 Intent(mActivity, AccountInfoActivity::class.java).let {
                     it.putExtras(Bundle().apply {
@@ -100,12 +97,12 @@ class AccountFragment : BaseFragment() {
             }
         })
 
-        mBinding.accountList.layoutManager = layoutManager
-        mBinding.accountList.adapter = mAdapter
+        mBinding.accountList.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
+        mBinding.accountList.adapter = adapter
 
         BaseDatabase.getInstance(mActivity).accountDAO()
                 .liveAccounts(mDisplayLang.ordinal, false)
-                .observe(this, Observer { mAdapter.update(it) })
+                .observe(this, Observer { adapter.update(it) })
     }
 
     override fun onResume() {

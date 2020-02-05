@@ -35,7 +35,6 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
         setSupportActionBar(mBinding.toolBar)
         initView()
         initGestureDetector()
-        reloadAd()
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -91,7 +90,7 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
                 .observe(this, Observer { adapter.update(it) })
     }
 
-    override fun reloadAd() {
+    override fun initAdMob() {
         val adRequest = AdRequest.Builder().build()
         mBinding.adView.loadAd(adRequest)
     }

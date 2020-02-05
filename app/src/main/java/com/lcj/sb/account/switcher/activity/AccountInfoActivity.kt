@@ -20,7 +20,6 @@ class AccountInfoActivity : BaseActivity() {
 
         setSupportActionBar(mBinding.toolBar)
         initView()
-        reloadAd()
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -37,7 +36,7 @@ class AccountInfoActivity : BaseActivity() {
         showPartyFragment()
     }
 
-    override fun reloadAd() {
+    override fun initAdMob() {
         val adRequest = AdRequest.Builder().build()
         mBinding.adView.loadAd(adRequest)
     }

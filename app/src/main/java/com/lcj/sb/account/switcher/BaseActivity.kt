@@ -38,6 +38,7 @@ abstract class BaseActivity : AppCompatActivity() {
         mAuth = FirebaseAuth.getInstance()
         mRemoteConfig = FirebaseRemoteConfig.getInstance()
         MobileAds.initialize(mActivity)
+        mHandler.postDelayed({ initAdMob() }, 1000)
 
         mContentView = findViewById(android.R.id.content)
 
@@ -65,5 +66,5 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     abstract fun initView()
-    abstract fun reloadAd()
+    abstract fun initAdMob()
 }

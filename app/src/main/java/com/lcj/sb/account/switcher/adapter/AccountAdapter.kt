@@ -11,7 +11,7 @@ import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ItemAccountListBinding
 import java.text.SimpleDateFormat
 
-class AccountAdapter(activity: Activity) : RecyclerView.Adapter<AccountAdapter.ViewHolder>() {
+class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapter.ViewHolder>() {
     private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<Account> = emptyList()
     private var mOnClickListener: OnClickListener? = null
@@ -26,10 +26,6 @@ class AccountAdapter(activity: Activity) : RecyclerView.Adapter<AccountAdapter.V
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = dataList[position]
-        holder.binding.accountAliasTv.text = item.alias
-        holder.binding.accountPathTv.text = item.folder.substring(item.folder.lastIndexOf("/") + 1)
-        holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(item.updateTime)
-
         val iconResId = if (item.selected) {
             holder.binding.accountAliasTv.setTextColor(Color.parseColor("#ffffffff"))
             when (item.lang) {
@@ -45,7 +41,11 @@ class AccountAdapter(activity: Activity) : RecyclerView.Adapter<AccountAdapter.V
                 else -> R.drawable.ic_launcher_jp_p
             }
         }
+
         holder.binding.accountIconIv.setImageResource(iconResId)
+        holder.binding.accountAliasTv.text = item.alias
+        holder.binding.accountPathTv.text = item.folder.substring(item.folder.lastIndexOf("/") + 1)
+        holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(item.updateTime)
 
         holder.binding.root.setOnClickListener {
             mOnClickListener?.onItemClick(holder, item)
