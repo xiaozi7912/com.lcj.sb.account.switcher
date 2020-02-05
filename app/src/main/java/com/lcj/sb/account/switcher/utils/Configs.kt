@@ -15,9 +15,11 @@ class Configs {
         const val PREFIX_NAME_SB_JP: String = "jp.gungho.bm"
         const val PREFIX_NAME_SB_TW: String = "com.ghg.sb"
         const val NAME_ACCOUNT_INFO_FILE: String = "account.json"
+        const val VERSION_NEW_FEATURE = 1
 
         const val PREF_KEY_FIRST_RUN = "first_run"
         const val PREF_KEY_LANGUAGE = "lang"
+        const val PREF_KEY_NEW_FEATURE = "NEW_FEATURE"
 
         const val URL_WEB_SITE_JP = "https://sb.gungho.jp/member/"
         const val URL_WEB_SITE_TW = "http://www.gungho-gamania.com/SB/Bulletins/Bulletin.aspx"

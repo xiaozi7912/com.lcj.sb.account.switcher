@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.View
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.ads.AdRequest
@@ -171,6 +172,7 @@ class MainActivity : BaseActivity() {
         if (EasyPermissions.hasPermissions(mActivity, *perms)) {
             getFCMInstanceId()
             initView()
+            checkNewFeature()
         } else {
             EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
         }
@@ -240,15 +242,30 @@ class MainActivity : BaseActivity() {
                 }
     }
 
-    private fun selectLanguage() {
-        when (mCurrentLang) {
-            Account.Language.JP -> {
-                mBinding.mainDrawerItemSbJ.performClick()
-            }
-            Account.Language.TW -> {
-                mBinding.mainDrawerItemSbT.performClick()
+    private fun checkNewFeature() {
+        PreferenceManager.getDefaultSharedPreferences(mActivity).apply {
+            val featureVersion = getInt(Configs.PREF_KEY_NEW_FEATURE, 0)
+            if (featureVersion < Configs.VERSION_NEW_FEATURE) {
+                showNewFeatureDialog()
             }
         }
+    }
+
+    private fun showNewFeatureDialog() {
+        AlertDialog.Builder(mActivity).apply {
+            setTitle("有新功能！")
+            setMessage("新功能在「本機同步」中\n可刪除本機已同步的備份檔案\n是否要看操作教學影片")
+            setPositiveButton("觀看影片") { dialog, which ->
+                startActivity(Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("https://youtu.be/HybpZKYeKwE")
+                })
+            }
+            setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
+            PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+                putInt(Configs.PREF_KEY_NEW_FEATURE, Configs.VERSION_NEW_FEATURE)
+                apply()
+            }
+        }.create().show()
     }
 
     private fun onDrawerItemSBClick(title: String, lang: Account.Language) {
