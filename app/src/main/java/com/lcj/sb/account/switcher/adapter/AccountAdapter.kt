@@ -29,15 +29,23 @@ class AccountAdapter(activity: Activity) : RecyclerView.Adapter<AccountAdapter.V
         holder.binding.accountAliasTv.text = item.alias
         holder.binding.accountPathTv.text = item.folder.substring(item.folder.lastIndexOf("/") + 1)
         holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(item.updateTime)
-        holder.binding.accountPathTv.visibility = View.INVISIBLE
 
-        if (item.selected) {
-            val iconResId = if (item.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_p else R.drawable.ic_launcher_tw_p
-            holder.binding.accountIconIv.setImageResource(iconResId)
+        val iconResId = if (item.selected) {
+            holder.binding.accountAliasTv.setTextColor(Color.parseColor("#ffffffff"))
+            when (item.lang) {
+                Account.Language.JP.ordinal -> R.drawable.ic_launcher_jp_p
+                Account.Language.TW.ordinal -> R.drawable.ic_launcher_tw_p
+                else -> R.drawable.ic_launcher_jp_p
+            }
         } else {
-            val iconResId = if (item.lang == Account.Language.JP.ordinal) R.drawable.ic_launcher_jp_n else R.drawable.ic_launcher_tw_n
-            holder.binding.accountIconIv.setImageResource(iconResId)
+            holder.binding.accountAliasTv.setTextColor(Color.parseColor("#80ffffff"))
+            when (item.lang) {
+                Account.Language.JP.ordinal -> R.drawable.ic_launcher_jp_n
+                Account.Language.TW.ordinal -> R.drawable.ic_launcher_tw_n
+                else -> R.drawable.ic_launcher_jp_p
+            }
         }
+        holder.binding.accountIconIv.setImageResource(iconResId)
 
         holder.binding.root.setOnClickListener {
             mOnClickListener?.onItemClick(holder, item)
@@ -56,7 +64,11 @@ class AccountAdapter(activity: Activity) : RecyclerView.Adapter<AccountAdapter.V
         mOnClickListener = listener
     }
 
-    class ViewHolder(val binding: ItemAccountListBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: ItemAccountListBinding) : RecyclerView.ViewHolder(binding.root) {
+        init {
+            binding.accountPathTv.visibility = View.INVISIBLE
+        }
+    }
 
     interface OnClickListener {
         fun onItemClick(holder: ViewHolder, account: Account)

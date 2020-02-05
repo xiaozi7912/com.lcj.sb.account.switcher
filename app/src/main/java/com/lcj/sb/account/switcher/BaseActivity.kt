@@ -6,7 +6,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.preference.PreferenceManager
+import android.util.DisplayMetrics
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.auth.FirebaseAuth
@@ -20,7 +22,10 @@ import com.lcj.sb.account.switcher.utils.Configs
 abstract class BaseActivity : AppCompatActivity() {
     val LOG_TAG: String = javaClass.simpleName
     val mActivity: Activity = this
+    protected lateinit var mDisplayMetrics: DisplayMetrics
     var mHandler: Handler = Handler()
+
+    protected lateinit var mContentView: View
 
     protected lateinit var mAuth: FirebaseAuth
     protected lateinit var mRemoteConfig: FirebaseRemoteConfig
@@ -29,9 +34,12 @@ abstract class BaseActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mDisplayMetrics = resources.displayMetrics
         mAuth = FirebaseAuth.getInstance()
         mRemoteConfig = FirebaseRemoteConfig.getInstance()
         MobileAds.initialize(mActivity)
+
+        mContentView = findViewById(android.R.id.content)
 
         PreferenceManager.getDefaultSharedPreferences(mActivity).apply {
             mFirstRun = getBoolean(Configs.PREF_KEY_FIRST_RUN, true)

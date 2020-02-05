@@ -74,7 +74,7 @@ class LocalSyncFragment : BaseFragment() {
 
     private fun showLocalSyncList(lang: Account.Language) {
         startActivity(Intent(mActivity, LocalSyncListActivity::class.java).apply {
-            putExtra(Configs.INTENT_KEY_LANGUAGE, lang.ordinal)
+            putExtra(Configs.INTENT_KEY_LANGUAGE, lang.name)
         })
     }
 
