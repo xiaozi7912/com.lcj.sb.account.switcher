@@ -6,7 +6,7 @@ apply plugin: 'io.fabric'
 
 android {
     compileSdkVersion 28
-    flavorDimensions "admob"
+    flavorDimensions "version", "admob"
 
     defaultConfig {
         applicationId "com.lcj.sb.account.switcher"
@@ -18,6 +18,15 @@ android {
         multiDexEnabled true
     }
     productFlavors {
+        v1 {
+            dimension "version"
+        }
+
+        v2 {
+            dimension "version"
+            applicationIdSuffix ".v2"
+        }
+
         ad_mob_sandbox {
             dimension "admob"
             applicationIdSuffix ".dev"
