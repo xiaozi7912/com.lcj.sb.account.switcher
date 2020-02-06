@@ -1,0 +1,23 @@
+召喚圖板：管理工具
+==================================================
+
+本機備份、雲端備份你的帳號，不再怕丟失
+關卡隊伍管理，讓你不再健忘
+==================================================
+
+【功能特色】
+1.本機帳號備份
+2.切換不同帳號
+3.記錄關卡隊伍
+4.支援日版&台版
+
+【說明】
+-APP不會竊取帳號資料，有疑慮的話可自行編譯APP
+
+Demo Video List : https://www.youtube.com/playlist?list=PLJ4VopJHbs2DlBfq7Zf57Hz5yaRS4Giag
+
+Github : https://lcj.page.link/TG78
+==================================================
+
+https://www.googleapis.com/auth/drive.appdata
+https://www.googleapis.com/auth/drive.file
