@@ -5,6 +5,7 @@
         android:id="@+id/toolbar_menu_download"
         android:icon="@drawable/round_system_update_white_24"
         android:title="Download"
+        android:visible="false"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/toolbar_menu_info"

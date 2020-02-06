@@ -58,7 +58,7 @@ class MainActivity : BaseActivity() {
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         return when (mSelectedFunctionId) {
             R.id.main_drawer_item_accounts -> {
-                updateDownloadAPKButton(menu)
+//                updateDownloadAPKButton(menu)
                 true
             }
             R.id.main_drawer_item_settings -> false
@@ -77,6 +77,9 @@ class MainActivity : BaseActivity() {
             it.syncState()
         }
 
+        mBinding.mainDrawerItemAccounts.setDownloadAPKButtonVisibility(false)
+        mBinding.mainDrawerItemSyncManagement.setDownloadAPKButtonVisibility(false)
+        mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
         mBinding.mainDrawerVersionTv.text = BuildConfig.VERSION_NAME
 
         mBinding.mainToolBar.setOnMenuItemClickListener { view ->
@@ -224,9 +227,6 @@ class MainActivity : BaseActivity() {
                 task.exception?.printStackTrace()
             }
         }
-        mBinding.mainDrawerItemAccounts.setDownloadAPKButtonVisibility(false)
-        mBinding.mainDrawerItemSyncManagement.setDownloadAPKButtonVisibility(false)
-        mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
     }
 
     private fun getFCMInstanceId() {
