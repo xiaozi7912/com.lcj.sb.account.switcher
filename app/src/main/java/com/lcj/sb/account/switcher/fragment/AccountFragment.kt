@@ -192,22 +192,38 @@ class AccountFragment : BaseFragment() {
     }
 
     private fun onBackupClick(holder: AccountAdapter.ViewHolder?, account: Account) {
-        Thread {
-            FileManager.backupFolder(mGameFolderPath, account.folder, object : FileManager.BackupCallback {
-                override fun onProcess(current: Int, total: Int) {
-                }
+        AlertDialog.Builder(mActivity).apply {
+            setTitle("備份遊戲資料")
+            setMessage("確定要覆蓋當前備份的資料嗎？")
+            setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
+                Thread {
+                    FileManager.backupFolder(mGameFolderPath, account.folder, object : FileManager.BackupCallback {
+                        override fun onProcess(current: Int, total: Int) {
+                        }
 
-                override fun onCompleted() {
-                    BaseDatabase.getInstance(mActivity).accountDAO().update(account.apply {
-                        updateTime = System.currentTimeMillis()
+                        override fun onCompleted() {
+                            BaseDatabase.getInstance(mActivity).accountDAO().update(account.apply {
+                                updateTime = System.currentTimeMillis()
+                            })
+
+                            mHandler.post {
+                                Snackbar.make(mContentView, "備份成功", Snackbar.LENGTH_SHORT).show()
+                                dialog.dismiss()
+                            }
+                        }
+
+                        override fun onError() {
+                            mHandler.post {
+                                Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show()
+                                dialog.dismiss()
+                            }
+                        }
                     })
-                }
+                }.start()
+            }
+            setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
+        }.create().show()
 
-                override fun onError() {
-                    mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
-                }
-            })
-        }.start()
     }
 
     private fun onRemoveClick(account: Account) {
