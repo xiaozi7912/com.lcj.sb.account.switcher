@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.lcj.sb.account.switcher.BaseApplication
@@ -33,6 +34,7 @@ import com.lcj.sb.account.switcher.model.*
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.IconUtils
 import com.theartofdev.edmodo.cropper.CropImage
+import java.io.File
 
 class PartyFragment : BaseFragment() {
     private lateinit var mBinding: FragmentPartyBinding
@@ -127,6 +129,27 @@ class PartyFragment : BaseFragment() {
         updateFilterElementView(mFilterElementList.first())
 
         mAdapter = PartyAdapter(mActivity)
+        mAdapter.setOnClickListener(object : PartyAdapter.onClickListener {
+            override fun onDeleteClick(item: DungeonParty) {
+                Log.i(LOG_TAG, "onDeleteClick")
+                Log.d(LOG_TAG, "onDeleteClick item : $item")
+                AlertDialog.Builder(mActivity).apply {
+                    setTitle("刪除隊伍")
+                    setMessage("確定要刪除此隊伍？")
+                    setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
+                        Thread {
+                            File(item.imagePath).let { if (it.exists()) it.delete() }
+                            BaseDatabase.getInstance(mActivity).dungeonPartyDAO().delete(item)
+                            mHandler.post {
+                                Snackbar.make(mContentView, R.string.dialog_message_delete_success, Snackbar.LENGTH_SHORT).show()
+                                dialog.dismiss()
+                            }
+                        }.start()
+                    }
+                    setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
+                }.create().show()
+            }
+        })
         mBinding.recyclerView.layoutManager = layoutManager
         mBinding.recyclerView.adapter = mAdapter
 
@@ -147,8 +170,9 @@ class PartyFragment : BaseFragment() {
             if (resultCode == Activity.RESULT_OK) {
                 mCropImageUri = result.uri
                 mCreatePartyBinding.partyIv.setImageURI(mCropImageUri)
+                Log.d(LOG_TAG, "mCropImageUri : ${mCropImageUri}")
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                val error = result.error
+                result.error.printStackTrace()
             }
         }
     }

@@ -2,6 +2,7 @@ package com.lcj.sb.account.switcher.database
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
@@ -9,7 +10,10 @@ import com.lcj.sb.account.switcher.database.entity.DungeonParty
 @Dao
 interface DungeonPartyDAO {
     @Insert
-    fun insert(dungeonParty: DungeonParty)
+    fun insert(entity: DungeonParty)
+
+    @Delete
+    fun delete(entity: DungeonParty)
 
     @Query("DELETE FROM dungeon_party")
     fun deleteAll()

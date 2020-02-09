@@ -12,6 +12,7 @@ import com.lcj.sb.account.switcher.utils.IconUtils
 class PartyAdapter(val activity: Activity) : RecyclerView.Adapter<PartyAdapter.ViewHolder>() {
     private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<DungeonParty> = emptyList()
+    private var mListener: onClickListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemDungeonPartyBinding.inflate(mInflater, parent, false))
@@ -23,7 +24,8 @@ class PartyAdapter(val activity: Activity) : RecyclerView.Adapter<PartyAdapter.V
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val currentItem = dataList[position]
-        val dungeonResId = IconUtils.getInstance(activity).getDungeonResId(currentItem.iconName ?: "")
+        val dungeonResId = IconUtils.getInstance(activity).getDungeonResId(currentItem.iconName
+                ?: "")
         val levelResId = IconUtils.getInstance(activity).getDungeonLevelResId(currentItem.dungeonType)
         val elementResId = IconUtils.getInstance(activity).getDungeonElementResId(currentItem.elementType)
 
@@ -31,6 +33,7 @@ class PartyAdapter(val activity: Activity) : RecyclerView.Adapter<PartyAdapter.V
         holder.binding.elementTypeImg.setImageResource(elementResId)
         holder.binding.title.text = String.format("%s - %s", currentItem.title, currentItem.monsterName)
         holder.binding.partyImage.setImageURI(Uri.parse(currentItem.imagePath))
+        holder.binding.deleteBtn.setOnClickListener { mListener?.onDeleteClick(currentItem) }
     }
 
     fun update(dataList: List<DungeonParty>) {
@@ -38,5 +41,13 @@ class PartyAdapter(val activity: Activity) : RecyclerView.Adapter<PartyAdapter.V
         notifyDataSetChanged()
     }
 
+    fun setOnClickListener(listener: onClickListener) {
+        mListener = listener
+    }
+
     class ViewHolder(val binding: ItemDungeonPartyBinding) : RecyclerView.ViewHolder(binding.root)
+
+    interface onClickListener {
+        fun onDeleteClick(item: DungeonParty)
+    }
 }
