@@ -37,13 +37,4 @@ class SyncManagementFragment : BaseFragment() {
             tab.text = mTabTitleArray[position]
         }.attach()
     }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_SETTINGS, LOG_TAG)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-    }
 }

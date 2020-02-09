@@ -28,6 +28,7 @@ import com.lcj.sb.account.switcher.fragment.SyncManagementFragment
 import com.lcj.sb.account.switcher.model.RemoteConfigModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.PackageUtils
+import com.lcj.sb.account.switcher.view.BottomMenuItemView
 import com.lcj.sb.account.switcher.view.DrawerItemView
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
@@ -159,13 +160,25 @@ class MainActivity : BaseActivity() {
             mBinding.mainDrawerItemSyncManagement.setImageAlpha(0.5f)
             showSettings(currentItem.getTitle())
         }
+        mBinding.menuItemAccount.setOnClickListener {
+            (it as BottomMenuItemView)
+            it.isActivated = true
+            mBinding.menuItemSync.isActivated = false
+            showAccounts(it.getTitle())
+        }
+        mBinding.menuItemSync.setOnClickListener {
+            (it as BottomMenuItemView)
+            it.isActivated = true
+            mBinding.menuItemAccount.isActivated = false
+            showSyncManagement(it.getTitle())
+        }
 
-        mBinding.mainDrawerItemAccounts.performClick()
+        mBinding.menuItemAccount.performClick()
     }
 
     override fun initAdMob() {
         val adRequest = AdRequest.Builder().build()
-        mBinding.mainAdView.loadAd(adRequest)
+        mBinding.adView.loadAd(adRequest)
     }
 
     @AfterPermissionGranted(REQUEST_CODE_WRITE_PERMISSION)

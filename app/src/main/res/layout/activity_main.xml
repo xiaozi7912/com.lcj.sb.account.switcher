@@ -23,6 +23,7 @@
                 android:layout_height="?attr/actionBarSize"
                 android:background="?attr/colorPrimary"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                android:visibility="gone"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -31,21 +32,53 @@
                 android:id="@+id/main_frame_layout"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintBottom_toTopOf="@+id/main_ad_view"
+                app:layout_constraintBottom_toTopOf="@+id/menu_layout"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/main_tool_bar" />
 
-            <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-                android:id="@+id/main_ad_view"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/menu_layout"
                 android:layout_width="0dp"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shape_80ffffff"
+                android:padding="2dp"
+                app:layout_constraintBottom_toTopOf="@+id/ad_view"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/main_frame_layout">
+
+                <com.lcj.sb.account.switcher.view.BottomMenuItemView
+                    android:id="@+id/menu_item_account"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@+id/menu_item_sync"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:src="@drawable/selector_round_account_box_black_24"
+                    app:title="@string/main_drawer_item_accounts" />
+
+                <com.lcj.sb.account.switcher.view.BottomMenuItemView
+                    android:id="@+id/menu_item_sync"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toRightOf="@+id/menu_item_account"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:src="@drawable/selector_round_sync_black_24"
+                    app:title="@string/main_drawer_item_sync_management" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/ad_view"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 ads:adSize="BANNER"
                 ads:adUnitId="@string/AD_UNIT_ID_MAIN"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent" />
+                ads:layout_constraintBottom_toBottomOf="parent"
+                ads:layout_constraintLeft_toLeftOf="parent"
+                ads:layout_constraintRight_toRightOf="parent"
+                ads:layout_constraintTop_toBottomOf="@+id/menu_layout" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.navigation.NavigationView

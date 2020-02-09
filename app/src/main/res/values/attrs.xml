@@ -7,4 +7,8 @@
         <attr name="title" />
         <attr name="src" />
     </declare-styleable>
+    <declare-styleable name="BottomMenuItemView">
+        <attr name="title" />
+        <attr name="src" />
+    </declare-styleable>
 </resources>

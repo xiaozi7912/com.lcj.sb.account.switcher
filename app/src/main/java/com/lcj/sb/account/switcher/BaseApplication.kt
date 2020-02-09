@@ -11,9 +11,10 @@ class BaseApplication : Application() {
         private val mHandler = Handler()
         private lateinit var analytics: FirebaseAnalytics
 
+        @Synchronized
         fun setCurrentScreen(activity: Activity, screenName: String, screenClassOverride: String) {
             Thread {
-                Thread.sleep(1000)
+                Thread.sleep(2000)
                 mHandler.post { analytics.setCurrentScreen(activity, screenName, screenClassOverride) }
             }.start()
         }
