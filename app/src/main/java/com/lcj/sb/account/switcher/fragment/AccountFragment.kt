@@ -83,7 +83,7 @@ class AccountFragment : BaseFragment() {
         super.onActivityCreated(savedInstanceState)
         val adapter = AccountAdapter(mActivity)
         adapter.setOnClickListener(object : AccountAdapter.OnClickListener {
-            override fun onItemClick(holder: AccountAdapter.ViewHolder, account: Account) {
+            override fun onItemClick(account: Account) {
                 Intent(mActivity, AccountInfoActivity::class.java).let {
                     it.putExtras(Bundle().apply {
                         putSerializable(Configs.INTENT_KEY_ACCOUNT, account)
@@ -92,8 +92,20 @@ class AccountFragment : BaseFragment() {
                 }
             }
 
-            override fun onMoreClick(holder: AccountAdapter.ViewHolder, account: Account) {
-                showAccountManagement(account)
+            override fun onEditAliasClick(account: Account) {
+                onEditClick(account)
+            }
+
+            override fun onSaveClick(account: Account) {
+                onBackupClick(account)
+            }
+
+            override fun onLoadGameClick(account: Account) {
+                onLoadClick(account)
+            }
+
+            override fun onMoreClick(account: Account) {
+//                showAccountManagement(account)
             }
         })
 
@@ -133,10 +145,10 @@ class AccountFragment : BaseFragment() {
 
             binding.accountAliasTv.text = String.format(getString(R.string.account_alias_text), account.alias)
             binding.accountPathTv.text = String.format(getString(R.string.dialog_folder_path), account.folder)
-            binding.accountAliasEdit.setOnClickListener { onEditClick(null, account); dialog.dismiss() }
+            binding.accountAliasEdit.setOnClickListener { onEditClick(account); dialog.dismiss() }
             binding.accountRemoveButton.setOnClickListener { onRemoveClick(account);dialog.dismiss() }
-            binding.accountBackupButton.setOnClickListener { onBackupClick(null, account); dialog.dismiss() }
-            binding.accountLoadButton.setOnClickListener { onLoadClick(null, account);dialog.dismiss() }
+            binding.accountBackupButton.setOnClickListener { onBackupClick(account); dialog.dismiss() }
+            binding.accountLoadButton.setOnClickListener { onLoadClick(account);dialog.dismiss() }
 
             dialog.show()
             dialog.window?.apply {
@@ -147,7 +159,7 @@ class AccountFragment : BaseFragment() {
         }
     }
 
-    private fun onEditClick(holder: AccountAdapter.ViewHolder?, account: Account) {
+    private fun onEditClick(account: Account) {
         AccountEditModel(account.alias).let { model ->
             val binding = DialogEditAccountBinding.inflate(layoutInflater)
             binding.model = model
@@ -174,7 +186,7 @@ class AccountFragment : BaseFragment() {
         }
     }
 
-    private fun onLoadClick(holder: AccountAdapter.ViewHolder?, account: Account) {
+    private fun onLoadClick(account: Account) {
         val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
         val srcFolder: String = String.format("%s/%s", account.folder, "files")
         val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
@@ -191,7 +203,7 @@ class AccountFragment : BaseFragment() {
         setAccountSelected(account)
     }
 
-    private fun onBackupClick(holder: AccountAdapter.ViewHolder?, account: Account) {
+    private fun onBackupClick(account: Account) {
         AlertDialog.Builder(mActivity).apply {
             setTitle("備份遊戲資料")
             setMessage("確定要覆蓋當前備份的資料嗎？")

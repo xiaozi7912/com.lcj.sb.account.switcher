@@ -11,17 +11,17 @@
         android:id="@+id/item_root_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
-        android:background="@drawable/bg_item_3"
+        android:layout_margin="5dp"
+        android:background="@drawable/shape_corner_80000000"
         android:foreground="?android:attr/selectableItemBackground"
-        android:padding="20dp">
+        android:padding="5dp">
 
         <ImageView
             android:id="@+id/account_icon_iv"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@drawable/ic_launcher_jp_n"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/account_divider"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,7 +39,7 @@
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/account_path_tv"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
-            app:layout_constraintRight_toLeftOf="@+id/account_more_btn"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="@+id/account_icon_iv" />
 
         <TextView
@@ -54,7 +54,7 @@
             android:textSize="14sp"
             app:layout_constraintBottom_toTopOf="@+id/account_update_time_tv"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
-            app:layout_constraintRight_toLeftOf="@+id/account_more_btn"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/account_alias_tv" />
 
         <TextView
@@ -69,18 +69,62 @@
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="@+id/account_icon_iv"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
-            app:layout_constraintRight_toLeftOf="@+id/account_more_btn"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/account_path_tv" />
+
+        <View
+            android:id="@+id/account_divider"
+            android:layout_width="wrap_content"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:background="#ffffff"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/account_icon_iv" />
+
+        <ImageButton
+            android:id="@+id/account_edit_alias_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_edit_white_24"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/account_save_btn"
+            app:layout_constraintTop_toBottomOf="@+id/account_divider" />
+
+        <ImageButton
+            android:id="@+id/account_save_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_save_white_24"
+            app:layout_constraintLeft_toRightOf="@+id/account_edit_alias_btn"
+            app:layout_constraintRight_toLeftOf="@+id/account_load_btn"
+            app:layout_constraintTop_toBottomOf="@+id/account_divider" />
+
+        <ImageButton
+            android:id="@+id/account_load_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_games_white_24"
+            app:layout_constraintLeft_toRightOf="@+id/account_save_btn"
+            app:layout_constraintRight_toLeftOf="@+id/account_more_btn"
+            app:layout_constraintTop_toBottomOf="@+id/account_divider" />
 
         <ImageButton
             android:id="@+id/account_more_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
             android:background="@android:color/transparent"
             android:elevation="2dp"
-            android:src="@drawable/selector_account_more_btn"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/selector_round_more_horiz_white_24"
+            app:layout_constraintLeft_toRightOf="@+id/account_load_btn"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/account_divider" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

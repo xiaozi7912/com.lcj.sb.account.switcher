@@ -47,12 +47,11 @@ class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapt
         holder.binding.accountPathTv.text = item.folder.substring(item.folder.lastIndexOf("/") + 1)
         holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(item.updateTime)
 
-        holder.binding.root.setOnClickListener {
-            mOnClickListener?.onItemClick(holder, item)
-        }
-        holder.binding.accountMoreBtn.setOnClickListener {
-            mOnClickListener?.onMoreClick(holder, item)
-        }
+        holder.binding.root.setOnClickListener { mOnClickListener?.onItemClick(item) }
+        holder.binding.accountEditAliasBtn.setOnClickListener { mOnClickListener?.onEditAliasClick(item) }
+        holder.binding.accountSaveBtn.setOnClickListener { mOnClickListener?.onSaveClick(item) }
+        holder.binding.accountLoadBtn.setOnClickListener { mOnClickListener?.onLoadGameClick(item) }
+        holder.binding.accountMoreBtn.setOnClickListener { mOnClickListener?.onMoreClick(item) }
     }
 
     fun update(dataList: List<Account>) {
@@ -67,12 +66,15 @@ class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapt
     class ViewHolder(val binding: ItemAccountListBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.accountPathTv.visibility = View.INVISIBLE
+            binding.accountMoreBtn.visibility = View.GONE
         }
     }
 
     interface OnClickListener {
-        fun onItemClick(holder: ViewHolder, account: Account)
-
-        fun onMoreClick(holder: ViewHolder, account: Account)
+        fun onItemClick(account: Account)
+        fun onEditAliasClick(account: Account)
+        fun onSaveClick(account: Account)
+        fun onLoadGameClick(account: Account)
+        fun onMoreClick(account: Account)
     }
 }
