@@ -13,7 +13,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:background="@drawable/bg_dialog_3"
+            android:background="@drawable/shape_corner_ffffffff"
             android:padding="20dp">
 
             <TextView
@@ -22,7 +22,7 @@
                 android:layout_height="wrap_content"
                 android:text="帳號備份"
                 android:textAlignment="center"
-                android:textColor="#ffffff"
+                android:textColor="#000000"
                 android:textSize="20sp"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
@@ -33,8 +33,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:hint="@string/backup_input_et_hint"
-                android:textColor="#ffffff"
-                android:textColorHint="#ffffff"
+                android:textColor="#000000"
+                android:textColorHint="#000000"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toTopOf="@+id/backup_progress_bar"
                 app:layout_constraintLeft_toLeftOf="parent"

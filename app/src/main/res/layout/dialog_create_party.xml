@@ -16,7 +16,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_dialog_3"
+            android:background="@drawable/shape_corner_ffffffff"
             android:padding="20dp">
 
             <RelativeLayout
@@ -120,8 +120,8 @@
                 android:hint="說明"
                 android:lines="1"
                 android:text="@={model.title}"
-                android:textColor="#ffffff"
-                android:textColorHint="#ffffff"
+                android:textColor="#000000"
+                android:textColorHint="#000000"
                 android:textSize="14sp"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
@@ -131,7 +131,7 @@
                 android:id="@+id/party_iv"
                 android:layout_width="0dp"
                 android:layout_height="68dp"
-                android:src="@drawable/selector_party_iv"
+                android:src="@drawable/selector_round_add_photo_alternate_black_24"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/input_edit" />

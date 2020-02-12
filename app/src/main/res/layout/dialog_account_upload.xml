@@ -13,7 +13,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="150dp"
-            android:background="@drawable/bg_dialog_3"
+            android:background="@drawable/shape_corner_ffffffff"
             android:padding="20dp">
 
             <TextView
@@ -23,7 +23,7 @@
                 android:ellipsize="end"
                 android:lines="1"
                 android:text="上傳中：檔名"
-                android:textColor="#ffffff"
+                android:textColor="#000000"
                 android:textSize="16sp"
                 app:layout_constraintBottom_toTopOf="@+id/account_upload_file_count_tv"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -34,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="1/2"
-                android:textColor="#ffffff"
+                android:textColor="#000000"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toTopOf="@+id/account_upload_progress_bar"
                 app:layout_constraintRight_toRightOf="parent"

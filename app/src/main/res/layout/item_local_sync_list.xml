@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
-        android:background="@drawable/bg_item_3"
+        android:background="@drawable/shape_corner_80000000"
         android:padding="20dp">
 
         <ImageView

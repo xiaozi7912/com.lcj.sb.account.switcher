@@ -31,12 +31,13 @@ import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.databinding.DialogCreatePartyBinding
 import com.lcj.sb.account.switcher.databinding.FragmentPartyBinding
 import com.lcj.sb.account.switcher.model.*
+import com.lcj.sb.account.switcher.repository.IPartyListListener
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.IconUtils
 import com.theartofdev.edmodo.cropper.CropImage
 import java.io.File
 
-class PartyFragment : BaseFragment() {
+class PartyFragment : BaseFragment(),IPartyListListener {
     private lateinit var mBinding: FragmentPartyBinding
     private lateinit var mAccount: Account
     private lateinit var mAdapter: PartyAdapter
@@ -123,34 +124,12 @@ class PartyFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-
         updateFilterLevelView(mFilterLevelList.first())
         updateFilterElementView(mFilterElementList.first())
 
         mAdapter = PartyAdapter(mActivity)
-        mAdapter.setOnClickListener(object : PartyAdapter.onClickListener {
-            override fun onDeleteClick(item: DungeonParty) {
-                Log.i(LOG_TAG, "onDeleteClick")
-                Log.d(LOG_TAG, "onDeleteClick item : $item")
-                AlertDialog.Builder(mActivity).apply {
-                    setTitle("刪除隊伍")
-                    setMessage("確定要刪除此隊伍？")
-                    setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
-                        Thread {
-                            File(item.imagePath).let { if (it.exists()) it.delete() }
-                            BaseDatabase.getInstance(mActivity).dungeonPartyDAO().delete(item)
-                            mHandler.post {
-                                Snackbar.make(mContentView, R.string.dialog_message_delete_success, Snackbar.LENGTH_SHORT).show()
-                                dialog.dismiss()
-                            }
-                        }.start()
-                    }
-                    setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
-                }.create().show()
-            }
-        })
-        mBinding.recyclerView.layoutManager = layoutManager
+        mAdapter.setOnClickListener(this)
+        mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
         mBinding.recyclerView.adapter = mAdapter
 
         BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
@@ -175,6 +154,26 @@ class PartyFragment : BaseFragment() {
                 result.error.printStackTrace()
             }
         }
+    }
+
+    override fun onDeleteClick(item: DungeonParty) {
+        Log.i(LOG_TAG, "onDeleteClick")
+        Log.d(LOG_TAG, "onDeleteClick item : $item")
+        AlertDialog.Builder(mActivity).apply {
+            setTitle("刪除隊伍")
+            setMessage("確定要刪除此隊伍？")
+            setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
+                Thread {
+                    File(item.imagePath).let { if (it.exists()) it.delete() }
+                    BaseDatabase.getInstance(mActivity).dungeonPartyDAO().delete(item)
+                    mHandler.post {
+                        Snackbar.make(mContentView, R.string.dialog_message_delete_success, Snackbar.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                }.start()
+            }
+            setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
+        }.create().show()
     }
 
     private fun getDungeonInfoFromRemote() {
