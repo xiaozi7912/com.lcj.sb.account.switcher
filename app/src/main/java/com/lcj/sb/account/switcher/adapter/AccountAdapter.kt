@@ -6,16 +6,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.lcj.sb.account.switcher.BaseAdapter
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ItemAccountListBinding
-import com.lcj.sb.account.switcher.repository.IAccountListListener
 import java.text.SimpleDateFormat
 
-class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapter.ViewHolder>() {
+class AccountAdapter(activity: Activity) : BaseAdapter<AccountAdapter.ViewHolder>(activity) {
     private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<Account> = emptyList()
-    private var mOnClickListener: IAccountListListener? = null
+    private var mOnClickListener: AccountListListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemAccountListBinding.inflate(mInflater, parent, false))
@@ -61,7 +61,7 @@ class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapt
         notifyDataSetChanged()
     }
 
-    fun setOnClickListener(listener: IAccountListListener) {
+    fun setOnClickListener(listener: AccountListListener) {
         mOnClickListener = listener
     }
 

@@ -5,15 +5,15 @@ import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.lcj.sb.account.switcher.BaseAdapter
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.databinding.ItemDungeonPartyBinding
-import com.lcj.sb.account.switcher.repository.IPartyListListener
 import com.lcj.sb.account.switcher.utils.IconUtils
 
-class PartyAdapter(val activity: Activity) : RecyclerView.Adapter<PartyAdapter.ViewHolder>() {
+class PartyAdapter(activity: Activity) : BaseAdapter<PartyAdapter.ViewHolder>(activity) {
     private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<DungeonParty> = emptyList()
-    private var mListener: IPartyListListener? = null
+    private var mListener: PartyListListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemDungeonPartyBinding.inflate(mInflater, parent, false))
@@ -42,7 +42,7 @@ class PartyAdapter(val activity: Activity) : RecyclerView.Adapter<PartyAdapter.V
         notifyDataSetChanged()
     }
 
-    fun setOnClickListener(listener: IPartyListListener) {
+    fun setOnClickListener(listener: PartyListListener) {
         mListener = listener
     }
 

@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.lcj.sb.account.switcher.BaseAdapter
 import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.BaseFragment
 import com.lcj.sb.account.switcher.R
@@ -31,13 +32,12 @@ import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.databinding.DialogCreatePartyBinding
 import com.lcj.sb.account.switcher.databinding.FragmentPartyBinding
 import com.lcj.sb.account.switcher.model.*
-import com.lcj.sb.account.switcher.repository.IPartyListListener
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.IconUtils
 import com.theartofdev.edmodo.cropper.CropImage
 import java.io.File
 
-class PartyFragment : BaseFragment(),IPartyListListener {
+class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
     private lateinit var mBinding: FragmentPartyBinding
     private lateinit var mAccount: Account
     private lateinit var mAdapter: PartyAdapter

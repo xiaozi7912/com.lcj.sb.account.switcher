@@ -3,12 +3,17 @@ package com.lcj.sb.account.switcher.view
 import android.app.Activity
 import android.app.AlertDialog
 import android.view.LayoutInflater
+import android.view.View
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.databinding.DialogAccountUploadBinding
 
 class AccountUploadDialog(val activity: Activity) {
     private val mDialog = AlertDialog.Builder(activity, R.style.CustomDialog).create()
     private val mBinding = DialogAccountUploadBinding.inflate(LayoutInflater.from(activity))
+
+    init {
+        mBinding.dialogCloseBtn.visibility = View.GONE
+    }
 
     companion object {
         private var instance: AccountUploadDialog? = null
@@ -29,6 +34,10 @@ class AccountUploadDialog(val activity: Activity) {
 
     fun setProgress(progress: Int) {
         mBinding.accountUploadProgressBar.progress = progress
+    }
+
+    fun setCloseClickListener(listener: View.OnClickListener) {
+        mBinding.dialogCloseBtn.setOnClickListener(listener)
     }
 
     fun show() {
