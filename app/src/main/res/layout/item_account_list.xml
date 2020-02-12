@@ -82,13 +82,24 @@
             app:layout_constraintTop_toBottomOf="@+id/account_icon_iv" />
 
         <ImageButton
+            android:id="@+id/account_delete_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_delete_forever_white_24"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/account_edit_alias_btn"
+            app:layout_constraintTop_toBottomOf="@+id/account_divider" />
+
+        <ImageButton
             android:id="@+id/account_edit_alias_btn"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginTop="5dp"
             android:background="@android:color/transparent"
             android:src="@drawable/selector_round_edit_white_24"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintLeft_toRightOf="@+id/account_delete_btn"
             app:layout_constraintRight_toLeftOf="@+id/account_save_btn"
             app:layout_constraintTop_toBottomOf="@+id/account_divider" />
 

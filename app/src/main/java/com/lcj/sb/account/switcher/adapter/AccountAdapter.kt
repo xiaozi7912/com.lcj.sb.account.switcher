@@ -9,12 +9,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ItemAccountListBinding
+import com.lcj.sb.account.switcher.repository.IAccountListListener
 import java.text.SimpleDateFormat
 
 class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapter.ViewHolder>() {
     private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<Account> = emptyList()
-    private var mOnClickListener: OnClickListener? = null
+    private var mOnClickListener: IAccountListListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemAccountListBinding.inflate(mInflater, parent, false))
@@ -48,6 +49,7 @@ class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapt
         holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(item.updateTime)
 
         holder.binding.root.setOnClickListener { mOnClickListener?.onItemClick(item) }
+        holder.binding.accountDeleteBtn.setOnClickListener { mOnClickListener?.onDeleteClick(item) }
         holder.binding.accountEditAliasBtn.setOnClickListener { mOnClickListener?.onEditAliasClick(item) }
         holder.binding.accountSaveBtn.setOnClickListener { mOnClickListener?.onSaveClick(item) }
         holder.binding.accountLoadBtn.setOnClickListener { mOnClickListener?.onLoadGameClick(item) }
@@ -59,7 +61,7 @@ class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapt
         notifyDataSetChanged()
     }
 
-    fun setOnClickListener(listener: OnClickListener) {
+    fun setOnClickListener(listener: IAccountListListener) {
         mOnClickListener = listener
     }
 
@@ -68,13 +70,5 @@ class AccountAdapter(val activity: Activity) : RecyclerView.Adapter<AccountAdapt
             binding.accountPathTv.visibility = View.INVISIBLE
             binding.accountMoreBtn.visibility = View.GONE
         }
-    }
-
-    interface OnClickListener {
-        fun onItemClick(account: Account)
-        fun onEditAliasClick(account: Account)
-        fun onSaveClick(account: Account)
-        fun onLoadGameClick(account: Account)
-        fun onMoreClick(account: Account)
     }
 }

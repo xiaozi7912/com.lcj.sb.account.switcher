@@ -73,9 +73,9 @@ class LocalSyncFragment : BaseFragment() {
     }
 
     private fun showLocalSyncList(lang: Account.Language) {
-        startActivity(Intent(mActivity, LocalSyncListActivity::class.java).apply {
-            putExtra(Configs.INTENT_KEY_LANGUAGE, lang.name)
-        })
+//        startActivity(Intent(mActivity, LocalSyncListActivity::class.java).apply {
+//            putExtra(Configs.INTENT_KEY_LANGUAGE, lang.name)
+//        })
     }
 
     private fun onSyncJPButtonClick() {

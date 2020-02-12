@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.animation.LinearInterpolator
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -24,13 +25,15 @@ import com.lcj.sb.account.switcher.databinding.DialogBackupAccountBinding
 import com.lcj.sb.account.switcher.databinding.DialogEditAccountBinding
 import com.lcj.sb.account.switcher.databinding.FragmentAccountBinding
 import com.lcj.sb.account.switcher.model.AccountEditModel
+import com.lcj.sb.account.switcher.repository.IAccountListListener
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.FileManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import java.io.File
 
-class AccountFragment : BaseFragment() {
+class AccountFragment : BaseFragment(), View.OnClickListener, IAccountListListener {
     private lateinit var mBinding: FragmentAccountBinding
     private lateinit var mGameFolderPath: String
     private lateinit var mDisplayLang: Account.Language
@@ -58,57 +61,13 @@ class AccountFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
         mDisplayLang = Account.Language.values()[arguments?.getInt(Configs.PREF_KEY_LANGUAGE)!!]
 
-        mBinding.addFab.setOnClickListener {
-            getPackageName().let {
-                if (FileManager.isPackageInstalled(it, mActivity)) {
-                    showBackupAccountDialog()
-                } else {
-                    showErrorNoInstalled(it)
-                }
-            }
-        }
-
-        mBinding.gameFab.setOnClickListener {
-            getPackageName().let {
-                if (FileManager.isPackageInstalled(it, mActivity)) {
-                    startApplication(it)
-                } else {
-                    showErrorNoInstalled(it)
-                }
-            }
-        }
+        mBinding.addFab.setOnClickListener(this)
+        mBinding.gameFab.setOnClickListener(this)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val adapter = AccountAdapter(mActivity)
-        adapter.setOnClickListener(object : AccountAdapter.OnClickListener {
-            override fun onItemClick(account: Account) {
-                Intent(mActivity, AccountInfoActivity::class.java).let {
-                    it.putExtras(Bundle().apply {
-                        putSerializable(Configs.INTENT_KEY_ACCOUNT, account)
-                    })
-                    startActivity(it)
-                }
-            }
-
-            override fun onEditAliasClick(account: Account) {
-                onEditClick(account)
-            }
-
-            override fun onSaveClick(account: Account) {
-                onBackupClick(account)
-            }
-
-            override fun onLoadGameClick(account: Account) {
-                onLoadClick(account)
-            }
-
-            override fun onMoreClick(account: Account) {
-//                showAccountManagement(account)
-            }
-        })
-
+        val adapter = AccountAdapter(mActivity).apply { setOnClickListener(this@AccountFragment) }
         mBinding.accountList.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
         mBinding.accountList.adapter = adapter
 
@@ -139,27 +98,74 @@ class AccountFragment : BaseFragment() {
         }
     }
 
-    private fun showAccountManagement(account: Account) {
-        AlertDialog.Builder(mActivity, R.style.CustomDialog).create().let { dialog ->
-            val binding = DialogAccountManagementBinding.inflate(layoutInflater)
-
-            binding.accountAliasTv.text = String.format(getString(R.string.account_alias_text), account.alias)
-            binding.accountPathTv.text = String.format(getString(R.string.dialog_folder_path), account.folder)
-            binding.accountAliasEdit.setOnClickListener { onEditClick(account); dialog.dismiss() }
-            binding.accountRemoveButton.setOnClickListener { onRemoveClick(account);dialog.dismiss() }
-            binding.accountBackupButton.setOnClickListener { onBackupClick(account); dialog.dismiss() }
-            binding.accountLoadButton.setOnClickListener { onLoadClick(account);dialog.dismiss() }
-
-            dialog.show()
-            dialog.window?.apply {
-                clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-                setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.add_fab -> getPackageName().let {
+                if (FileManager.isPackageInstalled(it, mActivity)) {
+                    showBackupAccountDialog()
+                } else {
+                    showErrorNoInstalled(it)
+                }
             }
-            dialog.setContentView(binding.root)
+            R.id.game_fab -> getPackageName().let {
+                if (FileManager.isPackageInstalled(it, mActivity)) {
+                    startApplication(it)
+                } else {
+                    showErrorNoInstalled(it)
+                }
+            }
         }
     }
 
-    private fun onEditClick(account: Account) {
+    override fun onItemClick(account: Account) {
+        Intent(mActivity, AccountInfoActivity::class.java).let {
+            it.putExtras(Bundle().apply {
+                putSerializable(Configs.INTENT_KEY_ACCOUNT, account)
+            })
+            startActivity(it)
+        }
+    }
+
+    override fun onDeleteClick(account: Account) {
+        AlertDialog.Builder(mActivity).apply {
+            setTitle(getString(R.string.dialog_title_delete_backup))
+            setMessage(getString(R.string.dialog_message_delete_backup))
+            setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
+                val folder = File(account.folder)
+                Thread {
+                    if (folder.exists()) {
+                        if (folder.isDirectory) {
+                            folder.listFiles().forEach { childFile ->
+                                if (childFile.isDirectory) {
+                                    childFile.listFiles().forEach { it.delete() }
+                                }
+                                childFile.delete()
+                            }
+
+                            if (folder.delete()) {
+                                BaseDatabase.getInstance(mActivity).accountDAO().delete(account)
+                                mHandler.post {
+                                    mBinding.addFab.animate().translationY(0f).setInterpolator(LinearInterpolator()).start()
+                                    mBinding.gameFab.animate().translationY(0f).setInterpolator(LinearInterpolator()).start()
+                                    Snackbar.make(mContentView, getString(R.string.dialog_message_delete_success), Snackbar.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                mHandler.post { Snackbar.make(mContentView, getString(R.string.dialog_message_delete_fail), Snackbar.LENGTH_SHORT).show() }
+                            }
+                        }
+                    } else {
+                        BaseDatabase.getInstance(mActivity).accountDAO().delete(account)
+                        mHandler.post { Snackbar.make(mContentView, getString(R.string.dialog_message_delete_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
+                    }
+                }.start()
+            }
+            setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which ->
+                dialog.dismiss()
+            }
+        }.create().show()
+    }
+
+    override fun onEditAliasClick(account: Account) {
         AccountEditModel(account.alias).let { model ->
             val binding = DialogEditAccountBinding.inflate(layoutInflater)
             binding.model = model
@@ -186,24 +192,7 @@ class AccountFragment : BaseFragment() {
         }
     }
 
-    private fun onLoadClick(account: Account) {
-        val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
-        val srcFolder: String = String.format("%s/%s", account.folder, "files")
-        val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
-
-        FileManager.loadFolder(srcFolder, dstFolder, object : FileManager.LoadCallback {
-            override fun onCompleted() {
-                mHandler.post { mBinding.gameFab.performClick() }
-            }
-
-            override fun onError() {
-
-            }
-        })
-        setAccountSelected(account)
-    }
-
-    private fun onBackupClick(account: Account) {
+    override fun onSaveClick(account: Account) {
         AlertDialog.Builder(mActivity).apply {
             setTitle("備份遊戲資料")
             setMessage("確定要覆蓋當前備份的資料嗎？")
@@ -235,15 +224,43 @@ class AccountFragment : BaseFragment() {
             }
             setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
         }.create().show()
-
     }
 
-    private fun onRemoveClick(account: Account) {
-        Thread {
-            BaseDatabase.getInstance(mActivity).accountDAO().update(account.apply {
-                hidden = true
-            })
-        }.start()
+    override fun onLoadGameClick(account: Account) {
+        val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
+        val srcFolder: String = String.format("%s/%s", account.folder, "files")
+        val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
+
+        FileManager.loadFolder(srcFolder, dstFolder, object : FileManager.LoadCallback {
+            override fun onCompleted() {
+                mHandler.post { mBinding.gameFab.performClick() }
+            }
+
+            override fun onError() {
+
+            }
+        })
+        setAccountSelected(account)
+    }
+
+    override fun onMoreClick(account: Account) {
+        AlertDialog.Builder(mActivity, R.style.CustomDialog).create().let { dialog ->
+            val binding = DialogAccountManagementBinding.inflate(layoutInflater)
+
+            binding.accountAliasTv.text = String.format(getString(R.string.account_alias_text), account.alias)
+            binding.accountPathTv.text = String.format(getString(R.string.dialog_folder_path), account.folder)
+            binding.accountAliasEdit.setOnClickListener { onEditAliasClick(account); dialog.dismiss() }
+            binding.accountRemoveButton.setOnClickListener { onDeleteClick(account);dialog.dismiss() }
+            binding.accountBackupButton.setOnClickListener { onSaveClick(account); dialog.dismiss() }
+            binding.accountLoadButton.setOnClickListener { onLoadGameClick(account);dialog.dismiss() }
+
+            dialog.show()
+            dialog.window?.apply {
+                clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+                setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            }
+            dialog.setContentView(binding.root)
+        }
     }
 
     private fun setAccountSelected(account: Account) {
