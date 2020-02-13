@@ -2,9 +2,11 @@ package com.lcj.sb.account.switcher.fragment
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -22,6 +24,7 @@ import com.lcj.sb.account.switcher.BaseApplication
 import com.lcj.sb.account.switcher.BaseFragment
 import com.lcj.sb.account.switcher.BuildConfig
 import com.lcj.sb.account.switcher.R
+import com.lcj.sb.account.switcher.adapter.GoogleDriveAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
@@ -39,8 +42,8 @@ import kotlin.collections.ArrayList
 
 class RemoteSyncFragment : BaseFragment() {
     private lateinit var mBinding: FragmentRemoteBackupBinding
-
     private lateinit var mSignInClient: GoogleSignInClient
+    private lateinit var mAdapter: GoogleDriveAdapter
 
     companion object {
         fun newInstance(): RemoteSyncFragment {
@@ -55,6 +58,10 @@ class RemoteSyncFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        mBinding.settingsGoogleAccountRoot.visibility = View.GONE
+        mBinding.settingsSbJRoot.visibility = View.GONE
+        mBinding.settingsSbTRoot.visibility = View.GONE
+
         mBinding.signInButton.setOnClickListener {
             startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
         }
@@ -72,6 +79,8 @@ class RemoteSyncFragment : BaseFragment() {
 
         initGoogleSignIn()
         checkLastSignedInAccount()
+        initRecyclerView()
+        refresh()
         updateSyncView(Account.Language.JP)
         updateSyncView(Account.Language.TW)
     }
@@ -87,6 +96,42 @@ class RemoteSyncFragment : BaseFragment() {
             Configs.REQUEST_CODE_GOOGLE_SIGN_IN -> handleSignInResult(data)
             else -> {
             }
+        }
+    }
+
+    private fun initRecyclerView() {
+        mAdapter = GoogleDriveAdapter(mActivity)
+        mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
+        mBinding.recyclerView.adapter = mAdapter
+    }
+
+    private fun refresh() {
+        val account = GoogleSignIn.getLastSignedInAccount(mActivity)
+        account?.let {
+            Thread {
+                val credential = GoogleAccountCredential.usingOAuth2(activity, setOf(DriveScopes.DRIVE_FILE)).apply {
+                    selectedAccount = it.account
+                }
+                val driveService = Drive.Builder(
+                        AndroidHttp.newCompatibleTransport(),
+                        GsonFactory(), credential)
+                        .build()
+
+                try {
+                    val qFolder = driveService.files().list()
+//                            .setQ("name='${BuildConfig.APPLICATION_ID}'")
+                            .setFields("files(id,name,parents,modifiedTime)")
+                            .execute()
+                    qFolder.files.forEach {
+                        Log.v(LOG_TAG, "it.id : ${it.id}")
+                        Log.v(LOG_TAG, "it.name : ${it.name}")
+                        Log.v(LOG_TAG, "it.modifiedTime : ${it.modifiedTime}")
+                        Log.v(LOG_TAG, "it.parents : ${it.parents}")
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }.start()
         }
     }
 

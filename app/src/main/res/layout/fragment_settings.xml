@@ -10,22 +10,58 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/settings_tab_layout"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@drawable/shape_corner_80b58e52"
+            android:padding="5dp"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/settings_pager"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/settings_tab_layout" />
+            <ImageView
+                android:id="@+id/settings_google_avatar"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/round_account_box_black_24"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/settings_sign_in_account_tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:ellipsize="end"
+                android:lines="1"
+                android:text="尚未綁定Google帳號"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/settings_google_avatar"
+                app:layout_constraintRight_toLeftOf="@+id/sign_in_button"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.gms.common.SignInButton
+                android:id="@+id/sign_in_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:buttonSize="icon_only"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/settings_sign_in_account_tv"
+                app:layout_constraintRight_toLeftOf="@+id/sign_out_button"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/sign_out_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="登出"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/sign_in_button"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

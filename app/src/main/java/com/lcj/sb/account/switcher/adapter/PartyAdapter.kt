@@ -2,7 +2,6 @@ package com.lcj.sb.account.switcher.adapter
 
 import android.app.Activity
 import android.net.Uri
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.lcj.sb.account.switcher.BaseAdapter
@@ -11,7 +10,6 @@ import com.lcj.sb.account.switcher.databinding.ItemDungeonPartyBinding
 import com.lcj.sb.account.switcher.utils.IconUtils
 
 class PartyAdapter(activity: Activity) : BaseAdapter<PartyAdapter.ViewHolder>(activity) {
-    private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<DungeonParty> = emptyList()
     private var mListener: PartyListListener? = null
 

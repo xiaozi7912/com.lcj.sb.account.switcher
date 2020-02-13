@@ -2,7 +2,6 @@ package com.lcj.sb.account.switcher.adapter
 
 import android.app.Activity
 import android.graphics.Color
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -13,7 +12,6 @@ import com.lcj.sb.account.switcher.databinding.ItemAccountListBinding
 import java.text.SimpleDateFormat
 
 class AccountAdapter(activity: Activity) : BaseAdapter<AccountAdapter.ViewHolder>(activity) {
-    private val mInflater: LayoutInflater = LayoutInflater.from(activity)
     private var dataList: List<Account> = emptyList()
     private var mOnClickListener: AccountListListener? = null
 

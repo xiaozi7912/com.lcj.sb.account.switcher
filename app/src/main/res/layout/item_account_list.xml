@@ -145,6 +145,7 @@
             android:background="@android:color/transparent"
             android:elevation="2dp"
             android:src="@drawable/selector_round_cloud_upload_white_24"
+            android:visibility="gone"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toLeftOf="@+id/account_edit_alias_btn"
             app:layout_constraintTop_toBottomOf="@+id/account_delete_btn" />
@@ -157,6 +158,7 @@
             android:background="@android:color/transparent"
             android:elevation="2dp"
             android:src="@drawable/selector_round_cloud_download_white_24"
+            android:visibility="gone"
             app:layout_constraintLeft_toRightOf="@+id/account_upload_btn"
             app:layout_constraintRight_toLeftOf="@+id/account_save_btn"
             app:layout_constraintTop_toBottomOf="@+id/account_delete_btn" />

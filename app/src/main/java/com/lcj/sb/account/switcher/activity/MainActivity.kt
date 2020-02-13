@@ -12,6 +12,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import com.google.android.gms.ads.AdRequest
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
@@ -112,65 +113,77 @@ class MainActivity : BaseActivity() {
         })
 
         mBinding.mainDrawerItemSbJ.setOnClickListener {
-            val currentItem = it as DrawerItemView
+            (it as DrawerItemView)
 
-            currentItem.setImageRes(R.drawable.ic_launcher_jp_p)
+            it.setImageRes(R.drawable.ic_launcher_jp_p)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
             mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
-            onDrawerItemSBClick(currentItem.getTitle(), Account.Language.JP)
+            onDrawerItemSBClick(it.getTitle(), Account.Language.JP)
         }
         mBinding.mainDrawerItemSbT.setOnClickListener {
-            val currentItem = it as DrawerItemView
+            (it as DrawerItemView)
 
-            currentItem.setImageRes(R.drawable.ic_launcher_tw_p)
+            it.setImageRes(R.drawable.ic_launcher_tw_p)
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
-            onDrawerItemSBClick(currentItem.getTitle(), Account.Language.TW)
+            onDrawerItemSBClick(it.getTitle(), Account.Language.TW)
         }
         mBinding.mainDrawerItemAccounts.setOnClickListener {
-            val currentItem = it as DrawerItemView
+            (it as DrawerItemView)
 
-            currentItem.setImageAlpha(1.0f)
+            it.setImageAlpha(1.0f)
             mSelectedFunctionId = it.id
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
             mBinding.mainDrawerItemSyncManagement.setImageAlpha(0.5f)
             mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
-            showAccounts(currentItem.getTitle())
+            showFragment(it.getTitle(), AccountsFragment.newInstance())
         }
         mBinding.mainDrawerItemSyncManagement.setOnClickListener {
-            val currentItem = it as DrawerItemView
+            (it as DrawerItemView)
 
-            currentItem.setImageAlpha(1.0f)
+            it.setImageAlpha(1.0f)
             mSelectedFunctionId = it.id
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
             mBinding.mainDrawerItemAccounts.setImageAlpha(0.5f)
             mBinding.mainDrawerItemSettings.setImageAlpha(0.5f)
-            showSyncManagement(currentItem.getTitle())
+            showFragment(it.getTitle(), SyncManagementFragment.newInstance())
         }
         mBinding.mainDrawerItemSettings.setOnClickListener {
-            val currentItem = it as DrawerItemView
+            (it as DrawerItemView)
 
-            currentItem.setImageAlpha(1.0f)
+            it.setImageAlpha(1.0f)
             mSelectedFunctionId = it.id
             mBinding.mainDrawerItemSbJ.setImageRes(R.drawable.ic_launcher_jp_n)
             mBinding.mainDrawerItemSbT.setImageRes(R.drawable.ic_launcher_tw_n)
             mBinding.mainDrawerItemAccounts.setImageAlpha(0.5f)
             mBinding.mainDrawerItemSyncManagement.setImageAlpha(0.5f)
-            showSettings(currentItem.getTitle())
+            showFragment(it.getTitle(), SettingsFragment.newInstance())
         }
         mBinding.menuItemAccount.setOnClickListener {
             (it as BottomMenuItemView)
+
             it.isActivated = true
             mBinding.menuItemSync.isActivated = false
-            showAccounts(it.getTitle())
+            mBinding.menuItemSettings.isActivated = false
+            showFragment(it.getTitle(), AccountsFragment.newInstance())
         }
         mBinding.menuItemSync.setOnClickListener {
             (it as BottomMenuItemView)
+
             it.isActivated = true
             mBinding.menuItemAccount.isActivated = false
-            showSyncManagement(it.getTitle())
+            mBinding.menuItemSettings.isActivated = false
+            showFragment(it.getTitle(), SyncManagementFragment.newInstance())
+        }
+        mBinding.menuItemSettings.setOnClickListener {
+            (it as BottomMenuItemView)
+
+            it.isActivated = true
+            mBinding.menuItemAccount.isActivated = false
+            mBinding.menuItemSync.isActivated = false
+            showFragment(it.getTitle(), SettingsFragment.newInstance())
         }
 
         mBinding.menuItemAccount.performClick()
@@ -297,36 +310,13 @@ class MainActivity : BaseActivity() {
         mCurrentLang = lang
     }
 
-    private fun showAccounts(title: String) {
+    private fun showFragment(title: String, fragment: Fragment) {
         supportActionBar!!.title = title
 
         val ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.main_frame_layout, AccountsFragment.newInstance())
+        ft.replace(R.id.main_frame_layout, fragment)
         ft.commit()
 
         mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
-        invalidateOptionsMenu()
-    }
-
-    private fun showSyncManagement(title: String) {
-        supportActionBar!!.title = title
-
-        val ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.main_frame_layout, SyncManagementFragment.newInstance())
-        ft.commit()
-
-        mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
-        invalidateOptionsMenu()
-    }
-
-    private fun showSettings(title: String) {
-        supportActionBar!!.title = title
-
-        val ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.main_frame_layout, SettingsFragment.newInstance())
-        ft.commit()
-
-        mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
-        invalidateOptionsMenu()
     }
 }
