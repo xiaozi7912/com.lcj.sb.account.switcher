@@ -28,6 +28,7 @@ import com.lcj.sb.account.switcher.adapter.GoogleDriveAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
+import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
 import com.lcj.sb.account.switcher.databinding.FragmentRemoteBackupBinding
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.ZipManager
@@ -38,6 +39,7 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
 
 class RemoteSyncFragment : BaseFragment() {
@@ -59,8 +61,8 @@ class RemoteSyncFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.settingsGoogleAccountRoot.visibility = View.GONE
-        mBinding.settingsSbJRoot.visibility = View.GONE
-        mBinding.settingsSbTRoot.visibility = View.GONE
+//        mBinding.settingsSbJRoot.visibility = View.GONE
+//        mBinding.settingsSbTRoot.visibility = View.GONE
 
         mBinding.signInButton.setOnClickListener {
             startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
@@ -80,13 +82,13 @@ class RemoteSyncFragment : BaseFragment() {
         initGoogleSignIn()
         checkLastSignedInAccount()
         initRecyclerView()
-        refresh()
         updateSyncView(Account.Language.JP)
         updateSyncView(Account.Language.TW)
     }
 
     override fun onResume() {
         super.onResume()
+        refresh()
         BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
     }
 
@@ -107,27 +109,58 @@ class RemoteSyncFragment : BaseFragment() {
 
     private fun refresh() {
         val account = GoogleSignIn.getLastSignedInAccount(mActivity)
+
+        mBinding.settingsNoFileText.visibility = View.GONE
         account?.let {
             Thread {
                 val credential = GoogleAccountCredential.usingOAuth2(activity, setOf(DriveScopes.DRIVE_FILE)).apply {
                     selectedAccount = it.account
                 }
-                val driveService = Drive.Builder(
+                val service = Drive.Builder(
                         AndroidHttp.newCompatibleTransport(),
                         GsonFactory(), credential)
                         .build()
-
                 try {
-                    val qFolder = driveService.files().list()
-//                            .setQ("name='${BuildConfig.APPLICATION_ID}'")
-                            .setFields("files(id,name,parents,modifiedTime)")
-                            .execute()
-                    qFolder.files.forEach {
-                        Log.v(LOG_TAG, "it.id : ${it.id}")
-                        Log.v(LOG_TAG, "it.name : ${it.name}")
-                        Log.v(LOG_TAG, "it.modifiedTime : ${it.modifiedTime}")
-                        Log.v(LOG_TAG, "it.parents : ${it.parents}")
+                    val folder = service.files().list()
+                            .setQ("name='${BuildConfig.APPLICATION_ID}' and mimeType='application/vnd.google-apps.folder' and trashed=false")
+                            .setFields("files(id,name,modifiedTime,parents,mimeType)")
+                            .execute().files.first().apply {
+                        Log.v(LOG_TAG, "it.id : $id")
+                        Log.v(LOG_TAG, "it.name : $name")
+                        Log.v(LOG_TAG, "it.modifiedTime : $modifiedTime")
+                        Log.v(LOG_TAG, "it.modifiedTime.value : ${modifiedTime.value}")
+                        Log.v(LOG_TAG, "it.modifiedTime.toStringRfc3339 : ${modifiedTime.toStringRfc3339()}")
+                        Log.v(LOG_TAG, "it.parents : $parents")
+                        Log.v(LOG_TAG, "it.mimeType : $mimeType")
                     }
+                    val dataList = arrayListOf<GoogleDriveItem>()
+                    val files = service.files().list()
+                            .setQ("'${folder.id}' in parents and mimeType='application/zip' and trashed=false")
+                            .setFields("files(id,name,modifiedTime,parents,mimeType)")
+                            .setOrderBy("name")
+                            .execute().files
+
+                    if (files.size == 0) throw NoSuchElementException()
+                    files.forEach { file ->
+                        Log.v(LOG_TAG, "file.id : ${file.id}")
+                        Log.v(LOG_TAG, "file.name : ${file.name}")
+                        Log.v(LOG_TAG, "file.modifiedTime : ${file.modifiedTime}")
+                        Log.v(LOG_TAG, "file.parents : ${file.parents}")
+                        Log.v(LOG_TAG, "file.mimeType : ${file.mimeType}")
+                        with(file.name) {
+                            when {
+                                contains(Configs.PREFIX_NAME_SB_JP) -> Account.Language.JP
+                                contains(Configs.PREFIX_NAME_SB_TW) -> Account.Language.TW
+                                else -> Account.Language.JP
+                            }
+                        }.let { lang ->
+                            dataList.add(GoogleDriveItem(file.id, file.name, file.modifiedTime.value, lang))
+                        }
+                    }
+                    mHandler.post { mAdapter.update(dataList) }
+                } catch (e: NoSuchElementException) {
+                    e.printStackTrace()
+                    mHandler.post { mBinding.settingsNoFileText.visibility = View.VISIBLE }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -186,7 +219,7 @@ class RemoteSyncFragment : BaseFragment() {
 
     private fun updateSyncView(lang: Account.Language) {
         val type = FolderSync.Type.REMOTE
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN)
 
         val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
                 .subscribeOn(Schedulers.io())

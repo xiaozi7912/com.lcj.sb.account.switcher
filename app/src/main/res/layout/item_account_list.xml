@@ -20,7 +20,7 @@
             android:id="@+id/account_icon_iv"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/ic_launcher_jp_n"
+            android:src="@drawable/round_account_box_black_24"
             app:layout_constraintBottom_toTopOf="@+id/account_divider"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

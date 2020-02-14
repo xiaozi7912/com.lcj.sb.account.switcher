@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.WindowManager
+import com.lcj.sb.account.switcher.BaseRepository
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.activity.AccountInfoActivity
 import com.lcj.sb.account.switcher.database.BaseDatabase
@@ -22,20 +23,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.io.File
 
-class AccountRepository(val activity: Activity) {
-    private var mLanguage: Account.Language
-    private var mGameFolderPath: String
-
-    init {
-        PreferenceManager.getDefaultSharedPreferences(activity).apply {
-            mLanguage = Account.Language.valueOf(getString(Configs.PREF_KEY_LANGUAGE, Account.Language.JP.name)!!)
-            mGameFolderPath = when (mLanguage) {
-                Account.Language.JP -> String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
-                Account.Language.TW -> String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
-            }
-        }
-    }
-
+class AccountRepository(activity: Activity) : BaseRepository(activity) {
     companion object {
         fun getInstance(activity: Activity): AccountRepository {
             return AccountRepository(activity)

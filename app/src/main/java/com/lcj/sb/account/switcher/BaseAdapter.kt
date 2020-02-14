@@ -21,4 +21,11 @@ abstract class BaseAdapter<T : RecyclerView.ViewHolder>(val activity: Activity) 
     interface PartyListListener {
         fun onDeleteClick(item: DungeonParty)
     }
+
+    interface LocalSyncListListener {
+        fun onItemClick(account: Account)
+        fun onIconClick(account: Account)
+        fun onDeleteClick(account: Account)
+        fun onUploadClick(account: Account)
+    }
 }

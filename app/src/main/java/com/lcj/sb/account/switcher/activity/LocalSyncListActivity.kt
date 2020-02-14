@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
 import com.google.android.material.snackbar.Snackbar
 import com.lcj.sb.account.switcher.BaseActivity
+import com.lcj.sb.account.switcher.BaseAdapter
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.LocalSyncListAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
@@ -64,8 +65,8 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
         val adapter = LocalSyncListAdapter(mActivity)
-        adapter.setOnClickListener(object : LocalSyncListAdapter.OnClickListener {
-            override fun onItemClick(holder: LocalSyncListAdapter.ViewHolder, account: Account) {
+        adapter.setOnClickListener(object : BaseAdapter.LocalSyncListListener {
+            override fun onItemClick(account: Account) {
                 onListItemClick(account)
             }
 
@@ -77,8 +78,7 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
                 onListDeleteClick(account)
             }
 
-            override fun onMoreClick(holder: LocalSyncListAdapter.ViewHolder, account: Account) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            override fun onUploadClick(account: Account) {
             }
         })
 

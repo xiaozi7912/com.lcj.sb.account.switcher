@@ -18,6 +18,9 @@ interface AccountDAO {
     @Query("UPDATE accounts SET selected = 0 WHERE lang = :lang AND selected = 1")
     fun deselectAll(lang: Int)
 
+    @Query("SELECT * FROM accounts ORDER BY folder ASC LIMIT 20")
+    fun liveAccounts(): LiveData<List<Account>>
+
     @Query("SELECT * FROM accounts WHERE lang = :lang ORDER BY id ASC LIMIT 20")
     fun liveAccounts(lang: Int): LiveData<List<Account>>
 

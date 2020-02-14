@@ -13,6 +13,7 @@ class AccountUploadDialog(val activity: Activity) {
 
     init {
         mBinding.dialogCloseBtn.visibility = View.GONE
+        mBinding.accountUploadFileCountTv.visibility = View.GONE
     }
 
     companion object {

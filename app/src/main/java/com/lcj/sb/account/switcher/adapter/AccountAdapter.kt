@@ -10,6 +10,7 @@ import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.databinding.ItemAccountListBinding
 import java.text.SimpleDateFormat
+import java.util.*
 
 class AccountAdapter(activity: Activity) : BaseAdapter<AccountAdapter.ViewHolder>(activity) {
     private var dataList: List<Account> = emptyList()
@@ -44,7 +45,7 @@ class AccountAdapter(activity: Activity) : BaseAdapter<AccountAdapter.ViewHolder
         holder.binding.accountIconIv.setImageResource(iconResId)
         holder.binding.accountAliasTv.text = item.alias
         holder.binding.accountPathTv.text = item.folder.substring(item.folder.lastIndexOf("/") + 1)
-        holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(item.updateTime)
+        holder.binding.accountUpdateTimeTv.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN).format(item.updateTime)
 
         holder.binding.root.setOnClickListener { mOnClickListener?.onItemClick(item) }
         holder.binding.accountDeleteBtn.setOnClickListener { mOnClickListener?.onDeleteClick(item) }
