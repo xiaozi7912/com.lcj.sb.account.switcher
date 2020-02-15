@@ -1,14 +1,12 @@
 package com.lcj.sb.account.switcher.utils
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import android.util.Log
+import java.io.*
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 class ZipManager {
-
     companion object {
         fun zip(files: ArrayList<String>, zipFile: String) {
             var origin: BufferedInputStream
@@ -35,6 +33,37 @@ class ZipManager {
             }
         }
 
-        fun unZip() {}
+        fun unZip(zipFile: String, destPath: String) {
+            val zis = ZipInputStream(BufferedInputStream(FileInputStream(zipFile)))
+            try {
+                val buffer = ByteArray(10 * 1024)
+                do {
+                    val ze = zis.nextEntry?.apply {
+                        val parents = name.split("/")
+                        val fileName = name
+
+                        File("$destPath/${parents[0]}").let {
+                            if (!it.exists()) it.mkdir()
+                        }
+
+                        File("$destPath/${parents[0]}/${parents[1]}").let {
+                            if (!it.exists()) it.mkdir()
+                        }
+
+                        FileOutputStream("$destPath/$fileName").let {
+                            do {
+                                val count = zis.read(buffer)
+                                if (count != -1) it.write(buffer, 0, count)
+                            } while (count != -1)
+                            it.close()
+                        }
+                        zis.closeEntry()
+                    }
+                } while (ze != null)
+                zis.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }

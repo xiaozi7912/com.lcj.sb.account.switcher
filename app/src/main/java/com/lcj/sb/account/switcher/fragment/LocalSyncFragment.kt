@@ -16,7 +16,7 @@ import com.lcj.sb.account.switcher.databinding.FragmentLocalBackupBinding
 import com.lcj.sb.account.switcher.repository.SyncRepository
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.FileManager
-import com.lcj.sb.account.switcher.view.AccountUploadDialog
+import com.lcj.sb.account.switcher.view.RemoteProgressDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.text.SimpleDateFormat
@@ -77,36 +77,36 @@ class LocalSyncFragment : BaseFragment() {
 
                 override fun onUploadClick(account: Account) {
                     Log.i(LOG_TAG, "onUploadClick")
-                    AccountUploadDialog.getInstance(mActivity).show()
-                    SyncRepository.getInstance(mActivity).upload(account, object : BaseRepository.UploadListener {
+                    RemoteProgressDialog.getInstance(mActivity).show()
+                    SyncRepository.getInstance(mActivity).upload(account, object : BaseRepository.UploadCallback {
                         override fun onInitial(fileName: String) {
-                            AccountUploadDialog.getInstance(mActivity).setFileName(fileName)
-                            AccountUploadDialog.getInstance(mActivity).setFileCount(0, 0)
-                            AccountUploadDialog.getInstance(mActivity).setProgress(0)
+                            RemoteProgressDialog.getInstance(mActivity).setTitle("上傳中：$fileName")
+                            RemoteProgressDialog.getInstance(mActivity).setFileCount(0, 0)
+                            RemoteProgressDialog.getInstance(mActivity).setProgress(0)
                         }
 
                         override fun onUploadStarted(progress: Int) {
-                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(progress) }
+                            mHandler.post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
                         }
 
-                        override fun onUploadInProgress(progress: Int) {
-                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(progress) }
+                        override fun inProgress(progress: Int) {
+                            mHandler.post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
                         }
 
-                        override fun onUploadOnComplete(progress: Int) {
-                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(progress) }
+                        override fun onComplete(progress: Int) {
+                            mHandler.post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
                         }
 
                         override fun onSuccess() {
                             mHandler.post {
-                                AccountUploadDialog.getInstance(mActivity).dismiss()
+                                RemoteProgressDialog.getInstance(mActivity).dismiss()
                                 Snackbar.make(mContentView, getString(R.string.file_upload_completed), Snackbar.LENGTH_SHORT).show()
                             }
                         }
 
                         override fun onError(message: String) {
                             mHandler.post {
-                                AccountUploadDialog.getInstance(mActivity).dismiss()
+                                RemoteProgressDialog.getInstance(mActivity).dismiss()
                                 Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
                             }
                         }

@@ -13,6 +13,7 @@ import java.util.*
 
 class GoogleDriveAdapter(activity: Activity) : BaseAdapter<GoogleDriveAdapter.ViewHolder>(activity) {
     private var dataList: List<GoogleDriveItem> = emptyList()
+    private var mListener: RemoteSyncListListener? = null
 
     override fun getItemCount(): Int {
         return dataList.size
@@ -25,11 +26,18 @@ class GoogleDriveAdapter(activity: Activity) : BaseAdapter<GoogleDriveAdapter.Vi
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = dataList[position]
         holder.updateView(item)
+        holder.binding.root.setOnClickListener { mListener?.onItemClick(item) }
+        holder.binding.itemDeleteBtn.setOnClickListener { mListener?.onDeleteClick(item) }
+        holder.binding.itemDownloadBtn.setOnClickListener { mListener?.onDownloadClick(item) }
     }
 
     fun update(dataList: List<GoogleDriveItem>) {
         this.dataList = dataList
         notifyDataSetChanged()
+    }
+
+    fun setListener(listener: RemoteSyncListListener) {
+        mListener = listener
     }
 
     class ViewHolder(val binding: ItemGoogleDriveBinding) : RecyclerView.ViewHolder(binding.root) {

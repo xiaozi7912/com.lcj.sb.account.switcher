@@ -20,6 +20,7 @@
     <string name="sync_account_completed">同步成功！</string>
     <string name="file_upload_completed">檔案上傳完成！</string>
     <string name="no_google_account_association">請先綁定帳號！</string>
+    <string name="file_download_completed">檔案下載完成！</string>
 
     <string name="dialog_button_cancel">取消</string>
     <string name="dialog_button_backup">備份</string>

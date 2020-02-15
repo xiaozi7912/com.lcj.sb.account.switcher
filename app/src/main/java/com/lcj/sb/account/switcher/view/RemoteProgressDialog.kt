@@ -7,7 +7,7 @@ import android.view.View
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.databinding.DialogAccountUploadBinding
 
-class AccountUploadDialog(val activity: Activity) {
+class RemoteProgressDialog(val activity: Activity) {
     private val mDialog = AlertDialog.Builder(activity, R.style.CustomDialog).create()
     private val mBinding = DialogAccountUploadBinding.inflate(LayoutInflater.from(activity))
 
@@ -17,16 +17,16 @@ class AccountUploadDialog(val activity: Activity) {
     }
 
     companion object {
-        private var instance: AccountUploadDialog? = null
+        private var instance: RemoteProgressDialog? = null
 
-        fun getInstance(activity: Activity): AccountUploadDialog {
-            if (instance == null) instance = AccountUploadDialog(activity)
+        fun getInstance(activity: Activity): RemoteProgressDialog {
+            if (instance == null) instance = RemoteProgressDialog(activity)
             return instance!!
         }
     }
 
-    fun setFileName(fileName: String) {
-        mBinding.accountUploadTv.text = "上傳中：$fileName"
+    fun setTitle(title: String) {
+        mBinding.dialogTitle.text = title
     }
 
     fun setFileCount(current: Int, total: Int) {

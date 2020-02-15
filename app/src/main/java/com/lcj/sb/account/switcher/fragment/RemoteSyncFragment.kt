@@ -7,42 +7,31 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import com.google.android.material.snackbar.Snackbar
-import com.google.api.client.extensions.android.http.AndroidHttp
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
-import com.google.api.client.googleapis.media.MediaHttpUploader
-import com.google.api.client.http.FileContent
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
-import com.lcj.sb.account.switcher.BaseApplication
-import com.lcj.sb.account.switcher.BaseFragment
-import com.lcj.sb.account.switcher.BuildConfig
-import com.lcj.sb.account.switcher.R
+import com.lcj.sb.account.switcher.*
 import com.lcj.sb.account.switcher.adapter.GoogleDriveAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
 import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
 import com.lcj.sb.account.switcher.databinding.FragmentRemoteBackupBinding
+import com.lcj.sb.account.switcher.repository.SyncRepository
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.ZipManager
-import com.lcj.sb.account.switcher.view.AccountUploadDialog
+import com.lcj.sb.account.switcher.view.RemoteProgressDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import java.io.File
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.NoSuchElementException
-import kotlin.collections.ArrayList
 
-class RemoteSyncFragment : BaseFragment() {
+class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener {
     private lateinit var mBinding: FragmentRemoteBackupBinding
     private lateinit var mSignInClient: GoogleSignInClient
     private lateinit var mAdapter: GoogleDriveAdapter
@@ -61,8 +50,8 @@ class RemoteSyncFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.settingsGoogleAccountRoot.visibility = View.GONE
-//        mBinding.settingsSbJRoot.visibility = View.GONE
-//        mBinding.settingsSbTRoot.visibility = View.GONE
+        mBinding.settingsSbJRoot.visibility = View.GONE
+        mBinding.settingsSbTRoot.visibility = View.GONE
 
         mBinding.signInButton.setOnClickListener {
             startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
@@ -88,7 +77,6 @@ class RemoteSyncFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        refresh()
         BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
     }
 
@@ -101,71 +89,81 @@ class RemoteSyncFragment : BaseFragment() {
         }
     }
 
-    private fun initRecyclerView() {
-        mAdapter = GoogleDriveAdapter(mActivity)
-        mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-        mBinding.recyclerView.adapter = mAdapter
+    override fun onRefresh() {
+        SyncRepository.getInstance(mActivity).fetch(object : BaseRepository.FetchCallback {
+            override fun onInitial() {
+                mBinding.settingsNoFileText.visibility = View.GONE
+                mBinding.progressBar.visibility = View.VISIBLE
+            }
+
+            override fun onSuccess(dataList: ArrayList<GoogleDriveItem>) {
+                if (dataList.isNotEmpty()) {
+                    mAdapter.update(dataList)
+                } else {
+                    mBinding.settingsNoFileText.visibility = View.VISIBLE
+                }
+                mBinding.progressBar.visibility = View.GONE
+            }
+
+            override fun onError(message: String) {
+                mBinding.settingsNoFileText.visibility = View.VISIBLE
+                mBinding.progressBar.visibility = View.GONE
+                Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
+            }
+        })
+        mBinding.swipeRefreshLayout.isRefreshing = false
     }
 
-    private fun refresh() {
-        val account = GoogleSignIn.getLastSignedInAccount(mActivity)
-
-        mBinding.settingsNoFileText.visibility = View.GONE
-        account?.let {
-            Thread {
-                val credential = GoogleAccountCredential.usingOAuth2(activity, setOf(DriveScopes.DRIVE_FILE)).apply {
-                    selectedAccount = it.account
+    private fun initRecyclerView() {
+        mAdapter = GoogleDriveAdapter(mActivity).apply {
+            setListener(object : BaseAdapter.RemoteSyncListListener {
+                override fun onItemClick(entity: GoogleDriveItem) {
+                    Log.i(LOG_TAG, "onItemClick")
                 }
-                val service = Drive.Builder(
-                        AndroidHttp.newCompatibleTransport(),
-                        GsonFactory(), credential)
-                        .build()
-                try {
-                    val folder = service.files().list()
-                            .setQ("name='${BuildConfig.APPLICATION_ID}' and mimeType='application/vnd.google-apps.folder' and trashed=false")
-                            .setFields("files(id,name,modifiedTime,parents,mimeType)")
-                            .execute().files.first().apply {
-                        Log.v(LOG_TAG, "it.id : $id")
-                        Log.v(LOG_TAG, "it.name : $name")
-                        Log.v(LOG_TAG, "it.modifiedTime : $modifiedTime")
-                        Log.v(LOG_TAG, "it.modifiedTime.value : ${modifiedTime.value}")
-                        Log.v(LOG_TAG, "it.modifiedTime.toStringRfc3339 : ${modifiedTime.toStringRfc3339()}")
-                        Log.v(LOG_TAG, "it.parents : $parents")
-                        Log.v(LOG_TAG, "it.mimeType : $mimeType")
-                    }
-                    val dataList = arrayListOf<GoogleDriveItem>()
-                    val files = service.files().list()
-                            .setQ("'${folder.id}' in parents and mimeType='application/zip' and trashed=false")
-                            .setFields("files(id,name,modifiedTime,parents,mimeType)")
-                            .setOrderBy("name")
-                            .execute().files
 
-                    if (files.size == 0) throw NoSuchElementException()
-                    files.forEach { file ->
-                        Log.v(LOG_TAG, "file.id : ${file.id}")
-                        Log.v(LOG_TAG, "file.name : ${file.name}")
-                        Log.v(LOG_TAG, "file.modifiedTime : ${file.modifiedTime}")
-                        Log.v(LOG_TAG, "file.parents : ${file.parents}")
-                        Log.v(LOG_TAG, "file.mimeType : ${file.mimeType}")
-                        with(file.name) {
-                            when {
-                                contains(Configs.PREFIX_NAME_SB_JP) -> Account.Language.JP
-                                contains(Configs.PREFIX_NAME_SB_TW) -> Account.Language.TW
-                                else -> Account.Language.JP
-                            }
-                        }.let { lang ->
-                            dataList.add(GoogleDriveItem(file.id, file.name, file.modifiedTime.value, lang))
+                override fun onDeleteClick(entity: GoogleDriveItem) {
+                    Log.i(LOG_TAG, "onDeleteClick")
+                }
+
+                override fun onDownloadClick(entity: GoogleDriveItem) {
+                    Log.i(LOG_TAG, "onDownloadClick")
+                    RemoteProgressDialog.getInstance(mActivity).show()
+                    SyncRepository.getInstance(mActivity).download(entity, object : BaseRepository.DownloadCallback {
+                        override fun onInitial() {
+                            RemoteProgressDialog.getInstance(activity).setTitle("下載中：${entity.name}")
+                            RemoteProgressDialog.getInstance(activity).setProgress(0)
                         }
-                    }
-                    mHandler.post { mAdapter.update(dataList) }
-                } catch (e: NoSuchElementException) {
-                    e.printStackTrace()
-                    mHandler.post { mBinding.settingsNoFileText.visibility = View.VISIBLE }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+
+                        override fun inProgress(progress: Int) {
+                            RemoteProgressDialog.getInstance(activity).setProgress(progress)
+                        }
+
+                        override fun onComplete(progress: Int) {
+                            RemoteProgressDialog.getInstance(activity).setProgress(progress)
+                        }
+
+                        override fun onUnzip() {
+                            RemoteProgressDialog.getInstance(activity).setTitle("解壓縮中：${entity.name}")
+                        }
+
+                        override fun onSuccess() {
+                            RemoteProgressDialog.getInstance(mActivity).dismiss()
+                            Snackbar.make(mContentView, getString(R.string.file_download_completed), Snackbar.LENGTH_SHORT).show()
+                        }
+
+                        override fun onError(message: String) {
+                            RemoteProgressDialog.getInstance(mActivity).dismiss()
+                            Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
+                        }
+                    })
                 }
-            }.start()
+            })
         }
+        mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
+        mBinding.recyclerView.adapter = mAdapter
+        mBinding.swipeRefreshLayout.setOnRefreshListener(this)
+
+        onRefresh()
     }
 
     private fun initGoogleSignIn() {
@@ -234,123 +232,9 @@ class RemoteSyncFragment : BaseFragment() {
                 }, { err -> err.printStackTrace() })
     }
 
-    private fun startUploadAccounts(lang: Account.Language) {
-        val signedInAccount = checkLastSignedInAccount()
-        if (signedInAccount != null) {
-            AccountUploadDialog.getInstance(mActivity).show()
-            Thread {
-                val db = BaseDatabase.getInstance(mActivity)
-                val currentTime = System.currentTimeMillis()
-                val type = FolderSync.Type.REMOTE
-                var folderSize: Int
-
-                db.accountDAO().accounts(lang.ordinal, false).apply {
-                    folderSize = size
-                    mHandler.post {
-                        AccountUploadDialog.getInstance(mActivity).setFileName("")
-                        AccountUploadDialog.getInstance(mActivity).setFileCount(0, folderSize)
-                        AccountUploadDialog.getInstance(mActivity).setProgress(0)
-                    }
-                }.forEachIndexed { index, account ->
-                    val folderPath = account.folder
-                    val filesPath = String.format("%s/%s", folderPath, "files")
-                    val filesFile: File? = File(filesPath)
-                    val folderName = account.folder.substring(account.folder.lastIndexOf("/") + 1)
-                    val hashZipFile = hashMapOf(
-                            "name" to "${folderName}.zip",
-                            "path" to "${mActivity.externalCacheDir?.absolutePath}/${folderName}.zip")
-                    val fileList = ArrayList<String>()
-
-                    filesFile?.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
-                    if (fileList.size > 0) {
-                        ZipManager.zip(fileList, hashZipFile["path"]!!)
-
-                        val credential = GoogleAccountCredential.usingOAuth2(activity, setOf(DriveScopes.DRIVE_FILE)).apply {
-                            selectedAccount = signedInAccount.account
-                        }
-                        val driveService = Drive.Builder(
-                                AndroidHttp.newCompatibleTransport(),
-                                GsonFactory(), credential)
-                                .build()
-                        try {
-                            val queryFolder = driveService.files().list()
-                                    .setQ("name='${BuildConfig.APPLICATION_ID}'")
-                                    .execute()
-                            val queryFile = driveService.files().list()
-                                    .setQ("name='${hashZipFile["name"]}'")
-                                    .execute()
-                            val folderFile = if (queryFolder.files.size == 0) {
-                                driveService.files().create(com.google.api.services.drive.model.File().apply {
-                                    name = BuildConfig.APPLICATION_ID
-                                    mimeType = "application/vnd.google-apps.folder"
-                                }).execute()
-                            } else {
-                                queryFolder.files.first()
-                            }
-
-                            driveService.files().create(com.google.api.services.drive.model.File().apply {
-                                parents = Collections.singletonList(folderFile.id)
-                                name = hashZipFile["name"]
-                            }, FileContent("application/zip", File(hashZipFile["path"]!!))).apply {
-                                mediaHttpUploader.chunkSize = (1 * 1024 * 1024)
-                                mediaHttpUploader.setProgressListener {
-                                    when (it.uploadState) {
-                                        MediaHttpUploader.UploadState.INITIATION_STARTED -> {
-                                            mHandler.post {
-                                                AccountUploadDialog.getInstance(mActivity).setFileName(hashZipFile["name"]!!)
-                                                AccountUploadDialog.getInstance(mActivity).setFileCount((index + 1), folderSize)
-                                                AccountUploadDialog.getInstance(mActivity).setProgress(0)
-                                            }
-                                        }
-                                        MediaHttpUploader.UploadState.INITIATION_COMPLETE -> {
-                                        }
-                                        MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> {
-                                            val percent = it.progress * 100
-                                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(percent.toInt()) }
-                                        }
-                                        MediaHttpUploader.UploadState.MEDIA_COMPLETE -> {
-                                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(100) }
-                                        }
-                                        else -> {
-                                        }
-                                    }
-                                }
-                            }.execute()
-
-                            queryFile.files.forEach {
-                                driveService.files().delete(it.id).execute()
-                            }
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-
-                db.folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
-                        .subscribe({ entity ->
-                            entity!!.updateTime = currentTime
-                            db.folderSyncDAO().update(entity)
-                            updateSyncView(lang)
-                        }, { err ->
-                            err.printStackTrace()
-                            db.folderSyncDAO().insert(FolderSync(type.ordinal, lang.ordinal, currentTime))
-                            updateSyncView(lang)
-                        })
-                mHandler.post {
-                    AccountUploadDialog.getInstance(mActivity).dismiss()
-                    Snackbar.make(mContentView, getString(R.string.file_upload_completed), Snackbar.LENGTH_SHORT).show()
-                }
-            }.start()
-        } else {
-            Snackbar.make(mContentView, getString(R.string.no_google_account_association), Snackbar.LENGTH_SHORT).show()
-        }
-    }
-
     private fun onSyncJPButtonClick() {
-        startUploadAccounts(Account.Language.JP)
     }
 
     private fun onSyncTWButtonClick() {
-        startUploadAccounts(Account.Language.TW)
     }
 }

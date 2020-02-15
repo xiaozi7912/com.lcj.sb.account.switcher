@@ -6,7 +6,7 @@ import com.lcj.sb.account.switcher.database.entity.Account
 
 @Dao
 interface AccountDAO {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(account: Account)
 
     @Delete
