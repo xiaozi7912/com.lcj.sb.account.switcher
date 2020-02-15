@@ -11,7 +11,7 @@ import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.database.entity.FolderSync
 
-@Database(entities = [Account::class, DungeonParty::class, FolderSync::class], version = 5)
+@Database(entities = [Account::class, DungeonParty::class, FolderSync::class], version = 6)
 abstract class BaseDatabase : RoomDatabase() {
     companion object {
         private const val DB_NAME: String = BuildConfig.APPLICATION_ID + ".db"
@@ -49,7 +49,14 @@ abstract class BaseDatabase : RoomDatabase() {
 
         private val MIGRATION_5 = object : Migration(4, 5) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                var command = "ALTER TABLE accounts ADD hidden INTEGER NOT NULL DEFAULT 0"
+                val command = "ALTER TABLE accounts ADD hidden INTEGER NOT NULL DEFAULT 0"
+                database.execSQL(command)
+            }
+        }
+
+        private val MIGRATION_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                val command = "CREATE UNIQUE INDEX index_accounts_folder ON accounts('folder')"
                 database.execSQL(command)
             }
         }
@@ -67,6 +74,7 @@ abstract class BaseDatabase : RoomDatabase() {
                     .addMigrations(MIGRATION_3)
                     .addMigrations(MIGRATION_4)
                     .addMigrations(MIGRATION_5)
+                    .addMigrations(MIGRATION_6)
                     .build()
         }
     }
