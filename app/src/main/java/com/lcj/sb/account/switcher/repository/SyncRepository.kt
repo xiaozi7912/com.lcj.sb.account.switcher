@@ -28,7 +28,7 @@ import kotlin.collections.ArrayList
 
 class SyncRepository(activity: Activity) : BaseRepository(activity) {
     companion object {
-        const val CHUNK_SIZE = (0.1 * 1024 * 1024).toInt()
+        const val CHUNK_SIZE = (0.5 * 1024 * 1024).toInt()
         fun getInstance(activity: Activity): SyncRepository {
             return SyncRepository(activity)
         }
@@ -46,7 +46,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                         "path" to "${activity.externalCacheDir?.absolutePath}/${folderName}.zip")
                 val fileList = ArrayList<String>()
 
-                callback.onInitial(hashZipFile["name"]!!)
+                mHandler.post { callback.onInitial(hashZipFile["name"]!!) }
                 filesFile?.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
                 if (fileList.size > 0) {
                     ZipManager.zip(fileList, hashZipFile["path"]!!)

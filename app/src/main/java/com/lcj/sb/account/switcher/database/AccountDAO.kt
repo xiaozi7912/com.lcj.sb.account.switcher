@@ -21,13 +21,13 @@ interface AccountDAO {
     @Query("SELECT * FROM accounts ORDER BY folder ASC LIMIT 20")
     fun liveAccounts(): LiveData<List<Account>>
 
-    @Query("SELECT * FROM accounts WHERE lang = :lang ORDER BY id ASC LIMIT 20")
+    @Query("SELECT * FROM accounts WHERE lang = :lang ORDER BY folder ASC LIMIT 20")
     fun liveAccounts(lang: Int): LiveData<List<Account>>
 
-    @Query("SELECT * FROM accounts WHERE lang = :lang AND hidden = :hidden ORDER BY id ASC LIMIT 20")
+    @Query("SELECT * FROM accounts WHERE lang = :lang AND hidden = :hidden ORDER BY folder ASC LIMIT 20")
     fun liveAccounts(lang: Int, hidden: Boolean): LiveData<List<Account>>
 
-    @Query("SELECT * FROM accounts WHERE lang = :lang AND hidden = :hidden ORDER BY id ASC LIMIT 20")
+    @Query("SELECT * FROM accounts WHERE lang = :lang AND hidden = :hidden ORDER BY folder ASC LIMIT 20")
     fun accounts(lang: Int, hidden: Boolean): List<Account>
 
     @Query("SELECT * FROM accounts WHERE folder = :folder")
