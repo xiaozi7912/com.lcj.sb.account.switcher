@@ -1,5 +1,6 @@
 package com.lcj.sb.account.switcher.fragment
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -24,7 +25,7 @@ import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
 import com.lcj.sb.account.switcher.databinding.FragmentRemoteBackupBinding
 import com.lcj.sb.account.switcher.repository.SyncRepository
 import com.lcj.sb.account.switcher.utils.Configs
-import com.lcj.sb.account.switcher.utils.ZipManager
+import com.lcj.sb.account.switcher.view.ProgressDialog
 import com.lcj.sb.account.switcher.view.RemoteProgressDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -123,6 +124,32 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
 
                 override fun onDeleteClick(entity: GoogleDriveItem) {
                     Log.i(LOG_TAG, "onDeleteClick")
+                    AlertDialog.Builder(mActivity).apply {
+                        setTitle("刪除雲端備份")
+                        setMessage("確定要刪除Google Drive上的備份嗎？")
+                        setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
+                            SyncRepository.getInstance(mActivity).delete(entity, object : BaseRepository.DeleteCallback {
+                                override fun onInitial() {
+                                    dialog.dismiss()
+                                    ProgressDialog.getInstance(mActivity).show()
+                                }
+
+                                override fun onSuccess() {
+                                    ProgressDialog.getInstance(mActivity).dismiss()
+                                    Snackbar.make(mContentView, "刪除成功！", Snackbar.LENGTH_SHORT).show()
+                                    onRefresh()
+                                }
+
+                                override fun onError(message: String) {
+                                    ProgressDialog.getInstance(mActivity).dismiss()
+                                    Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
+                                }
+                            })
+                        }
+                        setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which ->
+                            dialog.dismiss()
+                        }
+                    }.create().show()
                 }
 
                 override fun onDownloadClick(entity: GoogleDriveItem) {

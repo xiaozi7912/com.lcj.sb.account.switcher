@@ -47,4 +47,9 @@ open class BaseRepository(val activity: Activity) {
         fun onUnzip()
         fun onSuccess()
     }
+
+    interface DeleteCallback : BaseCallback {
+        fun onInitial()
+        fun onSuccess()
+    }
 }

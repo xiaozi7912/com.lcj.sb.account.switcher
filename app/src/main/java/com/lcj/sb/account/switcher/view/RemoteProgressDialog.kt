@@ -30,7 +30,7 @@ class RemoteProgressDialog(val activity: Activity) {
     }
 
     fun setFileCount(current: Int, total: Int) {
-        mBinding.accountUploadFileCountTv.text = "$current / $total"
+        mBinding.accountUploadFileCountTv.text = String.format("%s / %s", current, total)
     }
 
     fun setProgress(progress: Int) {

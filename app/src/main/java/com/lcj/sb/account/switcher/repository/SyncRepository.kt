@@ -28,7 +28,7 @@ import kotlin.collections.ArrayList
 
 class SyncRepository(activity: Activity) : BaseRepository(activity) {
     companion object {
-        const val CHUNK_SIZE = (0.5 * 1024 * 1024).toInt()
+        private const val CHUNK_SIZE = (0.5 * 1024 * 1024).toInt()
         fun getInstance(activity: Activity): SyncRepository {
             return SyncRepository(activity)
         }
@@ -192,6 +192,22 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                                     lang = entity.lang.ordinal,
                                     createTime = System.currentTimeMillis(),
                                     updateTime = System.currentTimeMillis()))
+                    mHandler.post { callback.onSuccess() }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    mHandler.post { callback.onError(e.localizedMessage) }
+                }
+            }.start()
+        }, { callback.onError(it) })
+    }
+
+    fun delete(entity: GoogleDriveItem, callback: DeleteCallback) {
+        callback.onInitial()
+        checkSignedInAccount({ signedIn ->
+            Thread {
+                val service = getDriveService(signedIn)
+                try {
+                    service.files().delete(entity.id).execute()
                     mHandler.post { callback.onSuccess() }
                 } catch (e: Exception) {
                     e.printStackTrace()
