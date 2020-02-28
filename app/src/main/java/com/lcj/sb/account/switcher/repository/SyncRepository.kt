@@ -128,7 +128,6 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                             .setOrderBy("name")
                             .execute().files
 
-                    if (files.size == 0) throw NoSuchElementException()
                     files.forEach { file ->
                         with(file.name) {
                             when {
@@ -143,7 +142,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     mHandler.post { callback.onSuccess(dataList) }
                 } catch (e: NoSuchElementException) {
                     e.printStackTrace()
-                    mHandler.post { callback.onError(e.localizedMessage) }
+                    mHandler.post { callback.onError(e.localizedMessage ?: "") }
                 } catch (e: Exception) {
                     e.printStackTrace()
                     mHandler.post { callback.onError(e.localizedMessage) }

@@ -98,11 +98,8 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
             }
 
             override fun onSuccess(dataList: ArrayList<GoogleDriveItem>) {
-                if (dataList.isNotEmpty()) {
-                    mAdapter.update(dataList)
-                } else {
-                    mBinding.settingsNoFileText.visibility = View.VISIBLE
-                }
+                if (dataList.isEmpty()) mBinding.settingsNoFileText.visibility = View.VISIBLE
+                mAdapter.update(dataList)
                 mBinding.progressBar.visibility = View.GONE
             }
 
