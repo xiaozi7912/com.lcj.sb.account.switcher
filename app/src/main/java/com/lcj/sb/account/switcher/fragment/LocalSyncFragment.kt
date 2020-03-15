@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.paging.toLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.lcj.sb.account.switcher.*
@@ -45,6 +46,8 @@ class LocalSyncFragment : BaseFragment() {
         mBinding.settingsSbJSyncBtn.setOnClickListener { onSyncJPButtonClick() }
         mBinding.settingsSbTRoot.setOnClickListener { showLocalSyncList(Account.Language.TW) }
         mBinding.settingsSbTSyncBtn.setOnClickListener { onSyncTWButtonClick() }
+        mBinding.typeSwitchJpButton.setOnClickListener { onTypeSwitchJPClick() }
+        mBinding.typeSwitchTwButton.setOnClickListener { onTypeSwitchTWClick() }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -53,6 +56,7 @@ class LocalSyncFragment : BaseFragment() {
         initRecyclerView()
         updateSyncView(Account.Language.JP)
         updateSyncView(Account.Language.TW)
+        mBinding.typeSwitchJpButton.performClick()
     }
 
     override fun onResume() {
@@ -116,10 +120,6 @@ class LocalSyncFragment : BaseFragment() {
         }
         mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
         mBinding.recyclerView.adapter = mAdapter
-
-        BaseDatabase.getInstance(mActivity).accountDAO()
-                .liveAccounts()
-                .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
     }
 
     private fun updateSyncView(lang: Account.Language) {
@@ -149,6 +149,11 @@ class LocalSyncFragment : BaseFragment() {
 //        })
     }
 
+    private fun defaultTypeSwitchButton() {
+        mBinding.typeSwitchJpButton.isActivated = false
+        mBinding.typeSwitchTwButton.isActivated = false
+    }
+
     private fun onSyncJPButtonClick() {
         Log.i(LOG_TAG, "onSyncJPButtonClick")
         FileManager.syncBackupFolder(mActivity, Account.Language.JP) {
@@ -163,5 +168,23 @@ class LocalSyncFragment : BaseFragment() {
             updateSyncView(Account.Language.TW)
             Snackbar.make(mContentView, getString(R.string.sync_account_completed), Snackbar.LENGTH_SHORT).show()
         }
+    }
+
+    private fun onTypeSwitchJPClick() {
+        defaultTypeSwitchButton()
+        mBinding.typeSwitchJpButton.isActivated = true
+        BaseDatabase.getInstance(mActivity).accountDAO()
+                .liveAccounts(Account.Language.JP.ordinal)
+                .toLiveData(pageSize = 20)
+                .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
+    }
+
+    private fun onTypeSwitchTWClick() {
+        defaultTypeSwitchButton()
+        mBinding.typeSwitchTwButton.isActivated = true
+        BaseDatabase.getInstance(mActivity).accountDAO()
+                .liveAccounts(Account.Language.TW.ordinal)
+                .toLiveData(pageSize = 20)
+                .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
     }
 }

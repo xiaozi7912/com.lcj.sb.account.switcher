@@ -35,6 +35,7 @@
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -47,6 +48,7 @@
             android:textColor="#ffffff"
             android:textSize="14sp"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/account_alias_tv" />
 
         <TextView
@@ -59,6 +61,7 @@
             android:textColor="#80ffffff"
             android:textSize="12sp"
             app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/account_path_tv" />
 
         <View

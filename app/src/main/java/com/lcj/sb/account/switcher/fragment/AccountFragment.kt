@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
 import androidx.lifecycle.Observer
+import androidx.paging.toLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.lcj.sb.account.switcher.BaseAdapter
@@ -49,6 +50,8 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
         super.onViewCreated(view, savedInstanceState)
         mDisplayLang = Account.Language.values()[arguments?.getInt(Configs.PREF_KEY_LANGUAGE)!!]
 
+        mBinding.createButton.setOnClickListener(this)
+        mBinding.gameStartButton.setOnClickListener(this)
         mBinding.addFab.setOnClickListener(this)
         mBinding.gameFab.setOnClickListener(this)
     }
@@ -61,6 +64,7 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
 
         BaseDatabase.getInstance(mActivity).accountDAO()
                 .liveAccounts(mDisplayLang.ordinal, false)
+                .toLiveData(pageSize = 20)
                 .observe(this, Observer { adapter.update(it) })
     }
 
@@ -88,6 +92,7 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
 
     override fun onClick(v: View?) {
         when (v?.id) {
+            R.id.create_button,
             R.id.add_fab -> getPackageName().let {
                 if (FileManager.isPackageInstalled(it, mActivity)) {
                     AccountRepository.getInstance(mActivity).showCreateAccountDialog({}, {
@@ -97,6 +102,7 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
                     showErrorNoInstalled(it)
                 }
             }
+            R.id.game_start_button,
             R.id.game_fab -> getPackageName().let {
                 if (FileManager.isPackageInstalled(it, mActivity)) {
                     startApplication(it)

@@ -7,6 +7,7 @@ import android.view.MotionEvent
 import androidx.core.view.GestureDetectorCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
+import androidx.paging.toLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.AdRequest
@@ -87,6 +88,7 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
         mBinding.recyclerView.addOnItemTouchListener(this)
         BaseDatabase.getInstance(mActivity).accountDAO()
                 .liveAccounts(mCurrentLang.ordinal)
+                .toLiveData(pageSize = 20)
                 .observe(this, Observer { adapter.update(it) })
     }
 
