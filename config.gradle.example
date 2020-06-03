@@ -1,0 +1,7 @@
+ext {
+    server = [
+            local   : '"http://127.0.0.1"',
+            sandbox : '"http://127.0.0.1"',
+            official: '"http://127.0.0.1"'
+    ]
+}

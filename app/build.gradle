@@ -6,7 +6,7 @@ apply plugin: 'io.fabric'
 
 android {
     compileSdkVersion 28
-    flavorDimensions "version", "admob"
+    flavorDimensions "version", "server", "admob"
 
     defaultConfig {
         applicationId "com.lcj.sb.account.switcher"
@@ -27,7 +27,22 @@ android {
             applicationIdSuffix ".v2"
         }
 
-        ad_mob_sandbox {
+        local {
+            dimension "server"
+            buildConfigField "String", "API_BASE_URL", rootProject.ext.server.local
+        }
+
+        sandbox{
+            dimension "server"
+            buildConfigField "String", "API_BASE_URL", rootProject.ext.server.sandbox
+        }
+
+        official {
+            dimension "server"
+            buildConfigField "String", "API_BASE_URL", rootProject.ext.server.official
+        }
+
+        dev {
             dimension "admob"
             applicationIdSuffix ".dev"
             resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-3940256099942544/6300978111"'
@@ -35,7 +50,7 @@ android {
             resValue "string", "AD_UNIT_ID_LOCAL_SYNC_LIST", '"ca-app-pub-3940256099942544/6300978111"'
         }
 
-        ad_mob {
+        production {
             dimension "admob"
             resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-5692319161651426/3653778519"'
             resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", '"ca-app-pub-5692319161651426/2028230874"'
@@ -96,6 +111,12 @@ dependencies {
     implementation 'com.theartofdev.edmodo:android-image-cropper:2.8.0'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation "androidx.paging:paging-rxjava2-ktx:2.1.2"
+    implementation 'com.squareup.okhttp3:okhttp:4.3.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.3.1'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.6.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.6.0'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.6.0'
 
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
 
