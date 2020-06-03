@@ -49,10 +49,20 @@
                 app:layout_constraintTop_toBottomOf="@+id/main_frame_layout">
 
                 <com.lcj.sb.account.switcher.view.BottomMenuItemView
-                    android:id="@+id/menu_item_account"
+                    android:id="@+id/menu_item_monster"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@+id/menu_item_account"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:src="@drawable/selector_round_account_box_black_24"
+                    app:title="@string/main_drawer_item_monsters" />
+
+                <com.lcj.sb.account.switcher.view.BottomMenuItemView
+                    android:id="@+id/menu_item_account"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toRightOf="@+id/menu_item_monster"
                     app:layout_constraintRight_toLeftOf="@+id/menu_item_sync"
                     app:layout_constraintTop_toTopOf="parent"
                     app:src="@drawable/selector_round_account_box_black_24"

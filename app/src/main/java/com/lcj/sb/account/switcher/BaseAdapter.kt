@@ -8,6 +8,7 @@ import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
 
 abstract class BaseAdapter<T : RecyclerView.ViewHolder>(val activity: Activity) : RecyclerView.Adapter<T>() {
+    protected val LOG_TAG = javaClass.simpleName;
     protected val mInflater: LayoutInflater = LayoutInflater.from(activity)
 
     interface BaseListener {

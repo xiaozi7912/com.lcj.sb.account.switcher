@@ -26,6 +26,7 @@ import com.lcj.sb.account.switcher.fragment.AccountFragment
 import com.lcj.sb.account.switcher.fragment.AccountsFragment
 import com.lcj.sb.account.switcher.fragment.SettingsFragment
 import com.lcj.sb.account.switcher.fragment.SyncManagementFragment
+import com.lcj.sb.account.switcher.fragment.monster.MonsterFragment
 import com.lcj.sb.account.switcher.model.RemoteConfigModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.PackageUtils
@@ -161,10 +162,21 @@ class MainActivity : BaseActivity() {
             mBinding.mainDrawerItemSyncManagement.setImageAlpha(0.5f)
             showFragment(it.getTitle(), SettingsFragment.newInstance())
         }
+
+        mBinding.menuItemMonster.setOnClickListener {
+            (it as BottomMenuItemView)
+
+            it.isActivated = true
+            mBinding.menuItemAccount.isActivated = false
+            mBinding.menuItemSync.isActivated = false
+            mBinding.menuItemSettings.isActivated = false
+            showFragment(it.getTitle(), MonsterFragment.newInstance())
+        }
         mBinding.menuItemAccount.setOnClickListener {
             (it as BottomMenuItemView)
 
             it.isActivated = true
+            mBinding.menuItemMonster.isActivated = false
             mBinding.menuItemSync.isActivated = false
             mBinding.menuItemSettings.isActivated = false
             showFragment(it.getTitle(), AccountsFragment.newInstance())
@@ -173,6 +185,7 @@ class MainActivity : BaseActivity() {
             (it as BottomMenuItemView)
 
             it.isActivated = true
+            mBinding.menuItemMonster.isActivated = false
             mBinding.menuItemAccount.isActivated = false
             mBinding.menuItemSettings.isActivated = false
             showFragment(it.getTitle(), SyncManagementFragment.newInstance())
@@ -181,6 +194,7 @@ class MainActivity : BaseActivity() {
             (it as BottomMenuItemView)
 
             it.isActivated = true
+            mBinding.menuItemMonster.isActivated = false
             mBinding.menuItemAccount.isActivated = false
             mBinding.menuItemSync.isActivated = false
             showFragment(it.getTitle(), SettingsFragment.newInstance())
