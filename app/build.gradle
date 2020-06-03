@@ -29,11 +29,13 @@ android {
 
         local {
             dimension "server"
+            applicationIdSuffix ".local"
             buildConfigField "String", "API_BASE_URL", rootProject.ext.server.local
         }
 
-        sandbox{
+        sandbox {
             dimension "server"
+            applicationIdSuffix ".sandbox"
             buildConfigField "String", "API_BASE_URL", rootProject.ext.server.sandbox
         }
 
@@ -117,6 +119,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.6.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.6.0'
     implementation 'com.squareup.retrofit2:converter-scalars:2.6.0'
+    implementation 'com.squareup.picasso:picasso:2.71828'
 
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
 
