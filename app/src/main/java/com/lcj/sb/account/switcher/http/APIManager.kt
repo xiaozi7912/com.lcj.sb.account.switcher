@@ -24,13 +24,15 @@ class APIManager : BaseAPIManager<APIService>(BuildConfig.API_BASE_URL) {
         }
     }
 
-    fun getMonsterList(): Observable<MonsterResponse> {
-        val params: Map<String, String> = HashMap()
+    fun getMonsterList(page: Int, limit: Int = 15): Observable<MonsterResponse> {
+        val params = HashMap<String, String>()
+        params["page"] = page.toString()
+        params["limit"] = limit.toString()
         return mService?.getMonsterList(params)!!.subscribeOn(Schedulers.io())
     }
 
     fun getDungeonList(): Observable<DungeonResponse> {
-        val params: Map<String, String> = HashMap()
+        val params = HashMap<String, String>()
         return mService?.getDungeonList(params)!!.subscribeOn(Schedulers.io())
     }
 }

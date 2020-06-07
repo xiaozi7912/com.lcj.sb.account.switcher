@@ -200,7 +200,7 @@ class MainActivity : BaseActivity() {
             showFragment(it.getTitle(), SettingsFragment.newInstance())
         }
 
-        mBinding.menuItemAccount.performClick()
+        mBinding.menuItemMonster.performClick()
     }
 
     override fun initAdMob() {

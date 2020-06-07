@@ -1,14 +1,14 @@
 package com.lcj.sb.account.switcher.view
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.view.LayoutInflater
-import com.lcj.sb.account.switcher.R
+import com.lcj.sb.account.switcher.BaseDialog
 import com.lcj.sb.account.switcher.databinding.DialogProgressBinding
 
-class ProgressDialog(val activity: Activity) {
-    private val mDialog = AlertDialog.Builder(activity, R.style.CustomDialog).create()
-    private val mBinding = DialogProgressBinding.inflate(LayoutInflater.from(activity))
+class ProgressDialog(activity: Activity) : BaseDialog(activity) {
+    init {
+        mBinding = DialogProgressBinding.inflate(LayoutInflater.from(activity))
+    }
 
     companion object {
         private var instance: ProgressDialog? = null
@@ -19,14 +19,13 @@ class ProgressDialog(val activity: Activity) {
         }
     }
 
-    fun show() {
-        mDialog.show()
+    override fun show() {
+        super.show()
         mDialog.setCancelable(false)
-        mDialog.setContentView(mBinding.root)
     }
 
-    fun dismiss() {
-        mDialog.dismiss()
+    override fun dismiss() {
+        super.dismiss()
         instance = null
     }
 }
