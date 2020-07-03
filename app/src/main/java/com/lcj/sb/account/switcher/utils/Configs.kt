@@ -37,6 +37,7 @@ class Configs {
         const val INTENT_KEY_ACCOUNT = "ACCOUNT"
         const val INTENT_KEY_LANGUAGE = "LANGUAGE"
 
+        val ELEMENT_COLOR_LIST = arrayListOf<String>("#FF3333", "#3333FF", "#33FF33", "#FFFF33", "#8F33FF")
         val DUNGEON_LEVEL_LIST: ArrayList<DungeonLevelModel> = arrayListOf(
                 DungeonLevelModel(2, "冥"), DungeonLevelModel(1, "神"), DungeonLevelModel(0, "滅"),
                 DungeonLevelModel(3, "塔"), DungeonLevelModel(4, "魔窟")

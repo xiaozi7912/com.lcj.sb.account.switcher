@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.lcj.sb.account.switcher.BaseFragment
@@ -55,7 +56,7 @@ class MonsterFragment : BaseFragment() {
     private fun initRecyclerView() {
         mAdapter = MonsterListAdapter(mActivity)
 
-        mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
+        mBinding.recyclerView.layoutManager = GridLayoutManager(mActivity, 4)
         mBinding.recyclerView.adapter = mAdapter
         mBinding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -67,20 +68,20 @@ class MonsterFragment : BaseFragment() {
                 val layoutManager = recyclerView.layoutManager as LinearLayoutManager
                 if (!mIsLoading) {
                     if (layoutManager.findLastCompletelyVisibleItemPosition() == (mDataList.size - 1)) {
-                        getMonsterList(mCurrentPage + 1)
+                        getMonsterList(mCurrentPage + 1, false)
                     }
                 }
             }
         })
     }
 
-    private fun getMonsterList(queryPage: Int) {
+    private fun getMonsterList(queryPage: Int, showProgress: Boolean = true) {
         if (queryPage > mTotalPage) return
         if (queryPage == 1) mDataList = ArrayList()
 
-        APIManager.getInstance(mActivity).getMonsterList(queryPage)
+        APIManager.getInstance(mActivity).getMonsterList(queryPage, 50)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(object : BaseObserver<MonsterResponse>(mActivity) {
+                .subscribe(object : BaseObserver<MonsterResponse>(mActivity, showProgress) {
                     override fun onSubscribe(d: Disposable) {
                         super.onSubscribe(d)
                         mIsLoading = true

@@ -1,13 +1,14 @@
 package com.lcj.sb.account.switcher.adapter
 
 import android.app.Activity
-import android.util.Log
+import android.graphics.Color
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.lcj.sb.account.switcher.BaseAdapter
 import com.lcj.sb.account.switcher.BuildConfig
 import com.lcj.sb.account.switcher.databinding.ItemMonsterListBinding
 import com.lcj.sb.account.switcher.http.model.MonsterModel
+import com.lcj.sb.account.switcher.utils.Configs
 import com.squareup.picasso.Picasso
 
 class MonsterListAdapter(activity: Activity) : BaseAdapter<MonsterListAdapter.ViewHolder>(activity) {
@@ -27,7 +28,7 @@ class MonsterListAdapter(activity: Activity) : BaseAdapter<MonsterListAdapter.Vi
     }
 
     fun update(dataList: List<MonsterModel>) {
-        mDataList = dataList;
+        mDataList = dataList
         notifyDataSetChanged()
     }
 
@@ -37,6 +38,7 @@ class MonsterListAdapter(activity: Activity) : BaseAdapter<MonsterListAdapter.Vi
 
             Picasso.get().load(iconUrl).into(binding.iconView)
             binding.titleView.text = item.name_jp
+            binding.titleView.setTextColor(Color.parseColor(Configs.ELEMENT_COLOR_LIST[item.element]))
         }
     }
 }

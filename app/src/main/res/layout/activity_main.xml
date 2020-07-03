@@ -41,7 +41,7 @@
                 android:id="@+id/menu_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/shape_80ffffff"
+                android:background="@drawable/shape_solid_80ffffff"
                 android:padding="2dp"
                 app:layout_constraintBottom_toTopOf="@+id/ad_view"
                 app:layout_constraintLeft_toLeftOf="parent"
