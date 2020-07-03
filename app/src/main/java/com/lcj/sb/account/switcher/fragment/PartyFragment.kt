@@ -301,7 +301,7 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
             }
 
             recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-            recyclerView.adapter = DungeonLevelAdapter(mActivity, dataList).apply {
+            recyclerView.adapter = DungeonLevelAdapter(mActivity).apply {
                 setCallback { selectedItem, position ->
                     when (view.id) {
                         R.id.filter_level_btn -> updateFilterLevelView(selectedItem)
@@ -309,6 +309,7 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
                     }
                     it.dismiss()
                 }
+                update(dataList)
             }
 
             it.show()
@@ -328,7 +329,7 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
             }
 
             recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-            recyclerView.adapter = DungeonElementAdapter(mActivity, dataList).apply {
+            recyclerView.adapter = DungeonElementAdapter(mActivity).apply {
                 setCallback { selectedItem, position ->
                     when (view.id) {
                         R.id.filter_element_btn -> updateFilterElementView(selectedItem)
@@ -336,6 +337,7 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
                     }
                     it.dismiss()
                 }
+                update(dataList)
             }
 
             it.show()
@@ -350,11 +352,12 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
             val recyclerView: RecyclerView = rootView.findViewById(R.id.recycler_view)
 
             recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-            recyclerView.adapter = DungeonStageAdapter(mActivity, mDungeonStageList).apply {
+            recyclerView.adapter = DungeonStageAdapter(mActivity).apply {
                 setCallback { selectedItem, position ->
                     updateDungeonStageView(selectedItem)
                     it.dismiss()
                 }
+                update(mDungeonStageList)
             }
 
             if (mDungeonStageList.isNotEmpty()) it.show()

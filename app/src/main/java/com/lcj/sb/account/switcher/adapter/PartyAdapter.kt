@@ -9,20 +9,15 @@ import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.databinding.ItemDungeonPartyBinding
 import com.lcj.sb.account.switcher.utils.IconUtils
 
-class PartyAdapter(activity: Activity) : BaseAdapter<PartyAdapter.ViewHolder>(activity) {
-    private var dataList: List<DungeonParty> = emptyList()
+class PartyAdapter(activity: Activity) : BaseAdapter<DungeonParty, PartyAdapter.ViewHolder>(activity) {
     private var mListener: PartyListListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemDungeonPartyBinding.inflate(mInflater, parent, false))
     }
 
-    override fun getItemCount(): Int {
-        return dataList.size
-    }
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val currentItem = dataList[position]
+        val currentItem = mDataList[position]
         val dungeonResId = IconUtils.getInstance(activity).getDungeonResId(currentItem.iconName
                 ?: "")
         val levelResId = IconUtils.getInstance(activity).getDungeonLevelResId(currentItem.dungeonType)
@@ -33,11 +28,6 @@ class PartyAdapter(activity: Activity) : BaseAdapter<PartyAdapter.ViewHolder>(ac
         holder.binding.title.text = String.format("%s - %s", currentItem.title, currentItem.monsterName)
         holder.binding.partyImage.setImageURI(Uri.parse(currentItem.imagePath))
         holder.binding.deleteBtn.setOnClickListener { mListener?.onDeleteClick(currentItem) }
-    }
-
-    fun update(dataList: List<DungeonParty>) {
-        this.dataList = dataList
-        notifyDataSetChanged()
     }
 
     fun setOnClickListener(listener: PartyListListener) {

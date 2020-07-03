@@ -12,20 +12,15 @@ import com.lcj.sb.account.switcher.databinding.ItemAccountListBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
-class AccountAdapter(activity: Activity) : BaseAdapter<AccountAdapter.ViewHolder>(activity) {
-    private var dataList: List<Account> = emptyList()
+class AccountAdapter(activity: Activity) : BaseAdapter<Account, AccountAdapter.ViewHolder>(activity) {
     private var mOnClickListener: AccountListListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemAccountListBinding.inflate(mInflater, parent, false))
     }
 
-    override fun getItemCount(): Int {
-        return dataList.size
-    }
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = dataList[position]
+        val item = mDataList[position]
         val iconResId = if (item.selected) {
             holder.binding.accountAliasTv.setTextColor(Color.parseColor("#ffffffff"))
             when (item.lang) {
@@ -53,11 +48,6 @@ class AccountAdapter(activity: Activity) : BaseAdapter<AccountAdapter.ViewHolder
         holder.binding.accountSaveBtn.setOnClickListener { mOnClickListener?.onSaveClick(item) }
         holder.binding.accountLoadBtn.setOnClickListener { mOnClickListener?.onLoadGameClick(item) }
         holder.binding.accountMoreBtn.setOnClickListener { mOnClickListener?.onMoreClick(item) }
-    }
-
-    fun update(dataList: List<Account>) {
-        this.dataList = dataList
-        notifyDataSetChanged()
     }
 
     fun setOnClickListener(listener: AccountListListener) {

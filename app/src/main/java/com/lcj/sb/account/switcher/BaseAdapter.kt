@@ -7,9 +7,20 @@ import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
 
-abstract class BaseAdapter<T : RecyclerView.ViewHolder>(val activity: Activity) : RecyclerView.Adapter<T>() {
+abstract class BaseAdapter<DT, VT : RecyclerView.ViewHolder>(val activity: Activity) : RecyclerView.Adapter<VT>() {
     protected val LOG_TAG = javaClass.simpleName;
     protected val mInflater: LayoutInflater = LayoutInflater.from(activity)
+
+    protected var mDataList: List<DT> = emptyList()
+
+    override fun getItemCount(): Int {
+        return mDataList.size
+    }
+
+    fun update(dataList: List<DT>) {
+        mDataList = dataList
+        notifyDataSetChanged()
+    }
 
     interface BaseListener {
         fun onItemClick(account: Account)

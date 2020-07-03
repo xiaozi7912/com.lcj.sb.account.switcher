@@ -11,30 +11,20 @@ import com.lcj.sb.account.switcher.databinding.ItemLocalSyncListBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
-class LocalSyncListAdapter(activity: Activity) : BaseAdapter<LocalSyncListAdapter.ViewHolder>(activity) {
-    private var dataList: List<Account> = emptyList()
+class LocalSyncListAdapter(activity: Activity) : BaseAdapter<Account, LocalSyncListAdapter.ViewHolder>(activity) {
     private var mListener: LocalSyncListListener? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemLocalSyncListBinding.inflate(mInflater, parent, false))
     }
 
-    override fun getItemCount(): Int {
-        return dataList.size
-    }
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = dataList[position]
+        val item = mDataList[position]
         holder.updateView(item)
         holder.binding.root.setOnClickListener { mListener?.onItemClick(item) }
         holder.binding.accountIconIv.setOnClickListener { mListener?.onIconClick(item) }
         holder.binding.accountDeleteBtn.setOnClickListener { mListener?.onDeleteClick(item) }
         holder.binding.itemUploadBtn.setOnClickListener { mListener?.onUploadClick(item) }
-    }
-
-    fun update(dataList: List<Account>) {
-        this.dataList = dataList
-        notifyDataSetChanged()
     }
 
     fun setOnClickListener(listener: LocalSyncListListener) {

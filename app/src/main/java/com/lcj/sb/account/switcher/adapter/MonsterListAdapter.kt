@@ -11,13 +11,7 @@ import com.lcj.sb.account.switcher.http.model.MonsterModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.squareup.picasso.Picasso
 
-class MonsterListAdapter(activity: Activity) : BaseAdapter<MonsterListAdapter.ViewHolder>(activity) {
-    private var mDataList: List<MonsterModel> = emptyList()
-
-    override fun getItemCount(): Int {
-        return mDataList.size
-    }
-
+class MonsterListAdapter(activity: Activity) : BaseAdapter<MonsterModel, MonsterListAdapter.ViewHolder>(activity) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemMonsterListBinding.inflate(mInflater, parent, false))
     }
@@ -25,11 +19,6 @@ class MonsterListAdapter(activity: Activity) : BaseAdapter<MonsterListAdapter.Vi
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = mDataList[position]
         holder.updateView(item)
-    }
-
-    fun update(dataList: List<MonsterModel>) {
-        mDataList = dataList
-        notifyDataSetChanged()
     }
 
     class ViewHolder(val binding: ItemMonsterListBinding) : RecyclerView.ViewHolder(binding.root) {

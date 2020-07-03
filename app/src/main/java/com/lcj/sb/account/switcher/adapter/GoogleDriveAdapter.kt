@@ -11,29 +11,19 @@ import com.lcj.sb.account.switcher.databinding.ItemGoogleDriveBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
-class GoogleDriveAdapter(activity: Activity) : BaseAdapter<GoogleDriveAdapter.ViewHolder>(activity) {
-    private var dataList: List<GoogleDriveItem> = emptyList()
+class GoogleDriveAdapter(activity: Activity) : BaseAdapter<GoogleDriveItem, GoogleDriveAdapter.ViewHolder>(activity) {
     private var mListener: RemoteSyncListListener? = null
-
-    override fun getItemCount(): Int {
-        return dataList.size
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemGoogleDriveBinding.inflate(mInflater, parent, false))
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = dataList[position]
+        val item = mDataList[position]
         holder.updateView(item)
         holder.binding.root.setOnClickListener { mListener?.onItemClick(item) }
         holder.binding.itemDeleteBtn.setOnClickListener { mListener?.onDeleteClick(item) }
         holder.binding.itemDownloadBtn.setOnClickListener { mListener?.onDownloadClick(item) }
-    }
-
-    fun update(dataList: List<GoogleDriveItem>) {
-        this.dataList = dataList
-        notifyDataSetChanged()
     }
 
     fun setListener(listener: RemoteSyncListListener) {
