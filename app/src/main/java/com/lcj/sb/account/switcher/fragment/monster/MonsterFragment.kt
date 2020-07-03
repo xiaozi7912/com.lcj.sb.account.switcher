@@ -1,19 +1,24 @@
 package com.lcj.sb.account.switcher.fragment.monster
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
 import com.lcj.sb.account.switcher.BaseFragment
+import com.lcj.sb.account.switcher.activity.MonsterDetailActivity
 import com.lcj.sb.account.switcher.adapter.MonsterListAdapter
 import com.lcj.sb.account.switcher.databinding.FragmentMonsterBinding
 import com.lcj.sb.account.switcher.http.APIManager
 import com.lcj.sb.account.switcher.http.BaseObserver
 import com.lcj.sb.account.switcher.http.model.MonsterModel
 import com.lcj.sb.account.switcher.http.response.MonsterResponse
+import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.view.MonsterFilterDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -46,15 +51,12 @@ class MonsterFragment : BaseFragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         initRecyclerView()
-    }
-
-    override fun onResume() {
-        super.onResume()
         getMonsterList(1)
     }
 
     private fun initRecyclerView() {
         mAdapter = MonsterListAdapter(mActivity)
+        mAdapter.setOnItemClick { position, item -> onMonsterClick(position, item) }
 
         mBinding.recyclerView.layoutManager = GridLayoutManager(mActivity, 4)
         mBinding.recyclerView.adapter = mAdapter
@@ -103,5 +105,14 @@ class MonsterFragment : BaseFragment() {
 
     private fun onFilterDialogButtonClick() {
         MonsterFilterDialog.getInstance(mActivity).show()
+    }
+
+    private fun onMonsterClick(position: Int, item: MonsterModel) {
+        Log.d(LOG_TAG, "position : $position")
+        Log.d(LOG_TAG, "item : ${item.id}")
+        Intent(mActivity, MonsterDetailActivity::class.java).let {
+            it.putExtra(Configs.INTENT_KEY_MONSTER_MODEL, Gson().toJson(item))
+            startActivity(it)
+        }
     }
 }

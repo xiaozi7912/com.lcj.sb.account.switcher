@@ -50,13 +50,15 @@ android {
             resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-3940256099942544/6300978111"'
             resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", '"ca-app-pub-3940256099942544/6300978111"'
             resValue "string", "AD_UNIT_ID_LOCAL_SYNC_LIST", '"ca-app-pub-3940256099942544/6300978111"'
+            resValue "string", "AD_UNIT_ID_MONSTER_DETAIL", '"ca-app-pub-3940256099942544/6300978111"'
         }
 
         production {
             dimension "admob"
-            resValue "string", "AD_UNIT_ID_MAIN", '"ca-app-pub-5692319161651426/3653778519"'
-            resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", '"ca-app-pub-5692319161651426/2028230874"'
-            resValue "string", "AD_UNIT_ID_LOCAL_SYNC_LIST", '"ca-app-pub-5692319161651426/9678336202"'
+            resValue "string", "AD_UNIT_ID_MAIN", rootProject.ext.ad.main
+            resValue "string", "AD_UNIT_ID_ACCOUNT_INFO", rootProject.ext.ad.account_info
+            resValue "string", "AD_UNIT_ID_LOCAL_SYNC_LIST", rootProject.ext.ad.local_sync_list
+            resValue "string", "AD_UNIT_ID_MONSTER_DETAIL", rootProject.ext.ad.monster_detail
         }
     }
     buildTypes {

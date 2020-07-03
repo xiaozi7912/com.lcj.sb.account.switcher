@@ -12,6 +12,8 @@ import com.lcj.sb.account.switcher.utils.Configs
 import com.squareup.picasso.Picasso
 
 class MonsterListAdapter(activity: Activity) : BaseAdapter<MonsterModel, MonsterListAdapter.ViewHolder>(activity) {
+    private var mItemClickCallback: ((position: Int, item: MonsterModel) -> Unit)? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(ItemMonsterListBinding.inflate(mInflater, parent, false))
     }
@@ -19,6 +21,11 @@ class MonsterListAdapter(activity: Activity) : BaseAdapter<MonsterModel, Monster
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = mDataList[position]
         holder.updateView(item)
+        holder.itemView.setOnClickListener { mItemClickCallback?.let { it(position, item) } }
+    }
+
+    fun setOnItemClick(callback: (position: Int, item: MonsterModel) -> Unit) {
+        mItemClickCallback = callback
     }
 
     class ViewHolder(val binding: ItemMonsterListBinding) : RecyclerView.ViewHolder(binding.root) {

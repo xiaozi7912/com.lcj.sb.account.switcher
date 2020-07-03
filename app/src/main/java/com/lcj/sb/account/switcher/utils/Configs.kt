@@ -1,6 +1,7 @@
 package com.lcj.sb.account.switcher.utils
 
 import android.os.Environment
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.model.DungeonElementModel
 import com.lcj.sb.account.switcher.model.DungeonLevelModel
 
@@ -36,8 +37,17 @@ class Configs {
         const val REQUEST_CODE_GOOGLE_SIGN_IN: Int = 1001
         const val INTENT_KEY_ACCOUNT = "ACCOUNT"
         const val INTENT_KEY_LANGUAGE = "LANGUAGE"
+        const val INTENT_KEY_MONSTER_MODEL = "MONSTER_MODEL"
 
-        val ELEMENT_COLOR_LIST = arrayListOf<String>("#FF3333", "#3333FF", "#33FF33", "#FFFF33", "#8F33FF")
+        val ELEMENT_COLOR_LIST = arrayListOf("#FF3333", "#3333FF", "#33FF33", "#FFFF33", "#8F33FF")
+        val ELEMENT_ICON_LIST = arrayListOf(
+                R.drawable.ic_element_0_3_p, R.drawable.ic_element_1_3_p, R.drawable.ic_element_2_3_p,
+                R.drawable.ic_element_3_3_p, R.drawable.ic_element_4_3_p)
+        val MONSTER_TYPE_A_ICON_LIST = arrayListOf(
+                R.drawable.ic_monster_type_a_0, R.drawable.ic_monster_type_a_1, R.drawable.ic_monster_type_a_2)
+        val MONSTER_TYPE_B_ICON_LIST = arrayListOf(
+                R.drawable.ic_monster_type_b_1, R.drawable.ic_monster_type_b_2, R.drawable.ic_monster_type_b_3,
+                R.drawable.ic_monster_type_b_4, R.drawable.ic_monster_type_b_5)
         val DUNGEON_LEVEL_LIST: ArrayList<DungeonLevelModel> = arrayListOf(
                 DungeonLevelModel(2, "冥"), DungeonLevelModel(1, "神"), DungeonLevelModel(0, "滅"),
                 DungeonLevelModel(3, "塔"), DungeonLevelModel(4, "魔窟")

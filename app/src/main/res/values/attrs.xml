@@ -11,4 +11,7 @@
         <attr name="title" />
         <attr name="src" />
     </declare-styleable>
+    <declare-styleable name="MonsterRarityView">
+        <attr name="rarity" format="integer" />
+    </declare-styleable>
 </resources>
