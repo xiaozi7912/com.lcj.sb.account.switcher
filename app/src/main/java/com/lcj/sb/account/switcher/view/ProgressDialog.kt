@@ -6,8 +6,10 @@ import com.lcj.sb.account.switcher.BaseDialog
 import com.lcj.sb.account.switcher.databinding.DialogProgressBinding
 
 class ProgressDialog(activity: Activity) : BaseDialog(activity) {
+    private var mBinding = DialogProgressBinding.inflate(LayoutInflater.from(activity))
+
     init {
-        mBinding = DialogProgressBinding.inflate(LayoutInflater.from(activity))
+        mRootView = mBinding.root
     }
 
     companion object {
@@ -17,6 +19,10 @@ class ProgressDialog(activity: Activity) : BaseDialog(activity) {
             if (instance == null) instance = ProgressDialog(activity)
             return instance!!
         }
+    }
+
+    override fun initView() {
+        TODO("Not yet implemented")
     }
 
     override fun show() {

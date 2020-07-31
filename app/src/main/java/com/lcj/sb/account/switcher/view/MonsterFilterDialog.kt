@@ -6,8 +6,11 @@ import com.lcj.sb.account.switcher.BaseDialog
 import com.lcj.sb.account.switcher.databinding.DialogMonsterFilterBinding
 
 class MonsterFilterDialog(activity: Activity) : BaseDialog(activity) {
+    private var mBinding = DialogMonsterFilterBinding.inflate(LayoutInflater.from(activity))
+
     init {
-        mBinding = DialogMonsterFilterBinding.inflate(LayoutInflater.from(activity))
+        mRootView = mBinding.root
+        initView()
     }
 
     companion object {
@@ -17,6 +20,9 @@ class MonsterFilterDialog(activity: Activity) : BaseDialog(activity) {
             if (instance == null) instance = MonsterFilterDialog(activity)
             return instance!!
         }
+    }
+
+    override fun initView() {
     }
 
     override fun dismiss() {

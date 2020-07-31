@@ -2,17 +2,25 @@ package com.lcj.sb.account.switcher
 
 import android.app.Activity
 import android.app.AlertDialog
-import androidx.databinding.ViewDataBinding
+import android.view.View
 
-open class BaseDialog(val activity: Activity) {
+abstract class BaseDialog(val activity: Activity) {
     protected val LOG_TAG = javaClass.simpleName
-    protected val mDialog = AlertDialog.Builder(activity, R.style.CustomDialog).create()
-    protected lateinit var mBinding: ViewDataBinding
+    protected var mDialog: AlertDialog
+    protected lateinit var mRootView: View
+
+    init {
+        mDialog = AlertDialog.Builder(activity, R.style.CustomDialog)
+                .setOnDismissListener { dismiss() }
+                .create()
+    }
 
     open fun show() {
         mDialog.show()
-        mDialog.setContentView(mBinding.root)
+        mDialog.setContentView(mRootView)
     }
+
+    abstract fun initView()
 
     open fun dismiss() {
         mDialog.dismiss()
