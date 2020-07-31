@@ -18,6 +18,7 @@ import com.lcj.sb.account.switcher.http.APIManager
 import com.lcj.sb.account.switcher.http.BaseObserver
 import com.lcj.sb.account.switcher.http.model.MonsterModel
 import com.lcj.sb.account.switcher.http.response.MonsterResponse
+import com.lcj.sb.account.switcher.model.MonsterFilterModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.view.MonsterFilterDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -31,6 +32,7 @@ class MonsterFragment : BaseFragment() {
     private var mCurrentPage = 1
     private var mTotalPage = 99
     private var mIsLoading: Boolean = false
+    private var mFilterModel = MonsterFilterModel()
 
     companion object {
         fun newInstance(): MonsterFragment {
@@ -104,7 +106,18 @@ class MonsterFragment : BaseFragment() {
     }
 
     private fun onFilterDialogButtonClick() {
-        MonsterFilterDialog.getInstance(mActivity).show()
+        val instance = MonsterFilterDialog.getInstance(mActivity) { model ->
+            Log.d(LOG_TAG, model.elements.toString())
+            Log.d(LOG_TAG, model.typeAs.toString())
+            Log.d(LOG_TAG, model.typeBs.toString())
+            val filterList = mDataList
+                    .filter { item -> model.elements.contains(item.element) }
+                    .filter { item -> model.typeAs.contains(item.type_a) }
+                    .filter { item -> model.typeBs.contains(item.type_b) }
+            mAdapter.update(filterList)
+        }
+
+        instance.show()
     }
 
     private fun onMonsterClick(position: Int, item: MonsterModel) {
