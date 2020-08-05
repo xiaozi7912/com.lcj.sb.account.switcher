@@ -46,7 +46,6 @@ class MonsterFilterDialog(activity: Activity, callback: (model: MonsterFilterMod
         mBinding.monsterTypeB5.setOnClickListener { it.isSelected = !it.isSelected }
         mBinding.confirmButton.setOnClickListener {
             mCallback(MonsterFilterModel().apply {
-                typeBs.add(0)
                 for ((index, viewId) in ELEMENT_BUTTON_IDS.withIndex()) {
                     val view: ImageButton = mRootView.findViewById(viewId)
                     if (view.isSelected) elements.add(index)
@@ -60,6 +59,26 @@ class MonsterFilterDialog(activity: Activity, callback: (model: MonsterFilterMod
                 for ((index, viewId) in TYPE_B_BUTTON_IDS.withIndex()) {
                     val view: ImageButton = mRootView.findViewById(viewId)
                     if (view.isSelected) typeBs.add(index + 1)
+                }
+
+                elements.let {
+                    if (it.size == 0) {
+                        for (index in ELEMENT_BUTTON_IDS.indices) {
+                            it.add(index)
+                        }
+                    }
+                }
+                typeAs.let {
+                    if (it.size == 0) {
+                        for (index in TYPE_A_BUTTON_IDS.indices) {
+                            it.add(index)
+                        }
+                    }
+                }
+                typeBs.let {
+                    if (it.size == 0) {
+                        typeBs.add(0)
+                    }
                 }
             })
         }
