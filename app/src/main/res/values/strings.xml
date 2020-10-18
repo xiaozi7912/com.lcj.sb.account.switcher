@@ -1,13 +1,11 @@
 <resources>
-    <string name="app_name">召喚圖板：管理工具</string>
-
+    <string name="app_name">圖板工具</string>
     <string name="main_drawer_item_sb_j">サモンズボード</string>
     <string name="main_drawer_item_sb_t">召喚圖板</string>
     <string name="main_drawer_item_monsters">棋寵圖鑑</string>
     <string name="main_drawer_item_accounts">帳號管理</string>
     <string name="main_drawer_item_settings">設定</string>
     <string name="main_drawer_item_sync_management">同步管理</string>
-
     <string name="no_install_game">尚未安裝遊戲</string>
     <string name="google_play_text">Google Play</string>
     <string name="game_folder_not_exists">遊戲資料夾內沒有資料，請先開啟遊戲！</string>
@@ -15,14 +13,12 @@
     <string name="edit_account_alias_edit_hint">帳號別名</string>
     <string name="account_alias_text">帳號別名：%s</string>
     <string name="account_remove_button">隱藏</string>
-
     <string name="settings_tab_local_backup_title">本機同步</string>
     <string name="settings_tab_remote_backup_title">雲端同步</string>
     <string name="sync_account_completed">同步成功！</string>
     <string name="file_upload_completed">檔案上傳完成！</string>
     <string name="no_google_account_association">請先綁定帳號！</string>
     <string name="file_download_completed">檔案下載完成！</string>
-
     <string name="dialog_button_cancel">取消</string>
     <string name="dialog_button_backup">備份</string>
     <string name="dialog_folder_path">資料夾：%s</string>
