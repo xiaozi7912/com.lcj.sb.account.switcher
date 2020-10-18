@@ -85,6 +85,8 @@ class MainActivity : BaseActivity() {
         mBinding.mainDrawerItemSettings.setDownloadAPKButtonVisibility(false)
         mBinding.mainDrawerVersionTv.text = BuildConfig.VERSION_NAME
 
+        mBinding.menuItemMonster.visibility = View.GONE
+
         mBinding.mainToolBar.setOnMenuItemClickListener { view ->
             PreferenceManager.getDefaultSharedPreferences(mActivity).let {
                 val lang = Account.Language.valueOf(it.getString(Configs.PREF_KEY_LANGUAGE, "JP")!!)
@@ -200,7 +202,7 @@ class MainActivity : BaseActivity() {
             showFragment(it.getTitle(), SettingsFragment.newInstance())
         }
 
-        mBinding.menuItemMonster.performClick()
+        mBinding.menuItemAccount.performClick()
     }
 
     override fun initAdMob() {

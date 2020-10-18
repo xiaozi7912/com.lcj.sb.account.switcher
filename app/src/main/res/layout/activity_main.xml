@@ -92,7 +92,7 @@
             <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
                 android:id="@+id/ad_view"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="50dp"
                 ads:adSize="BANNER"
                 ads:adUnitId="@string/AD_UNIT_ID_MAIN"
                 ads:layout_constraintBottom_toBottomOf="parent"
