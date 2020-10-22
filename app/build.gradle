@@ -5,13 +5,13 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'io.fabric'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     flavorDimensions "server", "admob"
 
     defaultConfig {
         applicationId "com.lcj.sb.account.switcher"
-        minSdkVersion 21
-        targetSdkVersion 28
+        minSdkVersion 23
+        targetSdkVersion 29
         versionCode 27
         versionName "0.6.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
