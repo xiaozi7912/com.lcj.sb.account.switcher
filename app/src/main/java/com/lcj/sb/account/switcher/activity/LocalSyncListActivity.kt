@@ -61,7 +61,7 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
     }
 
     override fun initView() {
-        mCurrentLang = Account.Language.valueOf(intent.getStringExtra(Configs.INTENT_KEY_LANGUAGE))
+        mCurrentLang = Account.Language.valueOf(intent.getStringExtra(Configs.INTENT_KEY_LANGUAGE) ?: "")
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
