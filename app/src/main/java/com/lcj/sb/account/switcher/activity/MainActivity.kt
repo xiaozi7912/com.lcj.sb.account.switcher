@@ -14,7 +14,9 @@ import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.google.android.gms.ads.AdRequest
-import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.FirebaseApp
+import com.google.firebase.installations.FirebaseInstallations
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.gson.Gson
 import com.lcj.sb.account.switcher.BaseActivity
@@ -272,15 +274,29 @@ class MainActivity : BaseActivity() {
     }
 
     private fun getFCMInstanceId() {
-        FirebaseInstanceId.getInstance().instanceId
-                .addOnSuccessListener {
-                    Log.i(LOG_TAG, "addOnSuccessListener")
-                    Log.v(LOG_TAG, "addOnSuccessListener it.id : ${it.id}")
-                    Log.v(LOG_TAG, "addOnSuccessListener it.token : ${it.token}")
-                }.addOnFailureListener {
-                    Log.i(LOG_TAG, "addOnFailureListener")
-                }.addOnCompleteListener {
-                    Log.i(LOG_TAG, "addOnCompleteListener")
+        FirebaseMessaging.getInstance().token
+                .addOnSuccessListener { token ->
+                    Log.i(LOG_TAG, "FirebaseMessaging addOnSuccessListener")
+                    Log.i(LOG_TAG, "FirebaseMessaging addOnSuccessListener token : $token")
+                }
+                .addOnFailureListener { e ->
+                    Log.i(LOG_TAG, "FirebaseMessaging addOnFailureListener")
+                    e.printStackTrace()
+                }
+                .addOnCompleteListener { task ->
+                    Log.i(LOG_TAG, "FirebaseMessaging addOnCompleteListener")
+                    Log.i(LOG_TAG, "FirebaseMessaging addOnCompleteListener task.result : ${task.result}")
+                }
+        FirebaseInstallations.getInstance().id
+                .addOnSuccessListener { id ->
+                    Log.i(LOG_TAG, "FirebaseInstallations addOnSuccessListener")
+                    Log.i(LOG_TAG, "FirebaseInstallations addOnSuccessListener id : $id")
+                }.addOnFailureListener { e ->
+                    Log.i(LOG_TAG, "FirebaseInstallations addOnFailureListener")
+                    e.printStackTrace()
+                }.addOnCompleteListener { task ->
+                    Log.i(LOG_TAG, "FirebaseInstallations addOnCompleteListener")
+                    Log.i(LOG_TAG, "FirebaseInstallations addOnCompleteListener task.result : ${task.result}")
                 }
     }
 
