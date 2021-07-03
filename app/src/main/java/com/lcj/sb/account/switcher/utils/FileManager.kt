@@ -2,7 +2,6 @@ package com.lcj.sb.account.switcher.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
@@ -27,7 +26,7 @@ class FileManager {
 
     companion object {
         private const val LOG_TAG = "FileManager"
-        private const val BUFFER_SIZE = 512
+        private const val BUFFER_SIZE = 1024
 
         fun isPackageInstalled(packageName: String, context: Context): Boolean {
             return try {
@@ -39,7 +38,6 @@ class FileManager {
         }
 
         fun isFolderExists(path: String): Boolean {
-            Log.i(LOG_TAG, "isFolderExists")
             val file = File(path)
             if (file.isDirectory && file.exists()) {
                 return true
@@ -94,7 +92,6 @@ class FileManager {
         }
 
         fun backupFolder(resPath: String, destPath: String, callback: BackupCallback) {
-            Log.i(LOG_TAG, "backupFolder")
             val resDir = File(resPath)
             val destDir = File(destPath)
             val destFilesDir = File(String.format("%s/files", destPath))
@@ -124,22 +121,25 @@ class FileManager {
 
         fun loadFolder(resPath: String, destPath: String, callback: LoadCallback) {
             Thread {
-                val command: String = String.format("cp -a %s %s", resPath, destPath)
-                try {
-                    val process: Process = Runtime.getRuntime().exec(command)
-                    val buffReader = BufferedReader(InputStreamReader(process.inputStream))
-                    var readLine: String?
+                val dstDir = File(destPath)
+                val resFilesDir = File(resPath, "files")
+                val dstFilesDir = File(destPath, "files")
 
-                    do {
-                        readLine = buffReader.readLine()
-                    } while (readLine != null)
+                if (!dstDir.exists()) {
+                    dstDir.mkdir()
+                    dstFilesDir.mkdir()
+                }
 
-                    buffReader.close()
-                    process.waitFor()
-                    callback.onCompleted()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    callback.onError()
+                resFilesDir.listFiles()?.let { list ->
+                    if (list.isEmpty()) {
+                        callback.onError()
+                    } else {
+                        list.forEach { file ->
+                            val dstFilePath = String.format("%s/%s", dstFilesDir.absolutePath, file.name)
+                            copyFile(file.absolutePath, dstFilePath)
+                        }
+                        callback.onCompleted()
+                    }
                 }
             }.start()
         }
@@ -156,13 +156,11 @@ class FileManager {
                     }.sorted()
                     .subscribeOn(Schedulers.io())
                     .subscribe({ file ->
-                        Log.d(LOG_TAG, "file.absolutePath : ${file.absolutePath}")
                         result.add(file)
                     }, { err -> err.printStackTrace() }, { callback(result) })
         }
 
         private fun copyFile(resFile: String, destFile: String) {
-            Log.i(LOG_TAG, "copyFile")
             var bis: BufferedInputStream? = null
             var bos: BufferedOutputStream? = null
 

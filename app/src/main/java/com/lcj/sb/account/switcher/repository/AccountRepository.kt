@@ -5,7 +5,6 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.WindowManager
 import com.lcj.sb.account.switcher.BaseRepository
 import com.lcj.sb.account.switcher.R
@@ -132,7 +131,7 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
 
     fun onLoadGameClick(account: Account, onSuccess: () -> Unit, onError: () -> Unit) {
         val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
-        val srcFolder: String = String.format("%s/%s", account.folder, "files")
+        val srcFolder: String = account.folder
         val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
 
         FileManager.loadFolder(srcFolder, dstFolder, object : FileManager.LoadCallback {
