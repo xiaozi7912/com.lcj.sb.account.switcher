@@ -14,7 +14,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:background="#55ffffff">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/main_tool_bar"
@@ -22,6 +23,7 @@
                 android:layout_height="?attr/actionBarSize"
                 android:background="?attr/colorPrimary"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                android:visibility="gone"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -30,21 +32,73 @@
                 android:id="@+id/main_frame_layout"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintBottom_toTopOf="@+id/main_ad_view"
+                app:layout_constraintBottom_toTopOf="@+id/menu_layout"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/main_tool_bar" />
 
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/menu_layout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shape_solid_80ffffff"
+                android:padding="2dp"
+                app:layout_constraintBottom_toTopOf="@+id/ad_view"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/main_frame_layout">
+
+                <com.lcj.sb.account.switcher.view.BottomMenuItemView
+                    android:id="@+id/menu_item_monster"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@+id/menu_item_account"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:src="@drawable/selector_round_account_box_black_24"
+                    app:title="@string/main_drawer_item_monsters" />
+
+                <com.lcj.sb.account.switcher.view.BottomMenuItemView
+                    android:id="@+id/menu_item_account"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toRightOf="@+id/menu_item_monster"
+                    app:layout_constraintRight_toLeftOf="@+id/menu_item_sync"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:src="@drawable/selector_round_account_box_black_24"
+                    app:title="@string/main_drawer_item_accounts" />
+
+                <com.lcj.sb.account.switcher.view.BottomMenuItemView
+                    android:id="@+id/menu_item_sync"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toRightOf="@+id/menu_item_account"
+                    app:layout_constraintRight_toLeftOf="@+id/menu_item_settings"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:src="@drawable/selector_round_sync_black_24"
+                    app:title="@string/main_drawer_item_sync_management" />
+
+                <com.lcj.sb.account.switcher.view.BottomMenuItemView
+                    android:id="@+id/menu_item_settings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toRightOf="@+id/menu_item_sync"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:src="@drawable/selector_round_settings_applications_black_24"
+                    app:title="@string/main_drawer_item_settings" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
             <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-                android:id="@+id/main_ad_view"
+                android:id="@+id/ad_view"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 ads:adSize="BANNER"
                 ads:adUnitId="@string/AD_UNIT_ID_MAIN"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent" />
+                ads:layout_constraintBottom_toBottomOf="parent"
+                ads:layout_constraintLeft_toLeftOf="parent"
+                ads:layout_constraintRight_toRightOf="parent"
+                ads:layout_constraintTop_toBottomOf="@+id/menu_layout" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.navigation.NavigationView
@@ -62,6 +116,7 @@
                     android:id="@+id/main_drawer_item_sb_j"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:src="@drawable/ic_launcher_jp_p"
@@ -71,17 +126,37 @@
                     android:id="@+id/main_drawer_item_sb_t"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_sb_j"
                     app:src="@drawable/ic_launcher_tw_p"
                     app:title="@string/main_drawer_item_sb_t" />
 
                 <com.lcj.sb.account.switcher.view.DrawerItemView
-                    android:id="@+id/main_drawer_item_settings"
+                    android:id="@+id/main_drawer_item_accounts"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_sb_t"
+                    app:src="@drawable/round_account_box_black_36"
+                    app:title="@string/main_drawer_item_accounts" />
+
+                <com.lcj.sb.account.switcher.view.DrawerItemView
+                    android:id="@+id/main_drawer_item_sync_management"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_accounts"
+                    app:src="@drawable/round_sync_black_36"
+                    app:title="@string/main_drawer_item_sync_management" />
+
+                <com.lcj.sb.account.switcher.view.DrawerItemView
+                    android:id="@+id/main_drawer_item_settings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/main_drawer_item_sync_management"
                     app:src="@drawable/round_settings_applications_black_36"
                     app:title="@string/main_drawer_item_settings" />
 

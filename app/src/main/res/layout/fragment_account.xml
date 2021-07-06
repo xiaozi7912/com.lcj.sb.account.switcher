@@ -10,10 +10,40 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#80000000">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                app:layout_scrollFlags="scroll|enterAlways|snap">
+
+                <ImageButton
+                    android:id="@+id/create_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/selector_round_add_white_36" />
+
+                <ImageButton
+                    android:id="@+id/game_start_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/selector_round_games_white_36" />
+            </LinearLayout>
+        </com.google.android.material.appbar.AppBarLayout>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/account_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/add_fab"
@@ -21,8 +51,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_marginRight="16dp"
-            android:layout_marginBottom="80dp"
+            android:layout_marginBottom="70dp"
             android:src="@drawable/round_add_white_24"
+            android:visibility="gone"
+            app:fabSize="mini"
             app:layout_behavior="com.lcj.sb.account.switcher.behavior.FabScrollBehavior" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -30,8 +62,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
-            android:layout_margin="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="16dp"
             android:src="@drawable/round_games_white_24"
+            android:visibility="gone"
+            app:fabSize="mini"
             app:layout_behavior="com.lcj.sb.account.switcher.behavior.FabScrollBehavior" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

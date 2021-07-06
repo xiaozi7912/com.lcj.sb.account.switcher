@@ -15,8 +15,12 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.lcj.sb.account.switcher.BaseAdapter
+import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BaseFragment
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.DungeonElementAdapter
 import com.lcj.sb.account.switcher.adapter.DungeonLevelAdapter
@@ -31,8 +35,9 @@ import com.lcj.sb.account.switcher.model.*
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.IconUtils
 import com.theartofdev.edmodo.cropper.CropImage
+import java.io.File
 
-class PartyFragment : BaseFragment() {
+class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
     private lateinit var mBinding: FragmentPartyBinding
     private lateinit var mAccount: Account
     private lateinit var mAdapter: PartyAdapter
@@ -119,18 +124,22 @@ class PartyFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-
         updateFilterLevelView(mFilterLevelList.first())
         updateFilterElementView(mFilterElementList.first())
 
         mAdapter = PartyAdapter(mActivity)
-        mBinding.recyclerView.layoutManager = layoutManager
+        mAdapter.setOnClickListener(this)
+        mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
         mBinding.recyclerView.adapter = mAdapter
 
         BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
                 .getPartyList(mAccount.id)
                 .observe(this, Observer { mAdapter.update(it) })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_PARTY, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -140,10 +149,31 @@ class PartyFragment : BaseFragment() {
             if (resultCode == Activity.RESULT_OK) {
                 mCropImageUri = result.uri
                 mCreatePartyBinding.partyIv.setImageURI(mCropImageUri)
+                Log.d(LOG_TAG, "mCropImageUri : ${mCropImageUri}")
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                val error = result.error
+                result.error.printStackTrace()
             }
         }
+    }
+
+    override fun onDeleteClick(item: DungeonParty) {
+        Log.i(LOG_TAG, "onDeleteClick")
+        Log.d(LOG_TAG, "onDeleteClick item : $item")
+        AlertDialog.Builder(mActivity).apply {
+            setTitle("刪除隊伍")
+            setMessage("確定要刪除此隊伍？")
+            setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
+                Thread {
+                    File(item.imagePath).let { if (it.exists()) it.delete() }
+                    BaseDatabase.getInstance(mActivity).dungeonPartyDAO().delete(item)
+                    mHandler.post {
+                        Snackbar.make(mContentView, R.string.dialog_message_delete_success, Snackbar.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                }.start()
+            }
+            setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
+        }.create().show()
     }
 
     private fun getDungeonInfoFromRemote() {
@@ -271,7 +301,7 @@ class PartyFragment : BaseFragment() {
             }
 
             recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-            recyclerView.adapter = DungeonLevelAdapter(mActivity, dataList).apply {
+            recyclerView.adapter = DungeonLevelAdapter(mActivity).apply {
                 setCallback { selectedItem, position ->
                     when (view.id) {
                         R.id.filter_level_btn -> updateFilterLevelView(selectedItem)
@@ -279,6 +309,7 @@ class PartyFragment : BaseFragment() {
                     }
                     it.dismiss()
                 }
+                update(dataList)
             }
 
             it.show()
@@ -298,7 +329,7 @@ class PartyFragment : BaseFragment() {
             }
 
             recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-            recyclerView.adapter = DungeonElementAdapter(mActivity, dataList).apply {
+            recyclerView.adapter = DungeonElementAdapter(mActivity).apply {
                 setCallback { selectedItem, position ->
                     when (view.id) {
                         R.id.filter_element_btn -> updateFilterElementView(selectedItem)
@@ -306,6 +337,7 @@ class PartyFragment : BaseFragment() {
                     }
                     it.dismiss()
                 }
+                update(dataList)
             }
 
             it.show()
@@ -320,11 +352,12 @@ class PartyFragment : BaseFragment() {
             val recyclerView: RecyclerView = rootView.findViewById(R.id.recycler_view)
 
             recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
-            recyclerView.adapter = DungeonStageAdapter(mActivity, mDungeonStageList).apply {
+            recyclerView.adapter = DungeonStageAdapter(mActivity).apply {
                 setCallback { selectedItem, position ->
                     updateDungeonStageView(selectedItem)
                     it.dismiss()
                 }
+                update(mDungeonStageList)
             }
 
             if (mDungeonStageList.isNotEmpty()) it.show()

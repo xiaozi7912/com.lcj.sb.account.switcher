@@ -14,9 +14,9 @@
         android:layout_height="wrap_content">
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="350dp"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_dialog"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@drawable/shape_corner_ffffffff"
             android:padding="20dp">
 
             <TextView
@@ -24,7 +24,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text='@{model.alias , default="edit_account_alias_tv"}'
-                android:textColor="#ffffff"
+                android:textColor="#000000"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -33,11 +33,11 @@
                 android:id="@+id/edit_account_alias_edit"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:hint="帳號說明"
+                android:hint="@string/edit_account_alias_edit_hint"
                 android:text='@={model.editAlias , default="edit_account_alias_edit"}'
-                android:textColor="#ffffff"
-                android:textColorHint="#ffffff"
+                android:textColor="#000000"
+                android:textColorHint="#000000"
+                app:layout_constraintBottom_toTopOf="@+id/edit_account_cancel_btn"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/edit_account_alias_tv" />
@@ -48,9 +48,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/dialog_button_cancel"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toLeftOf="@+id/edit_account_edit_btn"
-                app:layout_constraintTop_toBottomOf="@+id/edit_account_alias_edit" />
+                app:layout_constraintRight_toLeftOf="@+id/edit_account_edit_btn" />
 
             <Button
                 android:id="@+id/edit_account_edit_btn"
@@ -58,9 +58,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/dialog_button_edit"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toRightOf="@+id/edit_account_cancel_btn"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/edit_account_alias_edit" />
+                app:layout_constraintRight_toRightOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </RelativeLayout>
 </layout>

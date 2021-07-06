@@ -2,7 +2,6 @@ package com.lcj.sb.account.switcher.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
@@ -14,9 +13,20 @@ import java.util.regex.Pattern
 
 
 class FileManager {
+    interface BackupCallback {
+        fun onProcess(current: Int, total: Int)
+        fun onCompleted()
+        fun onError()
+    }
+
+    interface LoadCallback {
+        fun onCompleted()
+        fun onError()
+    }
+
     companion object {
         private const val LOG_TAG = "FileManager"
-        private const val BUFFER_SIZE = 512
+        private const val BUFFER_SIZE = 1024
 
         fun isPackageInstalled(packageName: String, context: Context): Boolean {
             return try {
@@ -28,7 +38,6 @@ class FileManager {
         }
 
         fun isFolderExists(path: String): Boolean {
-            Log.i(LOG_TAG, "isFolderExists")
             val file = File(path)
             if (file.isDirectory && file.exists()) {
                 return true
@@ -57,6 +66,10 @@ class FileManager {
                                     lang = lang.ordinal,
                                     createTime = currentTime,
                                     updateTime = currentTime))
+                        } else {
+                            db.accountDAO().update(existsAccount.apply {
+                                hidden = false
+                            })
                         }
                     }
                     .doOnComplete {
@@ -78,31 +91,76 @@ class FileManager {
                     .subscribe()
         }
 
-        fun backupFolder(resPath: String, destPath: String, callback: (Int, Int, Boolean) -> Unit) {
-            Log.i(LOG_TAG, "backupFolder")
+        fun backupFolder(resPath: String, destPath: String, callback: BackupCallback) {
             val resDir = File(resPath)
             val destDir = File(destPath)
             val destFilesDir = File(String.format("%s/files", destPath))
+            val resFileList = resDir.listFiles()
 
             destDir.mkdir()
             destFilesDir.mkdir()
             destFilesDir.setLastModified(System.currentTimeMillis())
 
-            resDir.listFiles(FileFilter { it.name == "files" })
-                    .forEach { file ->
-                        val fileList = file.listFiles(FileFilter { it.isFile })
-                        var current = 0
-                        val totalSize = fileList.size
-                        fileList.forEach {
-                            copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
-                            current++
-                            callback(current, totalSize, (current == totalSize))
-                        }
+            if (resFileList != null) {
+                resFileList.filter { it.name == "files" }.forEach { file ->
+                    val fileList = file.listFiles(FileFilter { it.isFile })
+                    var current = 0
+                    val totalSize = fileList.size
+
+                    fileList.forEach {
+                        copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
+                        current++
+                        callback.onProcess(current, totalSize)
                     }
+                    callback.onCompleted()
+                }
+            } else {
+                callback.onError()
+            }
+        }
+
+        fun loadFolder(resPath: String, destPath: String, callback: LoadCallback) {
+            Thread {
+                val dstDir = File(destPath)
+                val resFilesDir = File(resPath, "files")
+                val dstFilesDir = File(destPath, "files")
+
+                if (!dstDir.exists()) {
+                    dstDir.mkdir()
+                    dstFilesDir.mkdir()
+                }
+
+                resFilesDir.listFiles()?.let { list ->
+                    if (list.isEmpty()) {
+                        callback.onError()
+                    } else {
+                        list.forEach { file ->
+                            val dstFilePath = String.format("%s/%s", dstFilesDir.absolutePath, file.name)
+                            copyFile(file.absolutePath, dstFilePath)
+                        }
+                        callback.onCompleted()
+                    }
+                }
+            }.start()
+        }
+
+        fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
+            val result = arrayListOf<File>()
+            val d = Observable.just(File(Configs.PATH_APP_DATA))
+                    .flatMap { Observable.fromArray(*it.listFiles()) }
+                    .filter {
+                        Pattern.compile(when (lang) {
+                            Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
+                            Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
+                        }).matcher(it.name).matches()
+                    }.sorted()
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({ file ->
+                        result.add(file)
+                    }, { err -> err.printStackTrace() }, { callback(result) })
         }
 
         private fun copyFile(resFile: String, destFile: String) {
-            Log.i(LOG_TAG, "copyFile")
             var bis: BufferedInputStream? = null
             var bos: BufferedOutputStream? = null
 
@@ -127,23 +185,6 @@ class FileManager {
                     e.printStackTrace()
                 }
             }
-        }
-
-        fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
-            val result = arrayListOf<File>()
-            val d = Observable.just(File(Configs.PATH_APP_DATA))
-                    .flatMap { Observable.fromArray(*it.listFiles()) }
-                    .filter {
-                        Pattern.compile(when (lang) {
-                            Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
-                            Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
-                        }).matcher(it.name).matches()
-                    }.sorted()
-                    .subscribeOn(Schedulers.io())
-                    .subscribe({ file ->
-                        Log.d(LOG_TAG, "file.absolutePath : ${file.absolutePath}")
-                        result.add(file)
-                    }, { err -> err.printStackTrace() }, { callback(result) })
         }
     }
 }

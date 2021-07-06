@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <import type="android.view.View" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@drawable/shape_corner_80000000"
+        android:padding="5dp">
+
+        <ImageView
+            android:id="@+id/account_icon_iv"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/round_account_box_black_24"
+            app:layout_constraintBottom_toTopOf="@+id/item_divider"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/account_alias_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:ellipsize="end"
+            android:lines="1"
+            android:text="0000000000"
+            android:textColor="#ffffff"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/account_path_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:lines="1"
+            android:text="0000000000"
+            android:textColor="#ffffff"
+            android:textSize="14sp"
+            app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/account_alias_tv" />
+
+        <TextView
+            android:id="@+id/account_update_time_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:lines="1"
+            android:text="0000000000"
+            android:textColor="#80ffffff"
+            android:textSize="12sp"
+            app:layout_constraintLeft_toRightOf="@+id/account_icon_iv"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/account_path_tv" />
+
+        <View
+            android:id="@+id/item_divider"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="60dp"
+            android:background="@android:color/white"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/account_delete_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_delete_forever_white_24"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/item_upload_btn"
+            app:layout_constraintTop_toBottomOf="@+id/item_divider" />
+
+        <ImageButton
+            android:id="@+id/item_upload_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_cloud_upload_white_24"
+            app:layout_constraintLeft_toRightOf="@+id/account_delete_btn"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/item_divider" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

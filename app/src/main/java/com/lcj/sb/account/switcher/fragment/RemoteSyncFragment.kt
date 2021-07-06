@@ -1,45 +1,41 @@
 package com.lcj.sb.account.switcher.fragment
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
-import com.google.api.client.extensions.android.http.AndroidHttp
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
-import com.google.api.client.googleapis.media.MediaHttpUploader
-import com.google.api.client.http.FileContent
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.drive.Drive
+import com.google.android.material.snackbar.Snackbar
 import com.google.api.services.drive.DriveScopes
-import com.lcj.sb.account.switcher.BaseApplication
-import com.lcj.sb.account.switcher.BuildConfig
+import com.lcj.sb.account.switcher.*
+import com.lcj.sb.account.switcher.adapter.GoogleDriveAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
+import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
 import com.lcj.sb.account.switcher.databinding.FragmentRemoteBackupBinding
+import com.lcj.sb.account.switcher.repository.SyncRepository
 import com.lcj.sb.account.switcher.utils.Configs
-import com.lcj.sb.account.switcher.utils.FileManager
-import com.lcj.sb.account.switcher.utils.ZipManager
-import com.lcj.sb.account.switcher.view.AccountUploadDialog
+import com.lcj.sb.account.switcher.view.ProgressDialog
+import com.lcj.sb.account.switcher.view.RemoteProgressDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import java.io.File
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
-class RemoteSyncFragment : BaseFragment() {
+class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener {
     private lateinit var mBinding: FragmentRemoteBackupBinding
-
     private lateinit var mSignInClient: GoogleSignInClient
+    private lateinit var mAdapter: GoogleDriveAdapter
 
     companion object {
         fun newInstance(): RemoteSyncFragment {
@@ -54,8 +50,17 @@ class RemoteSyncFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        mBinding.settingsGoogleAccountRoot.visibility = View.GONE
+        mBinding.settingsSbJRoot.visibility = View.GONE
+        mBinding.settingsSbTRoot.visibility = View.GONE
+
         mBinding.signInButton.setOnClickListener {
             startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
+        }
+        mBinding.signOutButton.setOnClickListener {
+            mSignInClient.signOut().addOnCompleteListener {
+                checkLastSignedInAccount()
+            }
         }
         mBinding.settingsSbJSyncBtn.setOnClickListener { onSyncJPButtonClick() }
         mBinding.settingsSbTSyncBtn.setOnClickListener { onSyncTWButtonClick() }
@@ -63,12 +68,17 @@ class RemoteSyncFragment : BaseFragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        BaseApplication.analytics.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
 
         initGoogleSignIn()
         checkLastSignedInAccount()
+        initRecyclerView()
         updateSyncView(Account.Language.JP)
         updateSyncView(Account.Language.TW)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_REMOTE_BACKUP, LOG_TAG)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -78,6 +88,106 @@ class RemoteSyncFragment : BaseFragment() {
             else -> {
             }
         }
+    }
+
+    override fun onRefresh() {
+        SyncRepository.getInstance(mActivity).fetch(object : BaseRepository.FetchCallback {
+            override fun onInitial() {
+                mBinding.settingsNoFileText.visibility = View.GONE
+                mBinding.progressBar.visibility = View.VISIBLE
+            }
+
+            override fun onSuccess(dataList: ArrayList<GoogleDriveItem>) {
+                if (dataList.isEmpty()) mBinding.settingsNoFileText.visibility = View.VISIBLE
+                mAdapter.update(dataList)
+                mBinding.progressBar.visibility = View.GONE
+            }
+
+            override fun onError(message: String) {
+                mBinding.settingsNoFileText.visibility = View.VISIBLE
+                mBinding.progressBar.visibility = View.GONE
+                Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
+            }
+        })
+        mBinding.swipeRefreshLayout.isRefreshing = false
+    }
+
+    private fun initRecyclerView() {
+        mAdapter = GoogleDriveAdapter(mActivity).apply {
+            setListener(object : BaseAdapter.RemoteSyncListListener {
+                override fun onItemClick(entity: GoogleDriveItem) {
+                    Log.i(LOG_TAG, "onItemClick")
+                }
+
+                override fun onDeleteClick(entity: GoogleDriveItem) {
+                    Log.i(LOG_TAG, "onDeleteClick")
+                    AlertDialog.Builder(mActivity).apply {
+                        setTitle("刪除雲端備份")
+                        setMessage("確定要刪除Google Drive上的備份嗎？")
+                        setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
+                            SyncRepository.getInstance(mActivity).delete(entity, object : BaseRepository.DeleteCallback {
+                                override fun onInitial() {
+                                    dialog.dismiss()
+                                    ProgressDialog.getInstance(mActivity).show()
+                                }
+
+                                override fun onSuccess() {
+                                    ProgressDialog.getInstance(mActivity).dismiss()
+                                    Snackbar.make(mContentView, "刪除成功！", Snackbar.LENGTH_SHORT).show()
+                                    onRefresh()
+                                }
+
+                                override fun onError(message: String) {
+                                    ProgressDialog.getInstance(mActivity).dismiss()
+                                    Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
+                                }
+                            })
+                        }
+                        setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which ->
+                            dialog.dismiss()
+                        }
+                    }.create().show()
+                }
+
+                override fun onDownloadClick(entity: GoogleDriveItem) {
+                    Log.i(LOG_TAG, "onDownloadClick")
+                    RemoteProgressDialog.getInstance(mActivity).show()
+                    SyncRepository.getInstance(mActivity).download(entity, object : BaseRepository.DownloadCallback {
+                        override fun onInitial() {
+                            RemoteProgressDialog.getInstance(activity).setTitle("下載中：${entity.name}")
+                            RemoteProgressDialog.getInstance(activity).setProgress(0)
+                        }
+
+                        override fun inProgress(progress: Int) {
+                            RemoteProgressDialog.getInstance(activity).setProgress(progress)
+                        }
+
+                        override fun onComplete(progress: Int) {
+                            RemoteProgressDialog.getInstance(activity).setProgress(progress)
+                        }
+
+                        override fun onUnzip() {
+                            RemoteProgressDialog.getInstance(activity).setTitle("解壓縮中：${entity.name}")
+                        }
+
+                        override fun onSuccess() {
+                            RemoteProgressDialog.getInstance(mActivity).dismiss()
+                            Snackbar.make(mContentView, getString(R.string.file_download_completed), Snackbar.LENGTH_SHORT).show()
+                        }
+
+                        override fun onError(message: String) {
+                            RemoteProgressDialog.getInstance(mActivity).dismiss()
+                            Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
+                        }
+                    })
+                }
+            })
+        }
+        mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
+        mBinding.recyclerView.adapter = mAdapter
+        mBinding.swipeRefreshLayout.setOnRefreshListener(this)
+
+        onRefresh()
     }
 
     private fun initGoogleSignIn() {
@@ -105,12 +215,16 @@ class RemoteSyncFragment : BaseFragment() {
 
     private fun updateAccountUI(account: GoogleSignInAccount?) {
         if (account != null) {
+            mBinding.signInButton.visibility = View.INVISIBLE
+            mBinding.signOutButton.visibility = View.VISIBLE
             if (checkGrantedScopes(account, arrayOf(DriveScopes.DRIVE_APPDATA, DriveScopes.DRIVE_FILE))) {
                 mBinding.settingsSignInAccountTv.text = account.displayName
             } else {
                 mBinding.settingsSignInAccountTv.text = "權限不足，請重新登入"
             }
         } else {
+            mBinding.signInButton.visibility = View.VISIBLE
+            mBinding.signOutButton.visibility = View.INVISIBLE
             mBinding.settingsSignInAccountTv.text = "尚未綁定Google帳號"
         }
     }
@@ -127,7 +241,7 @@ class RemoteSyncFragment : BaseFragment() {
 
     private fun updateSyncView(lang: Account.Language) {
         val type = FolderSync.Type.REMOTE
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN)
 
         val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
                 .subscribeOn(Schedulers.io())
@@ -142,119 +256,9 @@ class RemoteSyncFragment : BaseFragment() {
                 }, { err -> err.printStackTrace() })
     }
 
-    private fun startUploadAccounts(lang: Account.Language) {
-        val signedInAccount = checkLastSignedInAccount()
-        if (signedInAccount != null) {
-            AccountUploadDialog.getInstance(mActivity).show()
-            FileManager.getFolderList(lang) { folderList ->
-                val folderSize = folderList.size
-                var currentUploadIndex = 0
-                AccountUploadDialog.getInstance(mActivity).setFileName("")
-                AccountUploadDialog.getInstance(mActivity).setFileCount(currentUploadIndex, folderSize)
-                AccountUploadDialog.getInstance(mActivity).setProgress(0)
-
-                for (folder in folderList) {
-                    val folderPath = folder.absolutePath
-                    val filesPath = String.format("%s/%s", folderPath, "files")
-                    val filesFile: File? = File(filesPath)
-                    val hashZipFile = hashMapOf(
-                            "name" to "${folder.name}.zip",
-                            "path" to "${mActivity.externalCacheDir?.absolutePath}/${folder.name}.zip")
-                    val fileList = ArrayList<String>()
-
-                    filesFile?.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
-
-                    if (fileList.size > 0) {
-                        ZipManager.zip(fileList, hashZipFile["path"]!!)
-
-                        val credential = GoogleAccountCredential.usingOAuth2(activity, setOf(DriveScopes.DRIVE_FILE)).apply {
-                            selectedAccount = signedInAccount.account
-                        }
-                        val driveService = Drive.Builder(
-                                AndroidHttp.newCompatibleTransport(),
-                                GsonFactory(), credential)
-                                .build()
-                        try {
-                            val queryFolder = driveService.files().list()
-                                    .setQ("name='${BuildConfig.APPLICATION_ID}'")
-                                    .execute()
-                            val queryFile = driveService.files().list()
-                                    .setQ("name='${hashZipFile["name"]}'")
-                                    .execute()
-                            val folderFile = if (queryFolder.files.size == 0) {
-                                driveService.files().create(com.google.api.services.drive.model.File().apply {
-                                    name = BuildConfig.APPLICATION_ID
-                                    mimeType = "application/vnd.google-apps.folder"
-                                }).execute()
-                            } else {
-                                queryFolder.files.first()
-                            }
-
-                            driveService.files().create(com.google.api.services.drive.model.File().apply {
-                                parents = Collections.singletonList(folderFile.id)
-                                name = hashZipFile["name"]
-                            }, FileContent("application/zip", File(hashZipFile["path"]!!))).apply {
-                                mediaHttpUploader.chunkSize = (1 * 1024 * 1024)
-                                mediaHttpUploader.setProgressListener {
-                                    when (it.uploadState) {
-                                        MediaHttpUploader.UploadState.INITIATION_STARTED -> {
-                                            currentUploadIndex++
-                                            mHandler.post {
-                                                AccountUploadDialog.getInstance(mActivity).setFileName(hashZipFile["name"]!!)
-                                                AccountUploadDialog.getInstance(mActivity).setFileCount(currentUploadIndex, folderSize)
-                                                AccountUploadDialog.getInstance(mActivity).setProgress(0)
-                                            }
-                                        }
-                                        MediaHttpUploader.UploadState.INITIATION_COMPLETE -> {
-                                        }
-                                        MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> {
-                                            val percent = it.progress * 100
-                                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(percent.toInt()) }
-                                        }
-                                        MediaHttpUploader.UploadState.MEDIA_COMPLETE -> {
-                                            mHandler.post { AccountUploadDialog.getInstance(mActivity).setProgress(100) }
-                                        }
-                                    }
-                                }
-                            }.execute()
-
-                            queryFile.files.forEach {
-                                driveService.files().delete(it.id).execute()
-                            }
-                        } catch (e: IOException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-
-                val db = BaseDatabase.getInstance(mActivity)
-                val currentTime = System.currentTimeMillis()
-                val type = FolderSync.Type.REMOTE
-                db.folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
-                        .subscribe({ entity ->
-                            entity!!.updateTime = currentTime
-                            db.folderSyncDAO().update(entity)
-                            updateSyncView(lang)
-                        }, { err ->
-                            err.printStackTrace()
-                            db.folderSyncDAO().insert(FolderSync(type.ordinal, lang.ordinal, currentTime))
-                            updateSyncView(lang)
-                        })
-                mHandler.post {
-                    AccountUploadDialog.getInstance(mActivity).dismiss()
-                    Toast.makeText(mActivity, "檔案上傳完成！", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
-            Toast.makeText(mActivity, "請先綁定帳號！", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     private fun onSyncJPButtonClick() {
-        startUploadAccounts(Account.Language.JP)
     }
 
     private fun onSyncTWButtonClick() {
-        startUploadAccounts(Account.Language.TW)
     }
 }

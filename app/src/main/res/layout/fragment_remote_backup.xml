@@ -8,15 +8,13 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="5dp"
-        android:background="@drawable/shape_corner_80ffffff"
-        android:padding="5dp">
+        android:layout_height="match_parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/settings_google_account_root"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_margin="5dp"
             android:background="@drawable/shape_corner_80b58e52"
             android:padding="5dp"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -44,13 +42,22 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/sign_out_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="登出"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/settings_sb_j_root"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_margin="5dp"
             android:background="@drawable/shape_corner_80b58e52"
             android:padding="5dp"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -82,10 +89,10 @@
 
             <ImageButton
                 android:id="@+id/settings_sb_j_sync_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/selector_settings_sb_upload_btn"
+                android:src="@drawable/selector_round_cloud_upload_black_24"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -95,7 +102,7 @@
             android:id="@+id/settings_sb_t_root"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_margin="5dp"
             android:background="@drawable/shape_corner_80b58e52"
             android:padding="5dp"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -127,13 +134,48 @@
 
             <ImageButton
                 android:id="@+id/settings_sb_t_sync_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/selector_settings_sb_upload_btn"
+                android:src="@drawable/selector_round_cloud_upload_black_24"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh_layout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/settings_sb_t_root">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <TextView
+            android:id="@+id/settings_no_file_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="無備份檔案"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            style="@android:style/Widget.Material.ProgressBar.Large"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

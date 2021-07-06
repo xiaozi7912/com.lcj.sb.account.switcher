@@ -1,18 +1,33 @@
 <resources>
-    <string name="app_name">召喚圖板：帳號工具</string>
-
+    <string name="app_name">圖板工具</string>
     <string name="main_drawer_item_sb_j">サモンズボード</string>
     <string name="main_drawer_item_sb_t">召喚圖板</string>
+    <string name="main_drawer_item_monsters">棋寵圖鑑</string>
+    <string name="main_drawer_item_accounts">帳號管理</string>
     <string name="main_drawer_item_settings">設定</string>
-
+    <string name="main_drawer_item_sync_management">同步管理</string>
     <string name="no_install_game">尚未安裝遊戲</string>
     <string name="google_play_text">Google Play</string>
+    <string name="game_folder_not_exists">遊戲資料夾內沒有資料，請先開啟遊戲！</string>
+    <string name="backup_input_et_hint">帳號別名</string>
+    <string name="edit_account_alias_edit_hint">帳號別名</string>
+    <string name="account_alias_text">帳號別名：%s</string>
+    <string name="account_remove_button">隱藏</string>
+    <string name="settings_tab_local_backup_title">本機同步</string>
+    <string name="settings_tab_remote_backup_title">雲端同步</string>
+    <string name="sync_account_completed">同步成功！</string>
+    <string name="file_upload_completed">檔案上傳完成！</string>
+    <string name="no_google_account_association">請先綁定帳號！</string>
+    <string name="file_download_completed">檔案下載完成！</string>
     <string name="dialog_button_cancel">取消</string>
     <string name="dialog_button_backup">備份</string>
     <string name="dialog_folder_path">資料夾：%s</string>
     <string name="dialog_button_edit">修改</string>
     <string name="dialog_button_load">讀取</string>
-
-    <string name="settings_tab_local_backup_title">本機同步</string>
-    <string name="settings_tab_remote_backup_title">雲端同步</string>
+    <string name="dialog_button_confirmed">確認</string>
+    <string name="dialog_title_delete_backup">刪除備份資料</string>
+    <string name="dialog_message_delete_backup">此操作將會刪除此帳號所有備份資料\n確定要刪除嗎？</string>
+    <string name="dialog_message_delete_success">刪除成功</string>
+    <string name="dialog_message_delete_fail">刪除失敗</string>
+    <string name="dialog_message_delete_folder_not_exists">資料夾不存在</string>
 </resources>

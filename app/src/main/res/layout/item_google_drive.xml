@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="@drawable/shape_corner_80000000"
+        android:padding="5dp">
+
+        <ImageView
+            android:id="@+id/item_icon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/round_account_box_black_24"
+            app:layout_constraintBottom_toTopOf="@+id/item_divider"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/item_id"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:text="0000000000"
+            android:textColor="@android:color/white"
+            app:layout_constraintLeft_toRightOf="@+id/item_icon"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/item_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:text="0000000000"
+            android:textColor="@android:color/white"
+            app:layout_constraintLeft_toRightOf="@+id/item_icon"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/item_id" />
+
+        <TextView
+            android:id="@+id/item_modified_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:text="0000000000"
+            android:textColor="@android:color/white"
+            app:layout_constraintLeft_toRightOf="@+id/item_icon"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/item_name" />
+
+        <View
+            android:id="@+id/item_divider"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="60dp"
+            android:background="@android:color/white"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/item_delete_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_delete_forever_white_24"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/item_download_btn"
+            app:layout_constraintTop_toBottomOf="@+id/item_divider" />
+
+        <ImageButton
+            android:id="@+id/item_download_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="5dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_cloud_download_white_24"
+            app:layout_constraintLeft_toRightOf="@+id/item_delete_btn"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/item_divider" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

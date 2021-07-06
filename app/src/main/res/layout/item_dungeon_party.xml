@@ -43,13 +43,23 @@
             app:layout_constraintLeft_toRightOf="@+id/element_type_img"
             app:layout_constraintTop_toTopOf="@+id/element_type_img" />
 
+        <ImageButton
+            android:id="@+id/delete_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:src="@drawable/selector_round_delete_forever_black_24"
+            app:layout_constraintBottom_toBottomOf="@+id/element_type_img"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/element_type_img" />
+
         <ImageView
             android:id="@+id/party_image"
             android:layout_width="0dp"
             android:layout_height="60dp"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="10dp"
-            android:src="@drawable/round_add_photo_alternate_black_24"
+            android:src="@drawable/round_add_photo_alternate_black_36"
             app:layout_constraintLeft_toRightOf="@+id/dungeon_icon_iv"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/element_type_img" />
