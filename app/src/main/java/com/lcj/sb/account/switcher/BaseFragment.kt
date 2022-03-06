@@ -1,6 +1,7 @@
 package com.lcj.sb.account.switcher
 
 import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.preference.PreferenceManager
@@ -23,7 +24,7 @@ open class BaseFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         Log.i(LOG_TAG, "onActivityCreated")
-        mActivity = activity!!
+        mActivity = requireActivity()
         mContentView = mActivity.findViewById(android.R.id.content)
     }
 
@@ -35,15 +36,6 @@ open class BaseFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         Log.i(LOG_TAG, "onResume")
-    }
-
-    fun getPackageName(): String {
-        PreferenceManager.getDefaultSharedPreferences(mActivity).let {
-            return when (Account.Language.valueOf(it.getString(Configs.PREF_KEY_LANGUAGE, Account.Language.JP.name)!!)) {
-                Account.Language.JP -> Configs.PREFIX_NAME_SB_JP
-                Account.Language.TW -> Configs.PREFIX_NAME_SB_TW
-            }
-        }
     }
 
     fun startApplication(appId: String) {

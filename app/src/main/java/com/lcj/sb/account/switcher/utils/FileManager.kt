@@ -2,13 +2,16 @@ package com.lcj.sb.account.switcher.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.internal.operators.completable.CompletableFromAction
 import io.reactivex.schedulers.Schedulers
 import java.io.*
+import java.lang.Exception
 import java.util.regex.Pattern
 
 
@@ -47,58 +50,62 @@ class FileManager {
 
         fun syncBackupFolder(context: Context, lang: Account.Language, callback: () -> Unit) {
             Observable.just(File(Configs.PATH_APP_DATA))
-                    .flatMap { Observable.fromArray(*it.listFiles()) }
-                    .filter {
-                        Pattern.compile(when (lang) {
+                .flatMap { Observable.fromArray(*it.listFiles()) }
+                .filter {
+                    Pattern.compile(
+                        when (lang) {
                             Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
                             Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
-                        }).matcher(it.name).matches()
-                    }.sorted()
-                    .doOnNext {
-                        val db = BaseDatabase.getInstance(context)
-                        val currentTime = System.currentTimeMillis()
-                        val existsAccount = db.accountDAO().account(it.absolutePath)
-
-                        if (existsAccount == null) {
-                            db.accountDAO().insert(Account(
-                                    alias = it.name,
-                                    folder = it.absolutePath,
-                                    lang = lang.ordinal,
-                                    createTime = currentTime,
-                                    updateTime = currentTime))
-                        } else {
-                            db.accountDAO().update(existsAccount.apply {
-                                hidden = false
-                            })
                         }
-                    }
-                    .doOnComplete {
-                        val db = BaseDatabase.getInstance(context)
-                        val currentTime = System.currentTimeMillis()
+                    ).matcher(it.name).matches()
+                }.sorted()
+                .doOnNext {
+                    val db = BaseDatabase.getInstance(context)
+                    val currentTime = System.currentTimeMillis()
+                    val existsAccount = db.accountDAO().account(it.absolutePath)
 
-                        db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
-                                .subscribe({ entity ->
-                                    entity!!.updateTime = currentTime
-                                    db.folderSyncDAO().update(entity!!)
-                                }, { err ->
-                                    err.printStackTrace()
-                                    db.folderSyncDAO().insert(FolderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal, currentTime))
-                                })
+                    if (existsAccount == null) {
+                        db.accountDAO().insert(
+                            Account(
+                                alias = it.name,
+                                folder = it.absolutePath,
+                                lang = lang.ordinal,
+                                createTime = currentTime,
+                                updateTime = currentTime
+                            )
+                        )
+                    } else {
+                        db.accountDAO().update(existsAccount.apply {
+                            hidden = false
+                        })
                     }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doOnComplete { callback() }
-                    .subscribe()
+                }
+                .doOnComplete {
+                    val db = BaseDatabase.getInstance(context)
+                    val currentTime = System.currentTimeMillis()
+
+                    db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
+                        .subscribe({ entity ->
+                            entity!!.updateTime = currentTime
+                            db.folderSyncDAO().update(entity!!)
+                        }, { err ->
+                            err.printStackTrace()
+                            db.folderSyncDAO().insert(FolderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal, currentTime))
+                        })
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnComplete { callback() }
+                .subscribe()
         }
 
         fun backupFolder(resPath: String, destPath: String, callback: BackupCallback) {
             val resDir = File(resPath)
-            val destDir = File(destPath)
-            val destFilesDir = File(String.format("%s/files", destPath))
+            val destFilesDir = File(destPath, "files")
             val resFileList = resDir.listFiles()
+            Log.d(LOG_TAG, "resDir.canRead : ${resDir.canRead()}")
 
-            destDir.mkdir()
-            destFilesDir.mkdir()
+            if (!destFilesDir.exists()) destFilesDir.mkdirs()
             destFilesDir.setLastModified(System.currentTimeMillis())
 
             if (resFileList != null) {
@@ -120,44 +127,50 @@ class FileManager {
         }
 
         fun loadFolder(resPath: String, destPath: String, callback: LoadCallback) {
-            Thread {
-                val dstDir = File(destPath)
+            val d = CompletableFromAction.fromAction {
                 val resFilesDir = File(resPath, "files")
                 val dstFilesDir = File(destPath, "files")
 
-                if (!dstDir.exists()) {
-                    dstDir.mkdir()
-                    dstFilesDir.mkdir()
-                }
+                if (!resFilesDir.exists()) resFilesDir.mkdirs()
+                if (!dstFilesDir.exists()) dstFilesDir.mkdirs()
 
-                resFilesDir.listFiles()?.let { list ->
-                    if (list.isEmpty()) {
-                        callback.onError()
-                    } else {
-                        list.forEach { file ->
-                            val dstFilePath = String.format("%s/%s", dstFilesDir.absolutePath, file.name)
-                            copyFile(file.absolutePath, dstFilePath)
+                try {
+                    resFilesDir.listFiles()?.let { list ->
+                        if (list.isEmpty()) {
+                            callback.onError()
+                        } else {
+                            list.forEach { file ->
+                                val dstFilePath = String.format("%s/%s", dstFilesDir.absolutePath, file.name)
+                                copyFile(file.absolutePath, dstFilePath)
+                            }
+                            callback.onCompleted()
                         }
-                        callback.onCompleted()
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    callback.onError()
                 }
-            }.start()
+            }
+                .subscribeOn(Schedulers.io())
+                .subscribe { Log.i(LOG_TAG, "completed") }
         }
 
         fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
             val result = arrayListOf<File>()
             val d = Observable.just(File(Configs.PATH_APP_DATA))
-                    .flatMap { Observable.fromArray(*it.listFiles()) }
-                    .filter {
-                        Pattern.compile(when (lang) {
+                .flatMap { Observable.fromArray(*it.listFiles()) }
+                .filter {
+                    Pattern.compile(
+                        when (lang) {
                             Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
                             Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
-                        }).matcher(it.name).matches()
-                    }.sorted()
-                    .subscribeOn(Schedulers.io())
-                    .subscribe({ file ->
-                        result.add(file)
-                    }, { err -> err.printStackTrace() }, { callback(result) })
+                        }
+                    ).matcher(it.name).matches()
+                }.sorted()
+                .subscribeOn(Schedulers.io())
+                .subscribe({ file ->
+                    result.add(file)
+                }, { err -> err.printStackTrace() }, { callback(result) })
         }
 
         private fun copyFile(resFile: String, destFile: String) {

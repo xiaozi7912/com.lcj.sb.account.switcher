@@ -34,7 +34,6 @@ import com.lcj.sb.account.switcher.databinding.FragmentPartyBinding
 import com.lcj.sb.account.switcher.model.*
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.IconUtils
-import com.theartofdev.edmodo.cropper.CropImage
 import java.io.File
 
 class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
@@ -134,7 +133,7 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
 
         BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
                 .getPartyList(mAccount.id)
-                .observe(this, Observer { mAdapter.update(it) })
+                .observe(viewLifecycleOwner, Observer { mAdapter.update(it) })
     }
 
     override fun onResume() {
@@ -144,16 +143,16 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            val result = CropImage.getActivityResult(data)
-            if (resultCode == Activity.RESULT_OK) {
-                mCropImageUri = result.uri
-                mCreatePartyBinding.partyIv.setImageURI(mCropImageUri)
-                Log.d(LOG_TAG, "mCropImageUri : ${mCropImageUri}")
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                result.error.printStackTrace()
-            }
-        }
+//        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+//            val result = CropImage.getActivityResult(data)
+//            if (resultCode == Activity.RESULT_OK) {
+//                mCropImageUri = result.uri
+//                mCreatePartyBinding.partyIv.setImageURI(mCropImageUri)
+//                Log.d(LOG_TAG, "mCropImageUri : ${mCropImageUri}")
+//            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+//                result.error.printStackTrace()
+//            }
+//        }
     }
 
     override fun onDeleteClick(item: DungeonParty) {
@@ -374,10 +373,10 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
             val height = (68 * it.density).toInt()
             val rect = Rect(left, top, left + width, top + height)
 
-            CropImage.activity()
-                    .setInitialCropWindowRectangle(rect)
-                    .setMinCropWindowSize(width, height)
-                    .start(context!!, this@PartyFragment)
+//            CropImage.activity()
+//                    .setInitialCropWindowRectangle(rect)
+//                    .setMinCropWindowSize(width, height)
+//                    .start(context!!, this@PartyFragment)
         }
     }
 

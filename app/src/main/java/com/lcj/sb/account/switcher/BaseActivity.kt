@@ -1,6 +1,7 @@
 package com.lcj.sb.account.switcher
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -42,7 +43,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
         mContentView = findViewById(android.R.id.content)
 
-        PreferenceManager.getDefaultSharedPreferences(mActivity).apply {
+        mActivity.getPreferences(Context.MODE_PRIVATE).apply {
             mFirstRun = getBoolean(Configs.PREF_KEY_FIRST_RUN, true)
             mCurrentLang = Account.Language.valueOf(getString(Configs.PREF_KEY_LANGUAGE, "JP")!!)
         }

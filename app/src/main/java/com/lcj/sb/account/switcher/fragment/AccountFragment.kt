@@ -1,11 +1,13 @@
 package com.lcj.sb.account.switcher.fragment
 
+import android.content.Context
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.paging.toLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -63,27 +65,16 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
         mBinding.accountList.adapter = adapter
 
         BaseDatabase.getInstance(mActivity).accountDAO()
-                .liveAccounts(mDisplayLang.ordinal, false)
-                .toLiveData(pageSize = 20)
-                .observe(this, Observer { adapter.update(it) })
+            .liveAccounts(mDisplayLang.ordinal, false)
+            .toLiveData(pageSize = 20)
+            .observe(requireActivity(), Observer { adapter.update(it) })
     }
 
     override fun onResume() {
         super.onResume()
         mActivity.invalidateOptionsMenu()
-
-        when (mDisplayLang) {
-            Account.Language.JP -> {
-                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_JP)
-                BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_SB_JP, LOG_TAG)
-            }
-            Account.Language.TW -> {
-                mGameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, Configs.PREFIX_NAME_SB_TW)
-                BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_SB_TW, LOG_TAG)
-            }
-        }
-
-        PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+        BaseApplication.setCurrentScreen(mActivity, mDisplayLang.screenName, LOG_TAG)
+        requireActivity().getPreferences(Context.MODE_PRIVATE).edit().apply {
             putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
             putString(Configs.PREF_KEY_LANGUAGE, mDisplayLang.name)
             apply()
@@ -93,9 +84,11 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.create_button,
-            R.id.add_fab -> getPackageName().let {
+            R.id.add_fab -> mDisplayLang.packageName.let {
                 if (FileManager.isPackageInstalled(it, mActivity)) {
-                    AccountRepository.getInstance(mActivity).showCreateAccountDialog({}, {
+                    AccountRepository.getInstance(mActivity).showCreateAccountDialog(mDisplayLang, {}, {
+                        mHandler.post { Toast.makeText(mActivity, "error", Toast.LENGTH_SHORT).show() }
+                    }, {
                         mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
                     })
                 } else {
@@ -103,7 +96,7 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
                 }
             }
             R.id.game_start_button,
-            R.id.game_fab -> getPackageName().let {
+            R.id.game_fab -> mDisplayLang.packageName.let {
                 if (FileManager.isPackageInstalled(it, mActivity)) {
                     startApplication(it)
                 } else {
@@ -136,7 +129,7 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     override fun onSaveClick(account: Account) {
-        AccountRepository.getInstance(mActivity).onSaveClick(account, {
+        AccountRepository.getInstance(mActivity).onSaveClick(mDisplayLang, account, {
             mHandler.post { Snackbar.make(mContentView, "備份成功", Snackbar.LENGTH_SHORT).show() }
         }, {
             mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
