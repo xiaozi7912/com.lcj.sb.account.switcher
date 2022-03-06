@@ -100,7 +100,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                         callback.onSuccess()
                     } catch (e: IOException) {
                         e.printStackTrace()
-                        callback.onError(e.localizedMessage)
+                        callback.onError(e.localizedMessage ?: "")
                     }
                 } else {
                     callback.onError("資料夾內沒有檔案！")
