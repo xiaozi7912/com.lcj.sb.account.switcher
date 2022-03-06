@@ -14,7 +14,7 @@ import androidx.core.view.GravityCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import com.google.android.gms.ads.AdRequest
-import com.google.firebase.FirebaseApp
+import com.google.android.gms.tasks.RuntimeExecutionException
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
@@ -227,8 +227,8 @@ class MainActivity : BaseActivity() {
 
     private fun initRemoteConfig() {
         val configSetting = FirebaseRemoteConfigSettings.Builder()
-                .setMinimumFetchIntervalInSeconds(1800)
-                .build()
+            .setMinimumFetchIntervalInSeconds(1800)
+            .build()
         mRemoteConfig.setConfigSettingsAsync(configSetting)
     }
 
@@ -275,29 +275,33 @@ class MainActivity : BaseActivity() {
 
     private fun getFCMInstanceId() {
         FirebaseMessaging.getInstance().token
-                .addOnSuccessListener { token ->
-                    Log.i(LOG_TAG, "FirebaseMessaging addOnSuccessListener")
-                    Log.i(LOG_TAG, "FirebaseMessaging addOnSuccessListener token : $token")
-                }
-                .addOnFailureListener { e ->
-                    Log.i(LOG_TAG, "FirebaseMessaging addOnFailureListener")
-                    e.printStackTrace()
-                }
-                .addOnCompleteListener { task ->
-                    Log.i(LOG_TAG, "FirebaseMessaging addOnCompleteListener")
+            .addOnSuccessListener { token ->
+                Log.i(LOG_TAG, "FirebaseMessaging addOnSuccessListener")
+                Log.i(LOG_TAG, "FirebaseMessaging addOnSuccessListener token : $token")
+            }
+            .addOnFailureListener { e ->
+                Log.i(LOG_TAG, "FirebaseMessaging addOnFailureListener")
+                e.printStackTrace()
+            }
+            .addOnCompleteListener { task ->
+                Log.i(LOG_TAG, "FirebaseMessaging addOnCompleteListener")
+                try {
                     Log.i(LOG_TAG, "FirebaseMessaging addOnCompleteListener task.result : ${task.result}")
-                }
-        FirebaseInstallations.getInstance().id
-                .addOnSuccessListener { id ->
-                    Log.i(LOG_TAG, "FirebaseInstallations addOnSuccessListener")
-                    Log.i(LOG_TAG, "FirebaseInstallations addOnSuccessListener id : $id")
-                }.addOnFailureListener { e ->
-                    Log.i(LOG_TAG, "FirebaseInstallations addOnFailureListener")
+                } catch (e: RuntimeExecutionException) {
                     e.printStackTrace()
-                }.addOnCompleteListener { task ->
-                    Log.i(LOG_TAG, "FirebaseInstallations addOnCompleteListener")
-                    Log.i(LOG_TAG, "FirebaseInstallations addOnCompleteListener task.result : ${task.result}")
                 }
+            }
+        FirebaseInstallations.getInstance().id
+            .addOnSuccessListener { id ->
+                Log.i(LOG_TAG, "FirebaseInstallations addOnSuccessListener")
+                Log.i(LOG_TAG, "FirebaseInstallations addOnSuccessListener id : $id")
+            }.addOnFailureListener { e ->
+                Log.i(LOG_TAG, "FirebaseInstallations addOnFailureListener")
+                e.printStackTrace()
+            }.addOnCompleteListener { task ->
+                Log.i(LOG_TAG, "FirebaseInstallations addOnCompleteListener")
+                Log.i(LOG_TAG, "FirebaseInstallations addOnCompleteListener task.result : ${task.result}")
+            }
     }
 
     private fun checkNewFeature() {

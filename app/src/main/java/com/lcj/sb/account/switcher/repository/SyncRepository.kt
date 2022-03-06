@@ -24,7 +24,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
-import kotlin.collections.ArrayList
 
 class SyncRepository(activity: Activity) : BaseRepository(activity) {
     companion object {
@@ -42,8 +41,9 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                 val filesFile: File? = File(filesPath)
                 val folderName = account.folder.substring(account.folder.lastIndexOf("/") + 1)
                 val hashZipFile = hashMapOf(
-                        "name" to "${folderName}.zip",
-                        "path" to "${activity.externalCacheDir?.absolutePath}/${folderName}.zip")
+                    "name" to "${folderName}.zip",
+                    "path" to "${activity.externalCacheDir?.absolutePath}/${folderName}.zip"
+                )
                 val fileList = ArrayList<String>()
 
                 mHandler.post { callback.onInitial(hashZipFile["name"]!!) }
@@ -54,11 +54,11 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     val service = getDriveService(signedIn)
                     try {
                         val qFolder = service.files().list()
-                                .setQ("name='${BuildConfig.APPLICATION_ID}'")
-                                .execute()
+                            .setQ("name='${BuildConfig.APPLICATION_ID}'")
+                            .execute()
                         val qFile = service.files().list()
-                                .setQ("name='${hashZipFile["name"]}'")
-                                .execute()
+                            .setQ("name='${hashZipFile["name"]}'")
+                            .execute()
                         val folderFile = if (qFolder.files.size == 0) {
                             service.files().create(com.google.api.services.drive.model.File().apply {
                                 name = BuildConfig.APPLICATION_ID
@@ -100,7 +100,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                         callback.onSuccess()
                     } catch (e: IOException) {
                         e.printStackTrace()
-                        callback.onError(e.localizedMessage)
+                        callback.onError(e.localizedMessage ?: "")
                     }
                 } else {
                     callback.onError("資料夾內沒有檔案！")
@@ -116,17 +116,17 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                 val service = getDriveService(signedIn)
                 try {
                     val folder = service.files().list()
-                            .setQ("name='${BuildConfig.APPLICATION_ID}' and mimeType='application/vnd.google-apps.folder' and trashed=false")
-                            .setFields("files(id,name,modifiedTime,parents,mimeType)")
-                            .execute().files.first().apply {
-                    }
+                        .setQ("name='${BuildConfig.APPLICATION_ID}' and mimeType='application/vnd.google-apps.folder' and trashed=false")
+                        .setFields("files(id,name,modifiedTime,parents,mimeType)")
+                        .execute().files.first().apply {
+                        }
 
                     val dataList = arrayListOf<GoogleDriveItem>()
                     val files = service.files().list()
-                            .setQ("'${folder.id}' in parents and mimeType='application/zip' and trashed=false")
-                            .setFields("files(id,name,modifiedTime,parents,mimeType)")
-                            .setOrderBy("name")
-                            .execute().files
+                        .setQ("'${folder.id}' in parents and mimeType='application/zip' and trashed=false")
+                        .setFields("files(id,name,modifiedTime,parents,mimeType)")
+                        .setOrderBy("name")
+                        .execute().files
 
                     files.forEach { file ->
                         with(file.name) {
@@ -145,7 +145,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     mHandler.post { callback.onError(e.localizedMessage ?: "") }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    mHandler.post { callback.onError(e.localizedMessage) }
+                    mHandler.post { callback.onError(e.localizedMessage ?: "") }
                 }
             }.start()
         }, { callback.onError(it) })
@@ -185,12 +185,15 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     mHandler.post { callback.onUnzip() }
                     ZipManager.unZip(file.absolutePath, Configs.PATH_APP_DATA)
                     BaseDatabase.getInstance(activity).accountDAO()
-                            .insert(Account(
-                                    alias = entity.name.substring(0, entity.name.lastIndexOf(".")),
-                                    folder = "${Configs.PATH_APP_DATA}/${entity.name.substring(0, entity.name.lastIndexOf("."))}",
-                                    lang = entity.lang.ordinal,
-                                    createTime = System.currentTimeMillis(),
-                                    updateTime = System.currentTimeMillis()))
+                        .insert(
+                            Account(
+                                alias = entity.name.substring(0, entity.name.lastIndexOf(".")),
+                                folder = "${Configs.PATH_APP_DATA}/${entity.name.substring(0, entity.name.lastIndexOf("."))}",
+                                lang = entity.lang.ordinal,
+                                createTime = System.currentTimeMillis(),
+                                updateTime = System.currentTimeMillis()
+                            )
+                        )
                     mHandler.post { callback.onSuccess() }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -229,7 +232,8 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
             selectedAccount = signedIn.account
         }
         return Drive.Builder(
-                AndroidHttp.newCompatibleTransport(),
-                GsonFactory(), credential).build()
+            AndroidHttp.newCompatibleTransport(),
+            GsonFactory(), credential
+        ).build()
     }
 }
