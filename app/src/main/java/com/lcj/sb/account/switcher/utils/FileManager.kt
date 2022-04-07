@@ -19,7 +19,7 @@ class FileManager {
     interface BackupCallback {
         fun onProcess(current: Int, total: Int)
         fun onCompleted(folderPath: String)
-        fun onError()
+        fun onError(message: String)
     }
 
     interface LoadCallback {
@@ -76,11 +76,7 @@ class FileManager {
                     if (existsAccount == null) {
                         db.accountDAO().insert(
                             Account(
-                                alias = it.name,
-                                folder = it.absolutePath,
-                                lang = lang.ordinal,
-                                createTime = currentTime,
-                                updateTime = currentTime
+                                alias = it.name, folder = it.absolutePath, lang = lang.ordinal, createTime = currentTime, updateTime = currentTime
                             )
                         )
                     } else {
@@ -96,7 +92,7 @@ class FileManager {
                     val d = db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
                         .subscribe({ entity ->
                             entity!!.updateTime = currentTime
-                            db.folderSyncDAO().update(entity!!)
+                            db.folderSyncDAO().update(entity)
                         }, { err ->
                             err.printStackTrace()
                             db.folderSyncDAO().insert(FolderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal, currentTime))
@@ -116,39 +112,30 @@ class FileManager {
             if (!destFilesDir.exists()) destFilesDir.mkdirs()
             destFilesDir.setLastModified(System.currentTimeMillis())
 
-            if (resFileList != null) {
-                resFileList.filter { it.name == "files" }.forEach { file ->
-                    val fileList = file.listFiles(FileFilter { it.isFile })
-                    var current = 0
-                    val totalSize = fileList.size
+            resFileList?.filter { it.name == "files" }?.forEach { dir ->
+                val fileList = dir?.listFiles()?.filter { item -> item.isFile }
+                var current = 0
+                val totalSize = fileList?.size ?: 0
 
-                    fileList.forEach {
-                        copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
-                        current++
-                        callback.onProcess(current, totalSize)
-                    }
-                    callback.onCompleted(destPath)
+                fileList?.forEach {
+                    copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
+                    current++
+                    callback.onProcess(current, totalSize)
                 }
-            } else {
-                callback.onError()
-            }
+                callback.onCompleted(destPath)
+            } ?: run { callback.onError("沒有資料。") }
         }
 
         fun backupFolder(resolver: ContentResolver, rootDir: DocumentFile, resDirName: String, destDirName: String, callback: BackupCallback) {
             val resDir = rootDir.findFile(resDirName)
-            var destDir = rootDir.findFile(destDirName)
-            var destFilesDir: DocumentFile? = null
-
-            if (destDir == null) {
-                destDir = rootDir.createDirectory(destDirName)
-                destFilesDir = destDir?.createDirectory("files")
-            }
+            val destDir = rootDir.findFile(destDirName) ?: run { rootDir.createDirectory(destDirName) }
+            val destFilesDir = destDir?.findFile("files") ?: run { destDir?.createDirectory("files") }
 
             resDir?.let {
                 val resFileList = it.listFiles()
 
                 if (resFileList.isEmpty()) {
-                    callback.onError()
+                    callback.onError("遊戲資料夾內沒資料。")
                     return
                 }
 
@@ -156,8 +143,9 @@ class FileManager {
                     val fileList = dir.listFiles().filter { item -> item.isFile }
                     var current = 0
                     val totalSize = fileList.size
+
                     fileList.forEach { file ->
-                        val destFile = destFilesDir?.createFile(file.type ?: "", file.name ?: "")
+                        val destFile = destFilesDir?.findFile(file.name!!) ?: run { destFilesDir?.createFile(file.type ?: "", file.name ?: "") }
                         var inputStream: InputStream? = null
                         var outputStream: OutputStream? = null
 
@@ -176,7 +164,7 @@ class FileManager {
                     }
                     callback.onCompleted(destDir?.uri.toString())
                 }
-            } ?: run { callback.onError() }
+            } ?: run { callback.onError("沒有資料。") }
         }
 
         fun loadFolder(resPath: String, destPath: String, callback: LoadCallback) {

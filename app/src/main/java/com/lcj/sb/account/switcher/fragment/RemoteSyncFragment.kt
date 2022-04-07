@@ -154,7 +154,7 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
                     RemoteProgressDialog.getInstance(mActivity).show()
                     SyncRepository.getInstance(mActivity).download(entity, object : BaseRepository.DownloadCallback {
                         override fun onInitial() {
-                            RemoteProgressDialog.getInstance(activity).setTitle("下載中：${entity.name}")
+                            RemoteProgressDialog.getInstance(activity).setTitle("檔案下載中\n${entity.name}")
                             RemoteProgressDialog.getInstance(activity).setProgress(0)
                         }
 
@@ -192,9 +192,9 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
 
     private fun initGoogleSignIn() {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestScopes(Scope(DriveScopes.DRIVE_FILE), Scope(DriveScopes.DRIVE_APPDATA))
-                .build().let { mSignInClient = GoogleSignIn.getClient(activity!!, it) }
+            .requestEmail()
+            .requestScopes(Scope(DriveScopes.DRIVE_FILE), Scope(DriveScopes.DRIVE_APPDATA))
+            .build().let { mSignInClient = GoogleSignIn.getClient(activity!!, it) }
     }
 
     private fun checkLastSignedInAccount(): GoogleSignInAccount? {
@@ -205,12 +205,12 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
 
     private fun handleSignInResult(result: Intent?) {
         GoogleSignIn.getSignedInAccountFromIntent(result)
-                .addOnSuccessListener { account ->
-                    updateAccountUI(account)
-                }
-                .addOnFailureListener { err ->
-                    err.printStackTrace()
-                }
+            .addOnSuccessListener { account ->
+                updateAccountUI(account)
+            }
+            .addOnFailureListener { err ->
+                err.printStackTrace()
+            }
     }
 
     private fun updateAccountUI(account: GoogleSignInAccount?) {
@@ -244,16 +244,16 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN)
 
         val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ entity ->
-                    entity?.let {
-                        when (lang) {
-                            Account.Language.JP -> mBinding.settingsSbJSyncTimeTv.text = sdf.format(it.updateTime)
-                            Account.Language.TW -> mBinding.settingsSbTSyncTimeTv.text = sdf.format(it.updateTime)
-                        }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ entity ->
+                entity?.let {
+                    when (lang) {
+                        Account.Language.JP -> mBinding.settingsSbJSyncTimeTv.text = sdf.format(it.updateTime)
+                        Account.Language.TW -> mBinding.settingsSbTSyncTimeTv.text = sdf.format(it.updateTime)
                     }
-                }, { err -> err.printStackTrace() })
+                }
+            }, { err -> err.printStackTrace() })
     }
 
     private fun onSyncJPButtonClick() {

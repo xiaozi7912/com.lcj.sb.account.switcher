@@ -101,28 +101,56 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
 
     fun onSaveClick(lang: Account.Language, account: Account, callback: SaveAccountCallback) {
         AlertDialog.Builder(activity).apply {
-            val gameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, lang.packageName)
             setTitle("備份遊戲資料")
             setMessage("確定要覆蓋當前備份的資料嗎？")
             setPositiveButton(activity.getString(R.string.dialog_button_confirmed)) { dialog, _ ->
                 val d = CompletableFromAction.fromAction {
-                    FileManager.backupFolder(gameFolderPath, account.folder, object : FileManager.BackupCallback {
-                        override fun onProcess(current: Int, total: Int) {
-                        }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        val gameDirName = lang.packageName
+                        val replacedName = account.folder.replace("%2F", "/", true)
+                        val destDirName = replacedName.substring(replacedName.lastIndexOf("/") + 1)
+                        val rootDir = DocumentFile.fromTreeUri(activity, Uri.parse(Configs.URI_ANDROID_DATA))
 
-                        override fun onCompleted(folderPath: String) {
-                            BaseDatabase.getInstance(activity).accountDAO().update(account.apply {
-                                updateTime = System.currentTimeMillis()
-                            })
-                            dialog.dismiss()
-                            callback.onSuccess()
-                        }
+                        rootDir?.let {
+                            FileManager.backupFolder(activity.contentResolver, rootDir, gameDirName, destDirName,
+                                object : FileManager.BackupCallback {
+                                    override fun onProcess(current: Int, total: Int) {
+                                    }
 
-                        override fun onError() {
-                            dialog.dismiss()
-                            callback.onError(activity.getString(R.string.game_folder_not_exists))
+                                    override fun onCompleted(folderPath: String) {
+                                        BaseDatabase.getInstance(activity).accountDAO().update(account.apply {
+                                            updateTime = System.currentTimeMillis()
+                                        })
+                                        dialog.dismiss()
+                                        callback.onSuccess()
+                                    }
+
+                                    override fun onError(message: String) {
+                                        dialog.dismiss()
+                                        callback.onError(activity.getString(R.string.game_folder_not_exists))
+                                    }
+                                })
                         }
-                    })
+                    } else {
+                        val gameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, lang.packageName)
+                        FileManager.backupFolder(gameFolderPath, account.folder, object : FileManager.BackupCallback {
+                            override fun onProcess(current: Int, total: Int) {
+                            }
+
+                            override fun onCompleted(folderPath: String) {
+                                BaseDatabase.getInstance(activity).accountDAO().update(account.apply {
+                                    updateTime = System.currentTimeMillis()
+                                })
+                                dialog.dismiss()
+                                callback.onSuccess()
+                            }
+
+                            override fun onError(message: String) {
+                                dialog.dismiss()
+                                callback.onError(activity.getString(R.string.game_folder_not_exists))
+                            }
+                        })
+                    }
                 }
                     .subscribeOn(Schedulers.io())
                     .subscribe {}
@@ -239,7 +267,7 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
                             callback.onSuccess()
                         }
 
-                        override fun onError() {
+                        override fun onError(message: String) {
                             callback.onError("備份失敗。")
                         }
                     })
@@ -280,8 +308,8 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
                         callback.onSuccess()
                     }
 
-                    override fun onError() {
-                        callback.onError("Error")
+                    override fun onError(message: String) {
+                        callback.onError("備份失敗。")
                     }
                 })
             } else {
