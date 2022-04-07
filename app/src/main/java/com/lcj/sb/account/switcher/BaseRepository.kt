@@ -1,12 +1,8 @@
 package com.lcj.sb.account.switcher
 
 import android.app.Activity
-import android.content.Context
 import android.os.Handler
-import android.preference.PreferenceManager
-import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
-import com.lcj.sb.account.switcher.utils.Configs
 
 open class BaseRepository(val activity: Activity) {
     protected val LOG_TAG = javaClass.simpleName
@@ -40,5 +36,23 @@ open class BaseRepository(val activity: Activity) {
     interface DeleteCallback : BaseCallback {
         fun onInitial()
         fun onSuccess()
+    }
+
+    interface CreateAccountCallback : BaseCallback {
+        fun onSuccess()
+        fun onNotExists()
+    }
+
+    interface LoadAccountCallback : BaseCallback {
+        fun onSuccess()
+    }
+
+    interface SaveAccountCallback : BaseCallback {
+        fun onSuccess()
+    }
+
+    interface DeleteAccountCallback : BaseCallback {
+        fun onSuccess()
+        fun onNotExists()
     }
 }

@@ -1,21 +1,22 @@
 package com.lcj.sb.account.switcher.fragment
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.preference.PreferenceManager
+import android.os.storage.StorageManager
+import android.provider.DocumentsContract
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
-import androidx.lifecycle.Observer
 import androidx.paging.toLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import com.lcj.sb.account.switcher.BaseAdapter
-import com.lcj.sb.account.switcher.BaseApplication
-import com.lcj.sb.account.switcher.BaseFragment
-import com.lcj.sb.account.switcher.R
+import com.lcj.sb.account.switcher.*
 import com.lcj.sb.account.switcher.adapter.AccountAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -30,6 +31,8 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     private lateinit var mDisplayLang: Account.Language
 
     companion object {
+        const val REQUEST_CODE_FOLDER_PERMISSION = 1001
+
         fun newInstance(): AccountFragment {
             return AccountFragment()
         }
@@ -67,7 +70,7 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
         BaseDatabase.getInstance(mActivity).accountDAO()
             .liveAccounts(mDisplayLang.ordinal, false)
             .toLiveData(pageSize = 20)
-            .observe(requireActivity(), Observer { adapter.update(it) })
+            .observe(requireActivity()) { adapter.update(it) }
     }
 
     override fun onResume() {
@@ -81,16 +84,41 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_FOLDER_PERMISSION) {
+            if (resultCode == Activity.RESULT_OK) {
+                val contentResolver = mActivity.contentResolver
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(data?.data!!, takeFlags)
+                createAccountFolder()
+            }
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.create_button,
             R.id.add_fab -> mDisplayLang.packageName.let {
                 if (FileManager.isPackageInstalled(it, mActivity)) {
-                    AccountRepository.getInstance(mActivity).showCreateAccountDialog(mDisplayLang, {}, {
-                        mHandler.post { Toast.makeText(mActivity, "error", Toast.LENGTH_SHORT).show() }
-                    }, {
-                        mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
-                    })
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        if (!hasFolderPermission()) {
+                            val sm = mActivity.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+                            val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
+                            var uri = intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI)
+                            var scheme = uri.toString().replace("/root/", "/document/")
+
+                            scheme += "%3A" + "Android%2Fdata"
+                            uri = Uri.parse(scheme)
+                            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri)
+                            startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION)
+                            Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+                        } else {
+                            createAccountFolder()
+                        }
+                    } else {
+                        createAccountFolder()
+                    }
                 } else {
                     showErrorNoInstalled(it)
                 }
@@ -111,16 +139,24 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     override fun onDeleteClick(account: Account) {
-        AccountRepository.getInstance(mActivity).onDeleteClick(account, {
-            mHandler.post {
-                mBinding.addFab.animate().translationY(0f).setInterpolator(LinearInterpolator()).start()
-                mBinding.gameFab.animate().translationY(0f).setInterpolator(LinearInterpolator()).start()
-                Snackbar.make(mContentView, getString(R.string.dialog_message_delete_success), Snackbar.LENGTH_SHORT).show()
+        AccountRepository.getInstance(mActivity).onDeleteClick(account, object : BaseRepository.DeleteAccountCallback {
+            override fun onSuccess() {
+                mHandler.post {
+                    mBinding.addFab.animate().translationY(0f).setInterpolator(LinearInterpolator()).start()
+                    mBinding.gameFab.animate().translationY(0f).setInterpolator(LinearInterpolator()).start()
+                    Snackbar.make(mContentView, getString(R.string.dialog_message_delete_success), Snackbar.LENGTH_SHORT).show()
+                }
             }
-        }, {
-            mHandler.post { Snackbar.make(mContentView, getString(R.string.dialog_message_delete_fail), Snackbar.LENGTH_SHORT).show() }
-        }, {
-            mHandler.post { Snackbar.make(mContentView, getString(R.string.dialog_message_delete_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
+
+            override fun onError(message: String) {
+                mHandler.post { Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show() }
+            }
+
+            override fun onNotExists() {
+                mHandler.post {
+                    Snackbar.make(mContentView, getString(R.string.dialog_message_delete_folder_not_exists), Snackbar.LENGTH_SHORT).show()
+                }
+            }
         })
     }
 
@@ -129,17 +165,27 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     override fun onSaveClick(account: Account) {
-        AccountRepository.getInstance(mActivity).onSaveClick(mDisplayLang, account, {
-            mHandler.post { Snackbar.make(mContentView, "備份成功", Snackbar.LENGTH_SHORT).show() }
-        }, {
-            mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
+        AccountRepository.getInstance(mActivity).onSaveClick(mDisplayLang, account, object : BaseRepository.SaveAccountCallback {
+            override fun onSuccess() {
+                mHandler.post { Snackbar.make(mContentView, "備份成功", Snackbar.LENGTH_SHORT).show() }
+            }
+
+            override fun onError(message: String) {
+                mHandler.post { Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show() }
+            }
         })
     }
 
     override fun onLoadGameClick(account: Account) {
-        AccountRepository.getInstance(mActivity).onLoadGameClick(account, {
-            mHandler.post { mBinding.gameFab.performClick() }
-        }, {})
+        AccountRepository.getInstance(mActivity).onLoadGameClick(account, object : BaseRepository.LoadAccountCallback {
+            override fun onSuccess() {
+                mHandler.post { mBinding.gameFab.performClick() }
+            }
+
+            override fun onError(message: String) {
+                mHandler.post { Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show() }
+            }
+        })
     }
 
     override fun onMoreClick(account: Account) {
@@ -148,5 +194,32 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
 
     private fun showErrorNoInstalled(packageName: String) {
         AccountRepository.getInstance(mActivity).showErrorNoInstalled(packageName)
+    }
+
+    private fun hasFolderPermission(): Boolean {
+        var result = false
+        for (permission in mActivity.contentResolver.persistedUriPermissions) {
+            if (permission.uri == Uri.parse(Configs.URI_ANDROID_DATA)) {
+                result = true
+                break
+            }
+        }
+        return result
+    }
+
+    private fun createAccountFolder() {
+        AccountRepository.getInstance(mActivity).showCreateAccountDialog(mDisplayLang, object : BaseRepository.CreateAccountCallback {
+            override fun onSuccess() {
+                mHandler.post { Toast.makeText(mActivity, "Success", Toast.LENGTH_SHORT).show() }
+            }
+
+            override fun onError(message: String) {
+                mHandler.post { Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show() }
+            }
+
+            override fun onNotExists() {
+                mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
+            }
+        })
     }
 }

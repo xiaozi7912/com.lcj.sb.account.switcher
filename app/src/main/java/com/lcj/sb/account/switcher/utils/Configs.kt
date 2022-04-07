@@ -10,8 +10,8 @@ import com.lcj.sb.account.switcher.model.DungeonLevelModel
  */
 class Configs {
     companion object {
-        val PATH_EXTERNAL_STORAGE: String = Environment.getExternalStorageDirectory().absolutePath
-        val PATH_APP_DATA: String = String.format("%s/%s", PATH_EXTERNAL_STORAGE, "Android/data")
+        val PATH_APP_DATA: String = String.format("%s/%s", Environment.getExternalStorageDirectory().absolutePath, "Android/data")
+        const val URI_ANDROID_DATA = "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata"
 
         const val PREFIX_NAME_SB_JP: String = "jp.gungho.bm"
         const val PREFIX_NAME_SB_TW: String = "com.ghg.sb"
@@ -41,19 +41,23 @@ class Configs {
 
         val ELEMENT_COLOR_LIST = arrayListOf("#FF3333", "#3333FF", "#33FF33", "#FFFF33", "#8F33FF")
         val ELEMENT_ICON_LIST = arrayListOf(
-                R.drawable.ic_element_0_3_p, R.drawable.ic_element_1_3_p, R.drawable.ic_element_2_3_p,
-                R.drawable.ic_element_3_3_p, R.drawable.ic_element_4_3_p)
+            R.drawable.ic_element_0_3_p, R.drawable.ic_element_1_3_p, R.drawable.ic_element_2_3_p,
+            R.drawable.ic_element_3_3_p, R.drawable.ic_element_4_3_p
+        )
         val MONSTER_TYPE_A_ICON_LIST = arrayListOf(
-                R.drawable.ic_monster_type_a_0, R.drawable.ic_monster_type_a_1, R.drawable.ic_monster_type_a_2)
+            R.drawable.ic_monster_type_a_0, R.drawable.ic_monster_type_a_1, R.drawable.ic_monster_type_a_2
+        )
         val MONSTER_TYPE_B_ICON_LIST = arrayListOf(
-                R.drawable.ic_monster_type_b_1, R.drawable.ic_monster_type_b_2, R.drawable.ic_monster_type_b_3,
-                R.drawable.ic_monster_type_b_4, R.drawable.ic_monster_type_b_5)
+            R.drawable.ic_monster_type_b_1, R.drawable.ic_monster_type_b_2, R.drawable.ic_monster_type_b_3,
+            R.drawable.ic_monster_type_b_4, R.drawable.ic_monster_type_b_5
+        )
         val DUNGEON_LEVEL_LIST: ArrayList<DungeonLevelModel> = arrayListOf(
-                DungeonLevelModel(2, "冥"), DungeonLevelModel(1, "神"), DungeonLevelModel(0, "滅"),
-                DungeonLevelModel(3, "塔"), DungeonLevelModel(4, "魔窟")
+            DungeonLevelModel(2, "冥"), DungeonLevelModel(1, "神"), DungeonLevelModel(0, "滅"),
+            DungeonLevelModel(3, "塔"), DungeonLevelModel(4, "魔窟")
         )
         val DUNGEON_ELEMENT_LIST: ArrayList<DungeonElementModel> = arrayListOf(
-                DungeonElementModel(0, "火"), DungeonElementModel(1, "水"), DungeonElementModel(2, "木"),
-                DungeonElementModel(3, "光"), DungeonElementModel(4, "暗"))
+            DungeonElementModel(0, "火"), DungeonElementModel(1, "水"), DungeonElementModel(2, "木"),
+            DungeonElementModel(3, "光"), DungeonElementModel(4, "暗")
+        )
     }
 }

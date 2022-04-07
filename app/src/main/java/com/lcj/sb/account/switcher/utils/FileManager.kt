@@ -1,8 +1,9 @@
 package com.lcj.sb.account.switcher.utils
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
+import androidx.documentfile.provider.DocumentFile
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
@@ -11,14 +12,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.internal.operators.completable.CompletableFromAction
 import io.reactivex.schedulers.Schedulers
 import java.io.*
-import java.lang.Exception
 import java.util.regex.Pattern
 
 
 class FileManager {
     interface BackupCallback {
         fun onProcess(current: Int, total: Int)
-        fun onCompleted()
+        fun onCompleted(folderPath: String)
         fun onError()
     }
 
@@ -42,10 +42,19 @@ class FileManager {
 
         fun isFolderExists(path: String): Boolean {
             val file = File(path)
-            if (file.isDirectory && file.exists()) {
-                return true
-            }
+            if (file.isDirectory && file.exists()) return true
             return false
+        }
+
+        fun isFolderExists(rootDirectory: DocumentFile, dirName: String): Boolean {
+            var exists = false
+            for (file in rootDirectory.listFiles()) {
+                if (file.name == dirName && file.isDirectory) {
+                    exists = true
+                    break
+                }
+            }
+            return exists
         }
 
         fun syncBackupFolder(context: Context, lang: Account.Language, callback: () -> Unit) {
@@ -84,7 +93,7 @@ class FileManager {
                     val db = BaseDatabase.getInstance(context)
                     val currentTime = System.currentTimeMillis()
 
-                    db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
+                    val d = db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
                         .subscribe({ entity ->
                             entity!!.updateTime = currentTime
                             db.folderSyncDAO().update(entity!!)
@@ -103,7 +112,6 @@ class FileManager {
             val resDir = File(resPath)
             val destFilesDir = File(destPath, "files")
             val resFileList = resDir.listFiles()
-            Log.d(LOG_TAG, "resDir.canRead : ${resDir.canRead()}")
 
             if (!destFilesDir.exists()) destFilesDir.mkdirs()
             destFilesDir.setLastModified(System.currentTimeMillis())
@@ -119,11 +127,56 @@ class FileManager {
                         current++
                         callback.onProcess(current, totalSize)
                     }
-                    callback.onCompleted()
+                    callback.onCompleted(destPath)
                 }
             } else {
                 callback.onError()
             }
+        }
+
+        fun backupFolder(resolver: ContentResolver, rootDir: DocumentFile, resDirName: String, destDirName: String, callback: BackupCallback) {
+            val resDir = rootDir.findFile(resDirName)
+            var destDir = rootDir.findFile(destDirName)
+            var destFilesDir: DocumentFile? = null
+
+            if (destDir == null) {
+                destDir = rootDir.createDirectory(destDirName)
+                destFilesDir = destDir?.createDirectory("files")
+            }
+
+            resDir?.let {
+                val resFileList = it.listFiles()
+
+                if (resFileList.isEmpty()) {
+                    callback.onError()
+                    return
+                }
+
+                resFileList.filter { file -> file.name == "files" }.forEach { dir ->
+                    val fileList = dir.listFiles().filter { item -> item.isFile }
+                    var current = 0
+                    val totalSize = fileList.size
+                    fileList.forEach { file ->
+                        val destFile = destFilesDir?.createFile(file.type ?: "", file.name ?: "")
+                        var inputStream: InputStream? = null
+                        var outputStream: OutputStream? = null
+
+                        try {
+                            inputStream = resolver.openInputStream(file.uri)!!
+                            outputStream = resolver.openOutputStream(destFile?.uri!!)!!
+                            copyFile(inputStream, outputStream)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        } finally {
+                            inputStream?.close()
+                            outputStream?.close()
+                        }
+                        current++
+                        callback.onProcess(current, totalSize)
+                    }
+                    callback.onCompleted(destDir?.uri.toString())
+                }
+            } ?: run { callback.onError() }
         }
 
         fun loadFolder(resPath: String, destPath: String, callback: LoadCallback) {
@@ -152,7 +205,7 @@ class FileManager {
                 }
             }
                 .subscribeOn(Schedulers.io())
-                .subscribe { Log.i(LOG_TAG, "completed") }
+                .subscribe { }
         }
 
         fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
@@ -168,9 +221,7 @@ class FileManager {
                     ).matcher(it.name).matches()
                 }.sorted()
                 .subscribeOn(Schedulers.io())
-                .subscribe({ file ->
-                    result.add(file)
-                }, { err -> err.printStackTrace() }, { callback(result) })
+                .subscribe({ file -> result.add(file) }, { err -> err.printStackTrace() }, { callback(result) })
         }
 
         private fun copyFile(resFile: String, destFile: String) {
@@ -180,6 +231,33 @@ class FileManager {
             try {
                 bis = BufferedInputStream(FileInputStream(File(resFile)))
                 bos = BufferedOutputStream(FileOutputStream(File(destFile), false))
+
+                val buff = ByteArray(BUFFER_SIZE)
+                var readSize: Int
+
+                do {
+                    readSize = bis.read(buff)
+                    if (readSize > 0) bos.write(buff, 0, readSize)
+                } while (readSize > 0)
+            } catch (e: IOException) {
+                e.printStackTrace()
+            } finally {
+                try {
+                    bis!!.close()
+                    bos!!.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        private fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
+            var bis: BufferedInputStream? = null
+            var bos: BufferedOutputStream? = null
+
+            try {
+                bis = BufferedInputStream(inputStream)
+                bos = BufferedOutputStream(outputStream)
 
                 val buff = ByteArray(BUFFER_SIZE)
                 var readSize: Int

@@ -4,9 +4,10 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
-import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
 import com.lcj.sb.account.switcher.BaseRepository
 import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.activity.AccountInfoActivity
@@ -18,8 +19,6 @@ import com.lcj.sb.account.switcher.databinding.DialogEditAccountBinding
 import com.lcj.sb.account.switcher.model.AccountEditModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.FileManager
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.internal.operators.completable.CompletableFromAction
 import io.reactivex.schedulers.Schedulers
 import java.io.File
@@ -40,38 +39,36 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
         }
     }
 
-    fun onDeleteClick(account: Account, onSuccess: () -> Unit, onError: () -> Unit, onNotExists: () -> Unit) {
+    fun onDeleteClick(account: Account, callback: DeleteAccountCallback) {
         AlertDialog.Builder(activity).apply {
             setTitle(activity.getString(R.string.dialog_title_delete_backup))
             setMessage(activity.getString(R.string.dialog_message_delete_backup))
-            setPositiveButton(activity.getString(R.string.dialog_button_confirmed)) { dialog, which ->
+            setPositiveButton(activity.getString(R.string.dialog_button_confirmed)) { _, _ ->
                 val folder = File(account.folder)
-                Thread {
+                val d = CompletableFromAction.fromAction {
                     if (folder.exists()) {
                         if (folder.isDirectory) {
-                            folder.listFiles().forEach { childFile ->
-                                if (childFile.isDirectory) {
-                                    childFile.listFiles().forEach { it.delete() }
-                                }
+                            folder.listFiles()?.forEach { childFile ->
+                                if (childFile.isDirectory) childFile.listFiles()?.forEach { it.delete() }
                                 childFile.delete()
                             }
 
                             if (folder.delete()) {
                                 BaseDatabase.getInstance(activity).accountDAO().delete(account)
-                                onSuccess()
+                                callback.onSuccess()
                             } else {
-                                onError()
+                                callback.onError(activity.getString(R.string.dialog_message_delete_fail))
                             }
                         }
                     } else {
                         BaseDatabase.getInstance(activity).accountDAO().delete(account)
-                        onNotExists()
+                        callback.onNotExists()
                     }
-                }.start()
+                }
+                    .subscribeOn(Schedulers.io())
+                    .subscribe { }
             }
-            setNegativeButton(activity.getString(R.string.dialog_button_cancel)) { dialog, which ->
-                dialog.dismiss()
-            }
+            setNegativeButton(activity.getString(R.string.dialog_button_cancel)) { dialog, _ -> dialog.dismiss() }
         }.create().show()
     }
 
@@ -102,37 +99,39 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
         }
     }
 
-    fun onSaveClick(lang: Account.Language, account: Account, onSuccess: () -> Unit, onError: () -> Unit) {
+    fun onSaveClick(lang: Account.Language, account: Account, callback: SaveAccountCallback) {
         AlertDialog.Builder(activity).apply {
             val gameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, lang.packageName)
             setTitle("備份遊戲資料")
             setMessage("確定要覆蓋當前備份的資料嗎？")
-            setPositiveButton(activity.getString(R.string.dialog_button_confirmed)) { dialog, which ->
-                Thread {
+            setPositiveButton(activity.getString(R.string.dialog_button_confirmed)) { dialog, _ ->
+                val d = CompletableFromAction.fromAction {
                     FileManager.backupFolder(gameFolderPath, account.folder, object : FileManager.BackupCallback {
                         override fun onProcess(current: Int, total: Int) {
                         }
 
-                        override fun onCompleted() {
+                        override fun onCompleted(folderPath: String) {
                             BaseDatabase.getInstance(activity).accountDAO().update(account.apply {
                                 updateTime = System.currentTimeMillis()
                             })
                             dialog.dismiss()
-                            onSuccess()
+                            callback.onSuccess()
                         }
 
                         override fun onError() {
                             dialog.dismiss()
-                            onError()
+                            callback.onError(activity.getString(R.string.game_folder_not_exists))
                         }
                     })
-                }.start()
+                }
+                    .subscribeOn(Schedulers.io())
+                    .subscribe {}
             }
-            setNegativeButton(activity.getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
+            setNegativeButton(activity.getString(R.string.dialog_button_cancel)) { dialog, _ -> dialog.dismiss() }
         }.create().show()
     }
 
-    fun onLoadGameClick(account: Account, onSuccess: () -> Unit, onError: () -> Unit) {
+    fun onLoadGameClick(account: Account, callback: LoadAccountCallback) {
         val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
         val srcFolder: String = account.folder
         val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
@@ -142,11 +141,11 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
                 account.selected = true
                 BaseDatabase.getInstance(activity).accountDAO().deselectAll(account.lang)
                 BaseDatabase.getInstance(activity).accountDAO().update(account)
-                onSuccess()
+                callback.onSuccess()
             }
 
             override fun onError() {
-                onError()
+                callback.onError("Error")
             }
         })
     }
@@ -171,7 +170,7 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
         }
     }
 
-    fun showCreateAccountDialog(lang: Account.Language, onSuccess: () -> Unit, onError: () -> Unit, onNotExists: () -> Unit) {
+    fun showCreateAccountDialog(lang: Account.Language, callback: CreateAccountCallback) {
         AlertDialog.Builder(activity, R.style.CustomDialog).create().let { dialog ->
             val binding = DialogBackupAccountBinding.inflate(activity.layoutInflater)
 
@@ -179,44 +178,14 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
                 dialog.dismiss()
             }
             binding.backupSubmitBtn.setOnClickListener {
-                val currentTime = System.currentTimeMillis()
-                val gameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, lang.packageName)
-                val destPath = String.format("%s.%s", gameFolderPath, currentTime)
-
-                it.isEnabled = false
-                val d = CompletableFromAction.fromAction {
-                    val exists = FileManager.isFolderExists(gameFolderPath)
-                    if (exists) {
-                        val alias = if (binding.backupInputEt.text.isNotEmpty()) {
-                            binding.backupInputEt.text.toString()
-                        } else {
-                            destPath.substring(destPath.lastIndexOf("/") + 1)
-                        }
-
-                        FileManager.backupFolder(gameFolderPath, destPath, object : FileManager.BackupCallback {
-                            override fun onProcess(current: Int, total: Int) {
-                                binding.backupProgressBar.max = total
-                                binding.backupProgressBar.progress = current
-                            }
-
-                            override fun onCompleted() {
-                                val account = Account(alias = alias, folder = destPath, lang = lang.ordinal, createTime = currentTime, updateTime = currentTime)
-                                BaseDatabase.getInstance(activity).accountDAO().insert(account)
-                                onSuccess()
-                            }
-
-                            override fun onError() {
-                                onError()
-                            }
-                        })
-                    } else {
-                        onNotExists()
-                    }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    startBackup(dialog, binding, lang, callback)
+                } else {
+                    startLegacyBackup(dialog, binding, lang, callback)
                 }
-                    .subscribeOn(Schedulers.io())
-                    .subscribe { dialog.dismiss() }
             }
 
+            dialog.setCancelable(false)
             dialog.show()
             dialog.window?.apply {
                 clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
@@ -229,15 +198,97 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
     fun showErrorNoInstalled(packageName: String) {
         AlertDialog.Builder(activity)
             .setMessage(R.string.no_install_game)
-            .setPositiveButton(R.string.google_play_text) { dialog, which ->
+            .setPositiveButton(R.string.google_play_text) { _, _ ->
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     data = Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
                     setPackage("com.android.vending")
                 }
                 activity.startActivity(intent)
             }
-            .setNegativeButton(R.string.dialog_button_cancel) { dialog, which ->
-                dialog.dismiss()
-            }.create().show()
+            .setNegativeButton(R.string.dialog_button_cancel) { dialog, _ -> dialog.dismiss() }
+            .create().show()
+    }
+
+    private fun startBackup(dialog: AlertDialog, binding: DialogBackupAccountBinding, lang: Account.Language, callback: CreateAccountCallback) {
+        val currentTime = System.currentTimeMillis()
+        val gameDirName = lang.packageName
+        val destFolderName = String.format("%s.%s", gameDirName, currentTime)
+        val rootDir = DocumentFile.fromTreeUri(activity, Uri.parse(Configs.URI_ANDROID_DATA))
+
+        binding.backupSubmitBtn.isEnabled = false
+        val d = CompletableFromAction.fromAction {
+            rootDir?.let {
+                val exists = FileManager.isFolderExists(rootDir, gameDirName)
+                if (exists) {
+                    val alias = if (binding.backupInputEt.text.isNotEmpty()) {
+                        binding.backupInputEt.text.toString()
+                    } else {
+                        destFolderName
+                    }
+
+                    FileManager.backupFolder(activity.contentResolver, rootDir, gameDirName, alias, object : FileManager.BackupCallback {
+                        override fun onProcess(current: Int, total: Int) {
+                            binding.backupProgressBar.max = total
+                            binding.backupProgressBar.progress = current
+                        }
+
+                        override fun onCompleted(folderPath: String) {
+                            val account =
+                                Account(alias = alias, folder = folderPath, lang = lang.ordinal, createTime = currentTime, updateTime = currentTime)
+                            BaseDatabase.getInstance(activity).accountDAO().insert(account)
+                            callback.onSuccess()
+                        }
+
+                        override fun onError() {
+                            callback.onError("備份失敗。")
+                        }
+                    })
+                } else {
+                    callback.onNotExists()
+                }
+            } ?: run { callback.onError("沒有資料夾存取權限。") }
+        }
+            .subscribeOn(Schedulers.io())
+            .subscribe { dialog.dismiss() }
+    }
+
+    private fun startLegacyBackup(dialog: AlertDialog, binding: DialogBackupAccountBinding, lang: Account.Language, callback: CreateAccountCallback) {
+        val currentTime = System.currentTimeMillis()
+        val gameFolderPath = String.format("%s/%s", Configs.PATH_APP_DATA, lang.packageName)
+        val destPath = String.format("%s.%s", gameFolderPath, currentTime)
+
+        binding.backupSubmitBtn.isEnabled = false
+        val d = CompletableFromAction.fromAction {
+            val exists = FileManager.isFolderExists(gameFolderPath)
+            if (exists) {
+                val alias = if (binding.backupInputEt.text.isNotEmpty()) {
+                    binding.backupInputEt.text.toString()
+                } else {
+                    destPath.substring(destPath.lastIndexOf("/") + 1)
+                }
+
+                FileManager.backupFolder(gameFolderPath, destPath, object : FileManager.BackupCallback {
+                    override fun onProcess(current: Int, total: Int) {
+                        binding.backupProgressBar.max = total
+                        binding.backupProgressBar.progress = current
+                    }
+
+                    override fun onCompleted(folderPath: String) {
+                        val account =
+                            Account(alias = alias, folder = folderPath, lang = lang.ordinal, createTime = currentTime, updateTime = currentTime)
+                        BaseDatabase.getInstance(activity).accountDAO().insert(account)
+                        callback.onSuccess()
+                    }
+
+                    override fun onError() {
+                        callback.onError("Error")
+                    }
+                })
+            } else {
+                callback.onNotExists()
+            }
+        }
+            .subscribeOn(Schedulers.io())
+            .subscribe { dialog.dismiss() }
     }
 }
