@@ -1,7 +1,9 @@
 package com.lcj.sb.account.switcher.repository
 
 import android.app.Activity
-import android.util.Log
+import android.net.Uri
+import android.os.Build
+import androidx.documentfile.provider.DocumentFile
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.api.client.extensions.android.http.AndroidHttp
@@ -20,6 +22,8 @@ import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.ZipManager
+import io.reactivex.internal.operators.completable.CompletableFromAction
+import io.reactivex.schedulers.Schedulers
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -35,77 +39,15 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
 
     fun upload(account: Account, callback: UploadCallback) {
         checkSignedInAccount({ signedIn ->
-            Thread {
-                val folderPath = account.folder
-                val filesPath = String.format("%s/%s", folderPath, "files")
-                val filesFile: File? = File(filesPath)
-                val folderName = account.folder.substring(account.folder.lastIndexOf("/") + 1)
-                val hashZipFile = hashMapOf(
-                    "name" to "${folderName}.zip",
-                    "path" to "${activity.externalCacheDir?.absolutePath}/${folderName}.zip"
-                )
-                val fileList = ArrayList<String>()
-
-                mHandler.post { callback.onInitial(hashZipFile["name"]!!) }
-                filesFile?.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
-                if (fileList.size > 0) {
-                    ZipManager.zip(fileList, hashZipFile["path"]!!)
-
-                    val service = getDriveService(signedIn)
-                    try {
-                        val qFolder = service.files().list()
-                            .setQ("name='${BuildConfig.APPLICATION_ID}'")
-                            .execute()
-                        val qFile = service.files().list()
-                            .setQ("name='${hashZipFile["name"]}'")
-                            .execute()
-                        val folderFile = if (qFolder.files.size == 0) {
-                            service.files().create(com.google.api.services.drive.model.File().apply {
-                                name = BuildConfig.APPLICATION_ID
-                                mimeType = "application/vnd.google-apps.folder"
-                            }).execute()
-                        } else {
-                            qFolder.files.first()
-                        }
-
-                        service.files().create(com.google.api.services.drive.model.File().apply {
-                            parents = Collections.singletonList(folderFile.id)
-                            name = hashZipFile["name"]
-                        }, FileContent("application/zip", File(hashZipFile["path"]!!))).apply {
-                            mediaHttpUploader.chunkSize = CHUNK_SIZE
-                            mediaHttpUploader.setProgressListener {
-                                when (it.uploadState) {
-                                    MediaHttpUploader.UploadState.INITIATION_STARTED -> {
-                                        callback.onUploadStarted(0)
-                                    }
-                                    MediaHttpUploader.UploadState.INITIATION_COMPLETE -> {
-                                    }
-                                    MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> {
-                                        val percent = it.progress * 100
-                                        Log.d(LOG_TAG, "percent : $percent")
-                                        callback.inProgress(percent.toInt())
-                                    }
-                                    MediaHttpUploader.UploadState.MEDIA_COMPLETE -> {
-                                        callback.onComplete(100)
-                                    }
-                                    else -> {
-                                    }
-                                }
-                            }
-                        }.execute()
-
-                        qFile.files.forEach {
-                            service.files().delete(it.id).execute()
-                        }
-                        callback.onSuccess()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                        callback.onError(e.localizedMessage ?: "")
-                    }
+            val d = CompletableFromAction.fromAction {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    startZipFiles(signedIn, account, callback)
                 } else {
-                    callback.onError("資料夾內沒有檔案！")
+                    startLegacyZipFiles(signedIn, account, callback)
                 }
-            }.start()
+            }
+                .subscribeOn(Schedulers.io())
+                .subscribe { }
         }, { callback.onError(it) })
     }
 
@@ -164,16 +106,12 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                         mediaHttpDownloader.setProgressListener {
                             when (it.downloadState) {
                                 MediaHttpDownloader.DownloadState.NOT_STARTED -> {
-                                    Log.i(LOG_TAG, "NOT_STARTED")
                                 }
                                 MediaHttpDownloader.DownloadState.MEDIA_IN_PROGRESS -> {
-                                    Log.i(LOG_TAG, "MEDIA_IN_PROGRESS")
                                     val percent = it.progress * 100
                                     callback.inProgress(percent.toInt())
-                                    Log.d(LOG_TAG, "percent : $percent")
                                 }
                                 MediaHttpDownloader.DownloadState.MEDIA_COMPLETE -> {
-                                    Log.i(LOG_TAG, "MEDIA_COMPLETE")
                                     callback.onComplete(100)
                                 }
                                 else -> {
@@ -235,5 +173,112 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
             AndroidHttp.newCompatibleTransport(),
             GsonFactory(), credential
         ).build()
+    }
+
+    private fun startZipFiles(signedIn: GoogleSignInAccount, account: Account, callback: UploadCallback) {
+        DocumentFile.fromTreeUri(activity, Uri.parse(Configs.URI_ANDROID_DATA))?.let { rootDir ->
+            val replacedName = account.folder.replace("%2F", "/", true)
+            val folderName = replacedName.substring(replacedName.lastIndexOf("/") + 1)
+            rootDir.findFile(folderName)?.let { backupDir ->
+                val filesDir = backupDir.findFile("files")
+                val hashZipFile = hashMapOf(
+                    "name" to "${folderName}.zip",
+                    "path" to "${activity.externalCacheDir?.absolutePath}/${folderName}.zip"
+                )
+                val fileList = ArrayList<String>()
+
+                filesDir?.let {
+                    mHandler.post { callback.onInitial(hashZipFile["name"]!!) }
+
+                    filesDir.listFiles().filter { item -> item.isFile }.forEach { file -> fileList.add(file.uri.toString()) }
+                    if (fileList.isNotEmpty()) {
+                        try {
+                            ZipManager.zip(activity.contentResolver, fileList, hashZipFile["path"]!!)
+                            startUploadFile(signedIn, hashZipFile, callback)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                } ?: run {
+                    callback.onError("找不到 files 資料夾。")
+                }
+            } ?: run {
+                callback.onError("找不到備份資料夾。")
+            }
+        } ?: run {
+            callback.onError("沒有資料夾存取權限。")
+        }
+    }
+
+    private fun startLegacyZipFiles(signedIn: GoogleSignInAccount, account: Account, callback: UploadCallback) {
+        val folderPath = account.folder
+        val filesPath = String.format("%s/%s", folderPath, "files")
+        val filesFile = File(filesPath)
+        val folderName = account.folder.substring(account.folder.lastIndexOf("/") + 1)
+        val hashZipFile = hashMapOf(
+            "name" to "${folderName}.zip",
+            "path" to "${activity.externalCacheDir?.absolutePath}/${folderName}.zip"
+        )
+        val fileList = ArrayList<String>()
+
+        mHandler.post { callback.onInitial(hashZipFile["name"]!!) }
+        filesFile.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
+        if (fileList.size > 0) {
+            ZipManager.zip(fileList, hashZipFile["path"]!!)
+            startUploadFile(signedIn, hashZipFile, callback)
+        } else {
+            callback.onError("資料夾內沒有檔案！")
+        }
+    }
+
+    private fun startUploadFile(signedIn: GoogleSignInAccount, hashZipFile: HashMap<String, String>, callback: UploadCallback) {
+        val service = getDriveService(signedIn)
+        try {
+            val qFolder = service.files().list()
+                .setQ("name='${BuildConfig.APPLICATION_ID}'")
+                .execute()
+            val qFile = service.files().list()
+                .setQ("name='${hashZipFile["name"]}'")
+                .execute()
+            val folderFile = if (qFolder.files.size == 0) {
+                service.files().create(com.google.api.services.drive.model.File().apply {
+                    name = BuildConfig.APPLICATION_ID
+                    mimeType = "application/vnd.google-apps.folder"
+                }).execute()
+            } else {
+                qFolder.files.first()
+            }
+
+            service.files().create(com.google.api.services.drive.model.File().apply {
+                parents = Collections.singletonList(folderFile.id)
+                name = hashZipFile["name"]
+            }, FileContent("application/zip", File(hashZipFile["path"]!!))).apply {
+                mediaHttpUploader.chunkSize = CHUNK_SIZE
+                mediaHttpUploader.setProgressListener {
+                    when (it.uploadState) {
+                        MediaHttpUploader.UploadState.INITIATION_STARTED -> {
+                            callback.onUploadStarted(0)
+                        }
+                        MediaHttpUploader.UploadState.INITIATION_COMPLETE -> {
+                        }
+                        MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> {
+                            val percent = it.progress * 100
+                            callback.inProgress(percent.toInt())
+                        }
+                        MediaHttpUploader.UploadState.MEDIA_COMPLETE -> {
+                            callback.onComplete(100)
+                        }
+                        else -> {
+                        }
+                    }
+                }
+            }.execute()
+
+            qFile.files.forEach { service.files().delete(it.id).execute() }
+            callback.onSuccess()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            callback.onError(e.localizedMessage ?: "")
+        }
     }
 }

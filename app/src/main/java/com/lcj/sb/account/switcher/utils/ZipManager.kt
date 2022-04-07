@@ -1,6 +1,7 @@
 package com.lcj.sb.account.switcher.utils
 
-import android.util.Log
+import android.content.ContentResolver
+import android.net.Uri
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -12,7 +13,7 @@ class ZipManager {
             var origin: BufferedInputStream
             val out = ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile)))
 
-            out.use { out ->
+            out.use {
                 val data = ByteArray(10 * 1024)
                 for (file in files) {
                     val fis = FileInputStream(file)
@@ -21,14 +22,50 @@ class ZipManager {
                     origin.use { origin ->
                         val rootFolderName = zipFile.substring(zipFile.lastIndexOf("/") + 1, zipFile.lastIndexOf("."))
                         val entry = ZipEntry("${rootFolderName}/files/${file.substring(file.lastIndexOf("/") + 1)}")
-                        out.putNextEntry(entry)
+                        it.putNextEntry(entry)
 
                         var count: Int
                         do {
                             count = origin.read(data, 0, 10 * 1024)
-                            if (count != -1) out.write(data, 0, count)
+                            if (count != -1) it.write(data, 0, count)
                         } while (count != -1)
                     }
+                }
+            }
+        }
+
+        @Throws(Exception::class)
+        fun zip(resolver: ContentResolver, files: ArrayList<String>, zipFile: String) {
+            var origin: BufferedInputStream
+            val out = ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile)))
+
+            out.use {
+                val data = ByteArray(10 * 1024)
+                var fis: InputStream? = null
+
+                try {
+                    for (file in files) {
+                        fis = resolver.openInputStream(Uri.parse(file))
+                        origin = BufferedInputStream(fis, 10 * 1024)
+
+                        origin.use { origin ->
+                            val rootFolderName = zipFile.substring(zipFile.lastIndexOf("/") + 1, zipFile.lastIndexOf("."))
+                            val replacedName = file.replace("%2F", "/")
+                            val entry = ZipEntry("${rootFolderName}/files/${replacedName.substring(replacedName.lastIndexOf("/") + 1)}")
+                            it.putNextEntry(entry)
+
+                            var count: Int
+                            do {
+                                count = origin.read(data, 0, 10 * 1024)
+                                if (count != -1) it.write(data, 0, count)
+                            } while (count != -1)
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    throw e
+                } finally {
+                    fis?.close()
                 }
             }
         }
