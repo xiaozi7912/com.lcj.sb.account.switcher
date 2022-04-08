@@ -22,6 +22,7 @@ open class BaseFragment : Fragment() {
     companion object {
         const val REQUEST_CODE_GOOGLE_SIGN_IN = 1001
         const val REQUEST_CODE_FOLDER_PERMISSION = 1002
+        const val REQUEST_CODE_FOLDER_PERMISSION_FOR_LOAD_GAME = 1003
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {

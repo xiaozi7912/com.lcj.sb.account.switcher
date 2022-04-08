@@ -84,12 +84,22 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_FOLDER_PERMISSION) {
-            if (resultCode == Activity.RESULT_OK) {
-                val contentResolver = mActivity.contentResolver
-                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                contentResolver.takePersistableUriPermission(data?.data!!, takeFlags)
-                createAccountFolder()
+        when (requestCode) {
+            REQUEST_CODE_FOLDER_PERMISSION -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    val contentResolver = mActivity.contentResolver
+                    val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    contentResolver.takePersistableUriPermission(data?.data!!, takeFlags)
+                    createAccountFolder()
+                }
+            }
+            REQUEST_CODE_FOLDER_PERMISSION_FOR_LOAD_GAME -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    val contentResolver = mActivity.contentResolver
+                    val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    contentResolver.takePersistableUriPermission(data?.data!!, takeFlags)
+                    Toast.makeText(mActivity, "請重新點擊還原備份。", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -175,18 +185,24 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     override fun onLoadGameClick(account: Account) {
-        ProgressDialog.getInstance(mActivity).show()
-        AccountRepository.getInstance(mActivity).onLoadGameClick(account, object : BaseRepository.LoadAccountCallback {
-            override fun onSuccess() {
-                ProgressDialog.getInstance(mActivity).dismiss()
-                mHandler.post { mBinding.gameFab.performClick() }
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!hasFolderPermission()) {
+                val sm = mActivity.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+                val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
+                var uri = intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI)
+                var scheme = uri.toString().replace("/root/", "/document/")
 
-            override fun onError(message: String) {
-                ProgressDialog.getInstance(mActivity).dismiss()
-                mHandler.post { Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show() }
+                scheme += "%3A" + "Android%2Fdata"
+                uri = Uri.parse(scheme)
+                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri)
+                startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION_FOR_LOAD_GAME)
+                Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+            } else {
+                loadGameData(account)
             }
-        })
+        } else {
+            loadGameData(account)
+        }
     }
 
     override fun onMoreClick(account: Account) {
@@ -209,6 +225,21 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
 
             override fun onNotExists() {
                 mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
+            }
+        })
+    }
+
+    private fun loadGameData(account: Account) {
+        ProgressDialog.getInstance(mActivity).show()
+        AccountRepository.getInstance(mActivity).onLoadGameClick(account, object : BaseRepository.LoadAccountCallback {
+            override fun onSuccess() {
+                ProgressDialog.getInstance(mActivity).dismiss()
+                mHandler.post { mBinding.gameFab.performClick() }
+            }
+
+            override fun onError(message: String) {
+                ProgressDialog.getInstance(mActivity).dismiss()
+                mHandler.post { Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show() }
             }
         })
     }
