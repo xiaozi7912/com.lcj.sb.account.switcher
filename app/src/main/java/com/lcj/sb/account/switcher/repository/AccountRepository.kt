@@ -160,22 +160,45 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
     }
 
     fun onLoadGameClick(account: Account, callback: LoadAccountCallback) {
-        val langStr = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
-        val srcFolder: String = account.folder
-        val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, langStr)
+        val destDirName = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
 
-        FileManager.loadFolder(srcFolder, dstFolder, object : FileManager.LoadCallback {
-            override fun onCompleted() {
-                account.selected = true
-                BaseDatabase.getInstance(activity).accountDAO().deselectAll(account.lang)
-                BaseDatabase.getInstance(activity).accountDAO().update(account)
-                callback.onSuccess()
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            DocumentFile.fromTreeUri(activity, Uri.parse(Configs.URI_ANDROID_DATA))?.let {
+                val replacedName = account.folder.replace("%2F", "/")
+                val srcDirName = replacedName.substring(replacedName.lastIndexOf("/") + 1)
 
-            override fun onError() {
-                callback.onError("Error")
+                FileManager.loadFolder(activity.contentResolver, it, srcDirName, destDirName, object : FileManager.LoadCallback {
+                    override fun onCompleted() {
+                        account.selected = true
+                        BaseDatabase.getInstance(activity).accountDAO().deselectAll(account.lang)
+                        BaseDatabase.getInstance(activity).accountDAO().update(account)
+                        callback.onSuccess()
+                    }
+
+                    override fun onError() {
+                        callback.onError("Error")
+                    }
+                })
+            } ?: run {
+                callback.onError("沒有資料夾存取權限。")
             }
-        })
+        } else {
+            val srcFolder: String = account.folder
+            val dstFolder: String = String.format("%s/%s", Configs.PATH_APP_DATA, destDirName)
+            
+            FileManager.loadFolder(srcFolder, dstFolder, object : FileManager.LoadCallback {
+                override fun onCompleted() {
+                    account.selected = true
+                    BaseDatabase.getInstance(activity).accountDAO().deselectAll(account.lang)
+                    BaseDatabase.getInstance(activity).accountDAO().update(account)
+                    callback.onSuccess()
+                }
+
+                override fun onError() {
+                    callback.onError("Error")
+                }
+            })
+        }
     }
 
     fun onMoreClick(account: Account) {

@@ -24,6 +24,7 @@ import com.lcj.sb.account.switcher.databinding.FragmentAccountBinding
 import com.lcj.sb.account.switcher.repository.AccountRepository
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.FileManager
+import com.lcj.sb.account.switcher.view.ProgressDialog
 
 class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.AccountListListener {
     private lateinit var mBinding: FragmentAccountBinding
@@ -174,12 +175,15 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     override fun onLoadGameClick(account: Account) {
+        ProgressDialog.getInstance(mActivity).show()
         AccountRepository.getInstance(mActivity).onLoadGameClick(account, object : BaseRepository.LoadAccountCallback {
             override fun onSuccess() {
+                ProgressDialog.getInstance(mActivity).dismiss()
                 mHandler.post { mBinding.gameFab.performClick() }
             }
 
             override fun onError(message: String) {
+                ProgressDialog.getInstance(mActivity).dismiss()
                 mHandler.post { Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show() }
             }
         })
