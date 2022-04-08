@@ -199,6 +199,9 @@ class FileManager {
                 val destFilesDir = destDir?.findFile("files") ?: destDir?.createDirectory("files")
 
                 try {
+                    destFilesDir?.listFiles()?.let { destFileList ->
+                        destFileList.filter { item -> item.isFile }.forEach { file -> file.delete() }
+                    }
                     srcFilesDir?.listFiles()?.let { srcFileList ->
                         srcFileList.forEach { srcFile ->
                             val fileName = srcFile.name ?: ""
