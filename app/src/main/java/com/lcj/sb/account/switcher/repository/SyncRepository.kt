@@ -96,7 +96,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
     fun download(entity: GoogleDriveItem, callback: DownloadCallback) {
         callback.onInitial()
         checkSignedInAccount({ signedIn ->
-            Thread {
+            val d = CompletableFromAction.fromAction {
                 val service = getDriveService(signedIn)
                 try {
                     val file = File("${activity.externalCacheDir?.absolutePath}/${entity.name}")
@@ -121,23 +121,38 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     }.executeMediaAndDownloadTo(outputStream)
                     outputStream.close()
                     mHandler.post { callback.onUnzip() }
-                    ZipManager.unZip(file.absolutePath, Configs.PATH_APP_DATA)
+
+                    val folderName = entity.name.substring(0, entity.name.lastIndexOf("."))
+                    var folderPath = "${Configs.PATH_APP_DATA}/$folderName"
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        DocumentFile.fromTreeUri(activity, Uri.parse(Configs.URI_ANDROID_DATA))?.let {
+                            val destDir = it.findFile(folderName) ?: it.createDirectory(folderName)
+                            folderPath = destDir?.uri.toString()
+                            ZipManager.unZip(activity.contentResolver, it, file)
+                        } ?: run {
+                            throw Exception("沒有資料夾存取權限。")
+                        }
+                    } else {
+                        ZipManager.unZip(file.absolutePath, Configs.PATH_APP_DATA)
+                    }
+
+                    val currentTime = System.currentTimeMillis()
                     BaseDatabase.getInstance(activity).accountDAO()
                         .insert(
                             Account(
-                                alias = entity.name.substring(0, entity.name.lastIndexOf(".")),
-                                folder = "${Configs.PATH_APP_DATA}/${entity.name.substring(0, entity.name.lastIndexOf("."))}",
-                                lang = entity.lang.ordinal,
-                                createTime = System.currentTimeMillis(),
-                                updateTime = System.currentTimeMillis()
+                                alias = folderName, folder = folderPath, lang = entity.lang.ordinal,
+                                createTime = currentTime, updateTime = currentTime
                             )
                         )
                     mHandler.post { callback.onSuccess() }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    mHandler.post { callback.onError(e.localizedMessage) }
+                    mHandler.post { callback.onError(e.localizedMessage ?: "") }
                 }
-            }.start()
+            }
+                .subscribeOn(Schedulers.io())
+                .subscribe { }
         }, { callback.onError(it) })
     }
 
@@ -151,7 +166,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     mHandler.post { callback.onSuccess() }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    mHandler.post { callback.onError(e.localizedMessage) }
+                    mHandler.post { callback.onError(e.localizedMessage ?: "") }
                 }
             }.start()
         }, { callback.onError(it) })

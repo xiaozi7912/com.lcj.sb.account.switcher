@@ -1,12 +1,18 @@
 package com.lcj.sb.account.switcher.fragment
 
+import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import android.os.storage.StorageManager
+import android.provider.DocumentsContract
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -55,7 +61,7 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
         mBinding.settingsSbTRoot.visibility = View.GONE
 
         mBinding.signInButton.setOnClickListener {
-            startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
+            startActivityForResult(mSignInClient.signInIntent, REQUEST_CODE_GOOGLE_SIGN_IN)
         }
         mBinding.signOutButton.setOnClickListener {
             mSignInClient.signOut().addOnCompleteListener {
@@ -84,7 +90,15 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
-            Configs.REQUEST_CODE_GOOGLE_SIGN_IN -> handleSignInResult(data)
+            REQUEST_CODE_GOOGLE_SIGN_IN -> handleSignInResult(data)
+            REQUEST_CODE_FOLDER_PERMISSION -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    val contentResolver = mActivity.contentResolver
+                    val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    contentResolver.takePersistableUriPermission(data?.data!!, takeFlags)
+                    Toast.makeText(mActivity, "請重新點擊下載。", Toast.LENGTH_LONG).show()
+                }
+            }
             else -> {
             }
         }
@@ -116,15 +130,13 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
         mAdapter = GoogleDriveAdapter(mActivity).apply {
             setListener(object : BaseAdapter.RemoteSyncListListener {
                 override fun onItemClick(entity: GoogleDriveItem) {
-                    Log.i(LOG_TAG, "onItemClick")
                 }
 
                 override fun onDeleteClick(entity: GoogleDriveItem) {
-                    Log.i(LOG_TAG, "onDeleteClick")
                     AlertDialog.Builder(mActivity).apply {
                         setTitle("刪除雲端備份")
                         setMessage("確定要刪除Google Drive上的備份嗎？")
-                        setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, which ->
+                        setPositiveButton(getString(R.string.dialog_button_confirmed)) { dialog, _ ->
                             SyncRepository.getInstance(mActivity).delete(entity, object : BaseRepository.DeleteCallback {
                                 override fun onInitial() {
                                     dialog.dismiss()
@@ -143,46 +155,35 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
                                 }
                             })
                         }
-                        setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which ->
+                        setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, _ ->
                             dialog.dismiss()
                         }
                     }.create().show()
                 }
 
                 override fun onDownloadClick(entity: GoogleDriveItem) {
-                    Log.i(LOG_TAG, "onDownloadClick")
-                    RemoteProgressDialog.getInstance(mActivity).show()
-                    SyncRepository.getInstance(mActivity).download(entity, object : BaseRepository.DownloadCallback {
-                        override fun onInitial() {
-                            RemoteProgressDialog.getInstance(activity).setTitle("檔案下載中\n${entity.name}")
-                            RemoteProgressDialog.getInstance(activity).setProgress(0)
-                        }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        if (!hasFolderPermission()) {
+                            val sm = mActivity.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+                            val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
+                            var uri = intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI)
+                            var scheme = uri.toString().replace("/root/", "/document/")
 
-                        override fun inProgress(progress: Int) {
-                            RemoteProgressDialog.getInstance(activity).setProgress(progress)
+                            scheme += "%3A" + "Android%2Fdata"
+                            uri = Uri.parse(scheme)
+                            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri)
+                            startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION)
+                            Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+                        } else {
+                            downloadGameData(entity)
                         }
-
-                        override fun onComplete(progress: Int) {
-                            RemoteProgressDialog.getInstance(activity).setProgress(progress)
-                        }
-
-                        override fun onUnzip() {
-                            RemoteProgressDialog.getInstance(activity).setTitle("解壓縮中：${entity.name}")
-                        }
-
-                        override fun onSuccess() {
-                            RemoteProgressDialog.getInstance(mActivity).dismiss()
-                            Snackbar.make(mContentView, getString(R.string.file_download_completed), Snackbar.LENGTH_SHORT).show()
-                        }
-
-                        override fun onError(message: String) {
-                            RemoteProgressDialog.getInstance(mActivity).dismiss()
-                            Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
-                        }
-                    })
+                    } else {
+                        downloadGameData(entity)
+                    }
                 }
             })
         }
+
         mBinding.recyclerView.layoutManager = LinearLayoutManager(mActivity, LinearLayoutManager.VERTICAL, false)
         mBinding.recyclerView.adapter = mAdapter
         mBinding.swipeRefreshLayout.setOnRefreshListener(this)
@@ -194,7 +195,7 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
             .requestScopes(Scope(DriveScopes.DRIVE_FILE), Scope(DriveScopes.DRIVE_APPDATA))
-            .build().let { mSignInClient = GoogleSignIn.getClient(activity!!, it) }
+            .build().let { mSignInClient = GoogleSignIn.getClient(mActivity, it) }
     }
 
     private fun checkLastSignedInAccount(): GoogleSignInAccount? {
@@ -260,5 +261,37 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
     }
 
     private fun onSyncTWButtonClick() {
+    }
+
+    private fun downloadGameData(entity: GoogleDriveItem) {
+        RemoteProgressDialog.getInstance(mActivity).show()
+        SyncRepository.getInstance(mActivity).download(entity, object : BaseRepository.DownloadCallback {
+            override fun onInitial() {
+                RemoteProgressDialog.getInstance(mActivity).setTitle("檔案下載中\n${entity.name}")
+                RemoteProgressDialog.getInstance(mActivity).setProgress(0)
+            }
+
+            override fun inProgress(progress: Int) {
+                RemoteProgressDialog.getInstance(mActivity).setProgress(progress)
+            }
+
+            override fun onComplete(progress: Int) {
+                RemoteProgressDialog.getInstance(mActivity).setProgress(progress)
+            }
+
+            override fun onUnzip() {
+                RemoteProgressDialog.getInstance(mActivity).setTitle("解壓縮中\n${entity.name}")
+            }
+
+            override fun onSuccess() {
+                RemoteProgressDialog.getInstance(mActivity).dismiss()
+                Snackbar.make(mContentView, getString(R.string.file_download_completed), Snackbar.LENGTH_SHORT).show()
+            }
+
+            override fun onError(message: String) {
+                RemoteProgressDialog.getInstance(mActivity).dismiss()
+                Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
+            }
+        })
     }
 }

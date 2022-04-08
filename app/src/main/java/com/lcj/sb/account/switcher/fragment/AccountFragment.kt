@@ -27,12 +27,9 @@ import com.lcj.sb.account.switcher.utils.FileManager
 
 class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.AccountListListener {
     private lateinit var mBinding: FragmentAccountBinding
-    private lateinit var mGameFolderPath: String
     private lateinit var mDisplayLang: Account.Language
 
     companion object {
-        const val REQUEST_CODE_FOLDER_PERMISSION = 1001
-
         fun newInstance(): AccountFragment {
             return AccountFragment()
         }
@@ -194,17 +191,6 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
 
     private fun showErrorNoInstalled(packageName: String) {
         AccountRepository.getInstance(mActivity).showErrorNoInstalled(packageName)
-    }
-
-    private fun hasFolderPermission(): Boolean {
-        var result = false
-        for (permission in mActivity.contentResolver.persistedUriPermissions) {
-            if (permission.uri == Uri.parse(Configs.URI_ANDROID_DATA)) {
-                result = true
-                break
-            }
-        }
-        return result
     }
 
     private fun createAccountFolder() {

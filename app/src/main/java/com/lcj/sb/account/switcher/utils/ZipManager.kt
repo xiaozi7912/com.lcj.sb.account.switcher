@@ -2,6 +2,8 @@ package com.lcj.sb.account.switcher.utils
 
 import android.content.ContentResolver
 import android.net.Uri
+import android.util.Log
+import androidx.documentfile.provider.DocumentFile
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -9,6 +11,8 @@ import java.util.zip.ZipOutputStream
 
 class ZipManager {
     companion object {
+        const val LOG_TAG = "ZipManager"
+
         fun zip(files: ArrayList<String>, zipFile: String) {
             var origin: BufferedInputStream
             val out = ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile)))
@@ -95,6 +99,38 @@ class ZipManager {
                             it.close()
                         }
                         zis.closeEntry()
+                    }
+                } while (ze != null)
+                zis.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        fun unZip(resolver: ContentResolver, rootDir: DocumentFile, zipFile: File) {
+            try {
+                val zis = ZipInputStream(BufferedInputStream(FileInputStream(zipFile)))
+                val buffer = ByteArray(10 * 1024)
+
+                do {
+                    val ze = zis.nextEntry?.apply {
+                        val nodes = name.split("/")
+                        val destDir = rootDir.findFile(nodes[0]) ?: rootDir.createDirectory(nodes[0])
+                        val filesDir = destDir?.findFile(nodes[1]) ?: destDir?.createDirectory(nodes[1])
+                        val file = filesDir?.findFile(nodes[2]) ?: filesDir?.createFile("", nodes[2])
+                        Log.d(LOG_TAG, "destDir?.uri : ${destDir?.uri}")
+                        Log.d(LOG_TAG, "filesDir?.uri : ${filesDir?.uri}")
+                        Log.d(LOG_TAG, "file?.uri : ${file?.uri}")
+                        file?.let {
+                            BufferedOutputStream(resolver.openOutputStream(it.uri)).let { stream ->
+                                do {
+                                    val count = zis.read(buffer)
+                                    if (count != -1) stream.write(buffer, 0, count)
+                                } while (count != -1)
+                                stream.close()
+                            }
+                            zis.closeEntry()
+                        }
                     }
                 } while (ze != null)
                 zis.close()

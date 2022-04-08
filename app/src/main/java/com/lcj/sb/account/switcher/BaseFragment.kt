@@ -1,14 +1,12 @@
 package com.lcj.sb.account.switcher
 
 import android.app.Activity
-import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.preference.PreferenceManager
 import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
-import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.utils.Configs
 
 /**
@@ -20,6 +18,11 @@ open class BaseFragment : Fragment() {
     lateinit var mActivity: Activity
 
     lateinit var mContentView: View
+
+    companion object {
+        const val REQUEST_CODE_GOOGLE_SIGN_IN = 1001
+        const val REQUEST_CODE_FOLDER_PERMISSION = 1002
+    }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
@@ -38,10 +41,20 @@ open class BaseFragment : Fragment() {
         Log.i(LOG_TAG, "onResume")
     }
 
+    protected fun hasFolderPermission(): Boolean {
+        var result = false
+        for (permission in mActivity.contentResolver.persistedUriPermissions) {
+            if (permission.uri == Uri.parse(Configs.URI_ANDROID_DATA)) {
+                result = true
+                break
+            }
+        }
+        return result
+    }
+
     fun startApplication(appId: String) {
-        mActivity.packageManager
-                .getLaunchIntentForPackage(appId).let {
-                    startActivity(it)
-                }
+        mActivity.packageManager.getLaunchIntentForPackage(appId).let {
+            startActivity(it)
+        }
     }
 }

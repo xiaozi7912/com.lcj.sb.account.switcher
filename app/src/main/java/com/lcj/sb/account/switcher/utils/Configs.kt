@@ -34,7 +34,6 @@ class Configs {
         const val SCREEN_REMOTE_BACKUP = "SCREEN_REMOTE_BACKUP"
         const val SCREEN_PARTY = "SCREEN_PARTY"
 
-        const val REQUEST_CODE_GOOGLE_SIGN_IN: Int = 1001
         const val INTENT_KEY_ACCOUNT = "ACCOUNT"
         const val INTENT_KEY_LANGUAGE = "LANGUAGE"
         const val INTENT_KEY_MONSTER_MODEL = "MONSTER_MODEL"
