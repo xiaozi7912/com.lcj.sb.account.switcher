@@ -53,6 +53,10 @@ android {
     }
     signingConfigs {
         debug {
+            storeFile file('..\\documents\\larry-debug-key.keystore')
+            storePassword 'Kd4LqUk9Mfvv2bBh'
+            keyAlias 'sb_account_switcher'
+            keyPassword 'Kd4LqUk9Mfvv2bBh'
             v1SigningEnabled true
             v2SigningEnabled true
         }
