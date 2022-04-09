@@ -38,7 +38,6 @@ class ZipManager {
                             val entry = ZipEntry("${rootFolderName}/files/${replacedName.substring(replacedName.lastIndexOf("/") + 1)}")
 
                             outputStream.putNextEntry(entry)
-                            outputStream.putNextEntry(entry)
                             outputStream.write(inputStream.readBytes())
                         }
                     }
