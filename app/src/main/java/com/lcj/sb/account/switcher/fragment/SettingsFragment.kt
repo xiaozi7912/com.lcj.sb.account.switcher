@@ -36,7 +36,7 @@ class SettingsFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mBinding.signInButton.setOnClickListener {
-            startActivityForResult(mSignInClient.signInIntent, Configs.REQUEST_CODE_GOOGLE_SIGN_IN)
+            startActivityForResult(mSignInClient.signInIntent, REQUEST_CODE_GOOGLE_SIGN_IN)
         }
         mBinding.signOutButton.setOnClickListener {
             mSignInClient.signOut().addOnCompleteListener {
@@ -59,7 +59,7 @@ class SettingsFragment : BaseFragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
-            Configs.REQUEST_CODE_GOOGLE_SIGN_IN -> handleSignInResult(data)
+            REQUEST_CODE_GOOGLE_SIGN_IN -> handleSignInResult(data)
             else -> {
             }
         }
@@ -67,19 +67,19 @@ class SettingsFragment : BaseFragment() {
 
     private fun initSignInClient() {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestScopes(Scope(DriveScopes.DRIVE_FILE), Scope(DriveScopes.DRIVE_APPDATA))
-                .build().let { mSignInClient = GoogleSignIn.getClient(activity!!, it) }
+            .requestEmail()
+            .requestScopes(Scope(DriveScopes.DRIVE_FILE), Scope(DriveScopes.DRIVE_APPDATA))
+            .build().let { mSignInClient = GoogleSignIn.getClient(mActivity, it) }
     }
 
     private fun handleSignInResult(result: Intent?) {
         GoogleSignIn.getSignedInAccountFromIntent(result)
-                .addOnSuccessListener { account ->
-                    updateUI(account)
-                }
-                .addOnFailureListener { err ->
-                    err.printStackTrace()
-                }
+            .addOnSuccessListener { account ->
+                updateUI(account)
+            }
+            .addOnFailureListener { err ->
+                err.printStackTrace()
+            }
     }
 
     private fun updateUI(account: GoogleSignInAccount?) {

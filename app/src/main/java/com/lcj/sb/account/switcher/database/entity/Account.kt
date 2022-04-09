@@ -1,6 +1,5 @@
 package com.lcj.sb.account.switcher.database.entity
 
-import androidx.paging.Config
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index

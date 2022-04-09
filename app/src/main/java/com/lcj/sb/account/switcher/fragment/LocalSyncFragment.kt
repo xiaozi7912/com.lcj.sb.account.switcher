@@ -84,7 +84,7 @@ class LocalSyncFragment : BaseFragment() {
                     RemoteProgressDialog.getInstance(mActivity).show()
                     SyncRepository.getInstance(mActivity).upload(account, object : BaseRepository.UploadCallback {
                         override fun onInitial(fileName: String) {
-                            RemoteProgressDialog.getInstance(mActivity).setTitle("上傳中：$fileName")
+                            RemoteProgressDialog.getInstance(mActivity).setTitle("檔案上傳中\n$fileName")
                             RemoteProgressDialog.getInstance(mActivity).setFileCount(0, 0)
                             RemoteProgressDialog.getInstance(mActivity).setProgress(0)
                         }
@@ -127,16 +127,16 @@ class LocalSyncFragment : BaseFragment() {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN)
 
         val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ entity ->
-                    entity?.let {
-                        when (lang) {
-                            Account.Language.JP -> mBinding.settingsSbJSyncTimeTv.text = sdf.format(it.updateTime)
-                            Account.Language.TW -> mBinding.settingsSbTSyncTimeTv.text = sdf.format(it.updateTime)
-                        }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ entity ->
+                entity?.let {
+                    when (lang) {
+                        Account.Language.JP -> mBinding.settingsSbJSyncTimeTv.text = sdf.format(it.updateTime)
+                        Account.Language.TW -> mBinding.settingsSbTSyncTimeTv.text = sdf.format(it.updateTime)
                     }
-                }, { err -> err.printStackTrace() })
+                }
+            }, { err -> err.printStackTrace() })
     }
 
     private fun refresh() {
@@ -174,17 +174,17 @@ class LocalSyncFragment : BaseFragment() {
         defaultTypeSwitchButton()
         mBinding.typeSwitchJpButton.isActivated = true
         BaseDatabase.getInstance(mActivity).accountDAO()
-                .liveAccounts(Account.Language.JP.ordinal)
-                .toLiveData(pageSize = 20)
-                .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
+            .liveAccounts(Account.Language.JP.ordinal)
+            .toLiveData(pageSize = 20)
+            .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
     }
 
     private fun onTypeSwitchTWClick() {
         defaultTypeSwitchButton()
         mBinding.typeSwitchTwButton.isActivated = true
         BaseDatabase.getInstance(mActivity).accountDAO()
-                .liveAccounts(Account.Language.TW.ordinal)
-                .toLiveData(pageSize = 20)
-                .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
+            .liveAccounts(Account.Language.TW.ordinal)
+            .toLiveData(pageSize = 20)
+            .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
     }
 }

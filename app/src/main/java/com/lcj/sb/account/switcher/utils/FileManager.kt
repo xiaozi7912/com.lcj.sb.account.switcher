@@ -1,8 +1,10 @@
 package com.lcj.sb.account.switcher.utils
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.FolderSync
@@ -11,15 +13,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.internal.operators.completable.CompletableFromAction
 import io.reactivex.schedulers.Schedulers
 import java.io.*
-import java.lang.Exception
 import java.util.regex.Pattern
-
 
 class FileManager {
     interface BackupCallback {
         fun onProcess(current: Int, total: Int)
-        fun onCompleted()
-        fun onError()
+        fun onCompleted(folderPath: String)
+        fun onError(message: String)
     }
 
     interface LoadCallback {
@@ -29,7 +29,6 @@ class FileManager {
 
     companion object {
         private const val LOG_TAG = "FileManager"
-        private const val BUFFER_SIZE = 1024
 
         fun isPackageInstalled(packageName: String, context: Context): Boolean {
             return try {
@@ -42,10 +41,19 @@ class FileManager {
 
         fun isFolderExists(path: String): Boolean {
             val file = File(path)
-            if (file.isDirectory && file.exists()) {
-                return true
-            }
+            if (file.isDirectory && file.exists()) return true
             return false
+        }
+
+        fun isFolderExists(rootDirectory: DocumentFile, dirName: String): Boolean {
+            var exists = false
+            for (file in rootDirectory.listFiles()) {
+                if (file.name == dirName && file.isDirectory) {
+                    exists = true
+                    break
+                }
+            }
+            return exists
         }
 
         fun syncBackupFolder(context: Context, lang: Account.Language, callback: () -> Unit) {
@@ -67,11 +75,7 @@ class FileManager {
                     if (existsAccount == null) {
                         db.accountDAO().insert(
                             Account(
-                                alias = it.name,
-                                folder = it.absolutePath,
-                                lang = lang.ordinal,
-                                createTime = currentTime,
-                                updateTime = currentTime
+                                alias = it.name, folder = it.absolutePath, lang = lang.ordinal, createTime = currentTime, updateTime = currentTime
                             )
                         )
                     } else {
@@ -84,10 +88,10 @@ class FileManager {
                     val db = BaseDatabase.getInstance(context)
                     val currentTime = System.currentTimeMillis()
 
-                    db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
+                    val d = db.folderSyncDAO().folderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal)
                         .subscribe({ entity ->
                             entity!!.updateTime = currentTime
-                            db.folderSyncDAO().update(entity!!)
+                            db.folderSyncDAO().update(entity)
                         }, { err ->
                             err.printStackTrace()
                             db.folderSyncDAO().insert(FolderSync(FolderSync.Type.LOCAL.ordinal, lang.ordinal, currentTime))
@@ -103,27 +107,56 @@ class FileManager {
             val resDir = File(resPath)
             val destFilesDir = File(destPath, "files")
             val resFileList = resDir.listFiles()
-            Log.d(LOG_TAG, "resDir.canRead : ${resDir.canRead()}")
 
             if (!destFilesDir.exists()) destFilesDir.mkdirs()
             destFilesDir.setLastModified(System.currentTimeMillis())
 
-            if (resFileList != null) {
-                resFileList.filter { it.name == "files" }.forEach { file ->
-                    val fileList = file.listFiles(FileFilter { it.isFile })
+            resFileList?.filter { it.name == "files" }?.forEach { dir ->
+                val fileList = dir?.listFiles()?.filter { item -> item.isFile }
+                var current = 0
+                val totalSize = fileList?.size ?: 0
+
+                fileList?.forEach {
+                    copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
+                    current++
+                    callback.onProcess(current, totalSize)
+                }
+                callback.onCompleted(destPath)
+            } ?: run { callback.onError("沒有資料。") }
+        }
+
+        fun backupFolder(resolver: ContentResolver, rootDir: DocumentFile, resDirName: String, destDirName: String, callback: BackupCallback) {
+            val resDir = rootDir.findFile(resDirName)
+            val destDir = rootDir.findFile(destDirName) ?: rootDir.createDirectory(destDirName)
+            val destFilesDir = destDir?.findFile("files") ?: destDir?.createDirectory("files")
+
+            resDir?.let {
+                val resFileList = it.listFiles()
+
+                if (resFileList.isEmpty()) {
+                    callback.onError("遊戲資料夾內沒資料。")
+                    return
+                }
+
+                resFileList.filter { file -> file.name == "files" }.forEach { dir ->
+                    val fileList = dir.listFiles().filter { item -> item.isFile }
                     var current = 0
                     val totalSize = fileList.size
 
-                    fileList.forEach {
-                        copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
+                    fileList.forEach { file ->
+                        val destFile = destFilesDir?.findFile(file.name!!) ?: destFilesDir?.createFile(file.type ?: "", file.name ?: "")
+
+                        try {
+                            copyFile(resolver, file.uri, destFile?.uri!!)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                         current++
                         callback.onProcess(current, totalSize)
                     }
-                    callback.onCompleted()
+                    callback.onCompleted(destDir?.uri.toString())
                 }
-            } else {
-                callback.onError()
-            }
+            } ?: run { callback.onError("沒有資料。") }
         }
 
         fun loadFolder(resPath: String, destPath: String, callback: LoadCallback) {
@@ -152,50 +185,55 @@ class FileManager {
                 }
             }
                 .subscribeOn(Schedulers.io())
-                .subscribe { Log.i(LOG_TAG, "completed") }
+                .subscribe { }
         }
 
-        fun getFolderList(lang: Account.Language, callback: (dataList: ArrayList<File>) -> Unit) {
-            val result = arrayListOf<File>()
-            val d = Observable.just(File(Configs.PATH_APP_DATA))
-                .flatMap { Observable.fromArray(*it.listFiles()) }
-                .filter {
-                    Pattern.compile(
-                        when (lang) {
-                            Account.Language.JP -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_JP)
-                            Account.Language.TW -> String.format("%s\\.\\w+", Configs.PREFIX_NAME_SB_TW)
-                        }
-                    ).matcher(it.name).matches()
-                }.sorted()
-                .subscribeOn(Schedulers.io())
-                .subscribe({ file ->
-                    result.add(file)
-                }, { err -> err.printStackTrace() }, { callback(result) })
-        }
+        fun loadFolder(resolver: ContentResolver, rootDir: DocumentFile, srcDirName: String, destDirName: String, callback: LoadCallback) {
+            val d = CompletableFromAction.fromAction {
+                val srcDir = rootDir.findFile(srcDirName) ?: rootDir.createDirectory(srcDirName)
+                val srcFilesDir = srcDir?.findFile("files") ?: srcDir?.createDirectory("files")
+                val destDir = rootDir.findFile(destDirName) ?: rootDir.createDirectory(destDirName)
+                val destFilesDir = destDir?.findFile("files") ?: destDir?.createDirectory("files")
 
-        private fun copyFile(resFile: String, destFile: String) {
-            var bis: BufferedInputStream? = null
-            var bos: BufferedOutputStream? = null
-
-            try {
-                bis = BufferedInputStream(FileInputStream(File(resFile)))
-                bos = BufferedOutputStream(FileOutputStream(File(destFile), false))
-
-                val buff = ByteArray(BUFFER_SIZE)
-                var readSize: Int
-
-                do {
-                    readSize = bis.read(buff)
-                    if (readSize > 0) bos.write(buff, 0, readSize)
-                } while (readSize > 0)
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } finally {
                 try {
-                    bis!!.close()
-                    bos!!.close()
-                } catch (e: IOException) {
+                    destFilesDir?.listFiles()?.let { destFileList ->
+                        destFileList.filter { item -> item.isFile }.forEach { file -> file.delete() }
+                    }
+                    srcFilesDir?.listFiles()?.let { srcFileList ->
+                        srcFileList.forEach { srcFile ->
+                            val fileName = srcFile.name ?: ""
+                            val destFile = destFilesDir?.findFile(fileName) ?: destFilesDir?.createFile("", fileName)
+                            copyFile(resolver, srcFile.uri, destFile?.uri!!)
+                        }
+                        callback.onCompleted()
+                    } ?: run { callback.onError() }
+                } catch (e: Exception) {
                     e.printStackTrace()
+                    callback.onError()
+                }
+            }
+                .subscribeOn(Schedulers.io())
+                .subscribe { }
+        }
+
+        @Throws(Exception::class)
+        private fun copyFile(srcFilePath: String, destFilePath: String) {
+            FileInputStream(srcFilePath).use { inputStream ->
+                FileOutputStream(destFilePath).use { outputStream ->
+                    outputStream.write(inputStream.readBytes())
+                }
+            }
+        }
+
+        @Throws(Exception::class)
+        private fun copyFile(resolver: ContentResolver, srcUri: Uri, destUri: Uri) {
+            resolver.openFileDescriptor(srcUri, "r")?.use { srcFile ->
+                FileInputStream(srcFile.fileDescriptor).use { inputStream ->
+                    resolver.openFileDescriptor(destUri, "w")?.use { destFile ->
+                        FileOutputStream(destFile.fileDescriptor).use { outputStream ->
+                            outputStream.write(inputStream.readBytes())
+                        }
+                    }
                 }
             }
         }
