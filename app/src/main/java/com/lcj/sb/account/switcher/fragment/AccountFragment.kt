@@ -173,12 +173,15 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     override fun onSaveClick(account: Account) {
+        ProgressDialog.getInstance(mActivity).show()
         AccountRepository.getInstance(mActivity).onSaveClick(mDisplayLang, account, object : BaseRepository.SaveAccountCallback {
             override fun onSuccess() {
+                ProgressDialog.getInstance(mActivity).dismiss()
                 mHandler.post { Snackbar.make(mContentView, "備份成功", Snackbar.LENGTH_SHORT).show() }
             }
 
             override fun onError(message: String) {
+                ProgressDialog.getInstance(mActivity).dismiss()
                 mHandler.post { Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show() }
             }
         })

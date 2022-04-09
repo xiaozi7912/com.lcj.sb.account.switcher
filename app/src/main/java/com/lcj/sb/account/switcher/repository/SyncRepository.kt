@@ -100,26 +100,26 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                 val service = getDriveService(signedIn)
                 try {
                     val file = File("${activity.externalCacheDir?.absolutePath}/${entity.name}")
-                    val outputStream = FileOutputStream(file)
-                    service.files().get(entity.id).apply {
-                        mediaHttpDownloader.chunkSize = CHUNK_SIZE
-                        mediaHttpDownloader.setProgressListener {
-                            when (it.downloadState) {
-                                MediaHttpDownloader.DownloadState.NOT_STARTED -> {
-                                }
-                                MediaHttpDownloader.DownloadState.MEDIA_IN_PROGRESS -> {
-                                    val percent = it.progress * 100
-                                    callback.inProgress(percent.toInt())
-                                }
-                                MediaHttpDownloader.DownloadState.MEDIA_COMPLETE -> {
-                                    callback.onComplete(100)
-                                }
-                                else -> {
+                    FileOutputStream(file).use { inputStream ->
+                        service.files().get(entity.id).apply {
+                            mediaHttpDownloader.chunkSize = CHUNK_SIZE
+                            mediaHttpDownloader.setProgressListener {
+                                when (it.downloadState) {
+                                    MediaHttpDownloader.DownloadState.NOT_STARTED -> {
+                                    }
+                                    MediaHttpDownloader.DownloadState.MEDIA_IN_PROGRESS -> {
+                                        val percent = it.progress * 100
+                                        callback.inProgress(percent.toInt())
+                                    }
+                                    MediaHttpDownloader.DownloadState.MEDIA_COMPLETE -> {
+                                        callback.onComplete(100)
+                                    }
+                                    else -> {
+                                    }
                                 }
                             }
-                        }
-                    }.executeMediaAndDownloadTo(outputStream)
-                    outputStream.close()
+                        }.executeMediaAndDownloadTo(inputStream)
+                    }
                     mHandler.post { callback.onUnzip() }
 
                     val folderName = entity.name.substring(0, entity.name.lastIndexOf("."))

@@ -3,6 +3,7 @@ package com.lcj.sb.account.switcher.utils
 import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -13,7 +14,6 @@ import io.reactivex.internal.operators.completable.CompletableFromAction
 import io.reactivex.schedulers.Schedulers
 import java.io.*
 import java.util.regex.Pattern
-
 
 class FileManager {
     interface BackupCallback {
@@ -29,7 +29,6 @@ class FileManager {
 
     companion object {
         private const val LOG_TAG = "FileManager"
-        private const val BUFFER_SIZE = 1024 * 1024
 
         fun isPackageInstalled(packageName: String, context: Context): Boolean {
             return try {
@@ -128,8 +127,8 @@ class FileManager {
 
         fun backupFolder(resolver: ContentResolver, rootDir: DocumentFile, resDirName: String, destDirName: String, callback: BackupCallback) {
             val resDir = rootDir.findFile(resDirName)
-            val destDir = rootDir.findFile(destDirName) ?: run { rootDir.createDirectory(destDirName) }
-            val destFilesDir = destDir?.findFile("files") ?: run { destDir?.createDirectory("files") }
+            val destDir = rootDir.findFile(destDirName) ?: rootDir.createDirectory(destDirName)
+            val destFilesDir = destDir?.findFile("files") ?: destDir?.createDirectory("files")
 
             resDir?.let {
                 val resFileList = it.listFiles()
@@ -140,17 +139,15 @@ class FileManager {
                 }
 
                 resFileList.filter { file -> file.name == "files" }.forEach { dir ->
-                    val fileList = dir.listFiles().filter { item -> item.isFile && item.name?.endsWith(".txt")!! }
+                    val fileList = dir.listFiles().filter { item -> item.isFile }
                     var current = 0
                     val totalSize = fileList.size
 
                     fileList.forEach { file ->
-                        val destFile = destFilesDir?.findFile(file.name!!) ?: run { destFilesDir?.createFile(file.type ?: "", file.name ?: "") }
+                        val destFile = destFilesDir?.findFile(file.name!!) ?: destFilesDir?.createFile(file.type ?: "", file.name ?: "")
 
                         try {
-                            val inputStream = resolver.openInputStream(file.uri)!!
-                            val outputStream = resolver.openOutputStream(destFile?.uri!!)!!
-                            copyFile(inputStream, outputStream)
+                            copyFile(resolver, file.uri, destFile?.uri!!)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -205,10 +202,8 @@ class FileManager {
                     srcFilesDir?.listFiles()?.let { srcFileList ->
                         srcFileList.forEach { srcFile ->
                             val fileName = srcFile.name ?: ""
-                            val destFile = destFilesDir?.findFile(fileName) ?: destFilesDir?.createFile(srcFile.type ?: "", fileName)
-                            val inputStream = resolver.openInputStream(srcFile.uri)!!
-                            val outputStream = resolver.openOutputStream(destFile?.uri!!)!!
-                            copyFile(inputStream, outputStream)
+                            val destFile = destFilesDir?.findFile(fileName) ?: destFilesDir?.createFile("", fileName)
+                            copyFile(resolver, srcFile.uri, destFile?.uri!!)
                         }
                         callback.onCompleted()
                     } ?: run { callback.onError() }
@@ -221,60 +216,24 @@ class FileManager {
                 .subscribe { }
         }
 
-        private fun copyFile(resFile: String, destFile: String) {
-            var bis: BufferedInputStream? = null
-            var bos: BufferedOutputStream? = null
-
-            try {
-                bis = BufferedInputStream(FileInputStream(File(resFile)))
-                bos = BufferedOutputStream(FileOutputStream(File(destFile), false))
-
-                val buff = ByteArray(BUFFER_SIZE)
-                var readSize: Int
-
-                do {
-                    readSize = bis.read(buff)
-                    if (readSize > 0) bos.write(buff, 0, readSize)
-                } while (readSize > 0)
-                bos.flush()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } finally {
-                try {
-                    bis!!.close()
-                    bos!!.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
+        @Throws(Exception::class)
+        private fun copyFile(srcFilePath: String, destFilePath: String) {
+            FileInputStream(srcFilePath).use { inputStream ->
+                FileOutputStream(destFilePath).use { outputStream ->
+                    outputStream.write(inputStream.readBytes())
                 }
             }
         }
 
-        private fun copyFile(inputStream: InputStream, outputStream: OutputStream) {
-            var bis: BufferedInputStream? = null
-            var bos: BufferedOutputStream? = null
-
-            try {
-                bis = BufferedInputStream(inputStream)
-                bos = BufferedOutputStream(outputStream)
-
-                val buff = ByteArray(BUFFER_SIZE)
-                var readSize: Int
-
-                do {
-                    readSize = bis.read(buff)
-                    if (readSize > 0) bos.write(buff, 0, readSize)
-                } while (readSize > 0)
-                bos.flush()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } finally {
-                try {
-                    bis!!.close()
-                    bos!!.close()
-                    inputStream.close()
-                    outputStream.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
+        @Throws(Exception::class)
+        private fun copyFile(resolver: ContentResolver, srcUri: Uri, destUri: Uri) {
+            resolver.openFileDescriptor(srcUri, "r")?.use { srcFile ->
+                FileInputStream(srcFile.fileDescriptor).use { inputStream ->
+                    resolver.openFileDescriptor(destUri, "w")?.use { destFile ->
+                        FileOutputStream(destFile.fileDescriptor).use { outputStream ->
+                            outputStream.write(inputStream.readBytes())
+                        }
+                    }
                 }
             }
         }
