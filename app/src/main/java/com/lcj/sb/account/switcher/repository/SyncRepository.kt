@@ -128,6 +128,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                         DocumentFile.fromTreeUri(activity, Uri.parse(Configs.URI_ANDROID_DATA))?.let {
                             val destDir = it.findFile(folderName) ?: it.createDirectory(folderName)
+                            destDir?.findFile("files")?.let { filesDir -> for (filesFile in filesDir.listFiles()) filesFile.delete() }
                             folderPath = destDir?.uri.toString()
                             ZipManager.unZip(activity.contentResolver, it, file)
                         } ?: run {

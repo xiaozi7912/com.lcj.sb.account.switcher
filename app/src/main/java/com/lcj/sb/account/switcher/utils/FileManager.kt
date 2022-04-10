@@ -12,7 +12,9 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.internal.operators.completable.CompletableFromAction
 import io.reactivex.schedulers.Schedulers
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.util.regex.Pattern
 
 class FileManager {
@@ -125,20 +127,22 @@ class FileManager {
             } ?: run { callback.onError("沒有資料。") }
         }
 
-        fun backupFolder(resolver: ContentResolver, rootDir: DocumentFile, resDirName: String, destDirName: String, callback: BackupCallback) {
-            val resDir = rootDir.findFile(resDirName)
+        fun backupFolder(resolver: ContentResolver, rootDir: DocumentFile, srcDirName: String, destDirName: String, callback: BackupCallback) {
+            val srcDir = rootDir.findFile(srcDirName)
             val destDir = rootDir.findFile(destDirName) ?: rootDir.createDirectory(destDirName)
             val destFilesDir = destDir?.findFile("files") ?: destDir?.createDirectory("files")
 
-            resDir?.let {
-                val resFileList = it.listFiles()
+            destFilesDir?.let { dir -> for (file in dir.listFiles()) file.delete() }
 
-                if (resFileList.isEmpty()) {
+            srcDir?.let {
+                val srcFileList = it.listFiles()
+
+                if (srcFileList.isEmpty()) {
                     callback.onError("遊戲資料夾內沒資料。")
                     return
                 }
 
-                resFileList.filter { file -> file.name == "files" }.forEach { dir ->
+                srcFileList.filter { file -> file.name == "files" }.forEach { dir ->
                     val fileList = dir.listFiles().filter { item -> item.isFile }
                     var current = 0
                     val totalSize = fileList.size
