@@ -37,7 +37,6 @@ import com.lcj.sb.account.switcher.view.DrawerItemView
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 
-
 class MainActivity : BaseActivity() {
     private lateinit var mBinding: ActivityMainBinding
     private var mSelectedFunctionId = 0
@@ -55,17 +54,14 @@ class MainActivity : BaseActivity() {
         requestPermissions()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        if (!menu?.hasVisibleItems()!!) menuInflater.inflate(R.menu.toolbar_menu, menu)
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        if (!menu.hasVisibleItems()) menuInflater.inflate(R.menu.toolbar_menu, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         return when (mSelectedFunctionId) {
-            R.id.main_drawer_item_accounts -> {
-//                updateDownloadAPKButton(menu)
-                true
-            }
+            R.id.main_drawer_item_accounts -> true
             R.id.main_drawer_item_settings -> false
             else -> super.onPrepareOptionsMenu(menu)
         }
@@ -98,12 +94,14 @@ class MainActivity : BaseActivity() {
                         Account.Language.JP -> startWebSite(Configs.URL_WEB_SITE_JP)
                         Account.Language.TW -> startWebSite(Configs.URL_WEB_SITE_TW)
                     }
+
                     R.id.toolbar_menu_download -> when (lang) {
                         Account.Language.JP -> {
                             startActivity(Intent(Intent.ACTION_VIEW).apply {
                                 data = Uri.parse(Configs.URL_APK_JP)
                             })
                         }
+
                         Account.Language.TW -> {
                         }
                     }
@@ -257,6 +255,7 @@ class MainActivity : BaseActivity() {
                                     menu?.findItem(R.id.toolbar_menu_download)?.setVisible(false)
                                 }
                             }
+
                             Account.Language.TW -> {
                                 if (remoteConfig.versionCodeTW > currentTWCode) {
                                     menu?.findItem(R.id.toolbar_menu_download)?.setVisible(false)

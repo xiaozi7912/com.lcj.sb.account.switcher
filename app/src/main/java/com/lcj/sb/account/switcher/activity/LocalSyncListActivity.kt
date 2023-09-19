@@ -45,7 +45,7 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
-        mDetector.onTouchEvent(event)
+        event?.let { mDetector.onTouchEvent(it) }
         return super.onTouchEvent(event)
     }
 
@@ -87,9 +87,9 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
         mBinding.recyclerView.adapter = adapter
         mBinding.recyclerView.addOnItemTouchListener(this)
         BaseDatabase.getInstance(mActivity).accountDAO()
-                .liveAccounts(mCurrentLang.ordinal)
-                .toLiveData(pageSize = 20)
-                .observe(this, Observer { adapter.update(it) })
+            .liveAccounts(mCurrentLang.ordinal)
+            .toLiveData(pageSize = 20)
+            .observe(this, Observer { adapter.update(it) })
     }
 
     override fun initAdMob() {
@@ -99,16 +99,16 @@ class LocalSyncListActivity : BaseActivity(), RecyclerView.OnItemTouchListener {
 
     private fun initGestureDetector() {
         mDetector = GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-                e?.let { event ->
+            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                e.let { event ->
                     val childView = mBinding.recyclerView.findChildViewUnder(event.x, event.y)
                     val position = childView?.let { view -> mBinding.recyclerView.getChildAdapterPosition(view) }
                 }
                 return super.onSingleTapConfirmed(e)
             }
 
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-                val deltaX = (e2?.x!! - e1?.x!!) / mDisplayMetrics.density
+            override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                val deltaX = (e2.x - e1.x) / mDisplayMetrics.density
                 if (deltaX >= FLING_MIN_DELTA_VALUE) onBackPressed()
                 return super.onFling(e1, e2, velocityX, velocityY)
             }
