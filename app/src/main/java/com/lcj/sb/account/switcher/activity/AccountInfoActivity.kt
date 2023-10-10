@@ -16,7 +16,7 @@ class AccountInfoActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_account_info)
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_account_info)
 
         setSupportActionBar(mBinding.toolBar)
         initView()

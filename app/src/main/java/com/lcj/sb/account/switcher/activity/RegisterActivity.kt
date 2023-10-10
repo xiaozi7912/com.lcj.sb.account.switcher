@@ -30,17 +30,15 @@ class RegisterActivity : BaseActivity() {
 
             if (inputEmail.isNotEmpty() && inputPassword.isNotEmpty()) {
                 mAuth.createUserWithEmailAndPassword(inputEmail, inputPassword)
-                        .addOnCompleteListener(mActivity) { task ->
-                            if (task.isSuccessful) {
-                                Log.d(LOG_TAG, "createUserWithEmail:success")
-                                val user = mAuth.currentUser
-                                user?.sendEmailVerification()
-                            } else {
-                                Log.w(LOG_TAG, "createUserWithEmail:failure", task.exception)
-                            }
+                    .addOnCompleteListener(this) { task ->
+                        if (task.isSuccessful) {
+                            Log.d(LOG_TAG, "createUserWithEmail:success")
+                            val user = mAuth.currentUser
+                            user?.sendEmailVerification()
+                        } else {
+                            Log.w(LOG_TAG, "createUserWithEmail:failure", task.exception)
                         }
-            } else {
-
+                    }
             }
         }
     }

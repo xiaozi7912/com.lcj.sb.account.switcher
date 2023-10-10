@@ -1,16 +1,17 @@
 package com.lcj.sb.account.switcher.repository
 
 import android.app.Activity
-import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.media.MediaHttpDownloader
 import com.google.api.client.googleapis.media.MediaHttpUploader
 import com.google.api.client.http.FileContent
+import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
@@ -27,7 +28,7 @@ import io.reactivex.schedulers.Schedulers
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.util.*
+import java.util.Collections
 
 class SyncRepository(activity: Activity) : BaseRepository(activity) {
     companion object {
@@ -39,15 +40,15 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
 
     fun upload(account: Account, callback: UploadCallback) {
         checkSignedInAccount({ signedIn ->
-            val d = CompletableFromAction.fromAction {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            CompletableFromAction.fromAction {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     startZipFiles(signedIn, account, callback)
                 } else {
                     startLegacyZipFiles(signedIn, account, callback)
                 }
             }
                 .subscribeOn(Schedulers.io())
-                .subscribe { }
+                .subscribe { }.let { }
         }, { callback.onError(it) })
     }
 
@@ -99,21 +100,23 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
             val d = CompletableFromAction.fromAction {
                 val service = getDriveService(signedIn)
                 try {
-                    val file = File("${activity.externalCacheDir?.absolutePath}/${entity.name}")
-                    FileOutputStream(file).use { inputStream ->
+                    val zipFile = File("${activity.externalCacheDir?.absolutePath}/${entity.name}")
+                    FileOutputStream(zipFile).use { inputStream ->
                         service.files().get(entity.id).apply {
-                            mediaHttpDownloader.chunkSize = CHUNK_SIZE
                             mediaHttpDownloader.setProgressListener {
                                 when (it.downloadState) {
                                     MediaHttpDownloader.DownloadState.NOT_STARTED -> {
                                     }
+
                                     MediaHttpDownloader.DownloadState.MEDIA_IN_PROGRESS -> {
                                         val percent = it.progress * 100
                                         callback.inProgress(percent.toInt())
                                     }
+
                                     MediaHttpDownloader.DownloadState.MEDIA_COMPLETE -> {
                                         callback.onComplete(100)
                                     }
+
                                     else -> {
                                     }
                                 }
@@ -123,26 +126,30 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     mHandler.post { callback.onUnzip() }
 
                     val folderName = entity.name.substring(0, entity.name.lastIndexOf("."))
-                    var folderPath = "${Configs.PATH_APP_DATA}/$folderName"
+                    val docDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                    val appDir = File(docDir, BuildConfig.APPLICATION_ID)
+                    val accountDir = File(appDir, folderName)
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        DocumentFile.fromTreeUri(activity, Uri.parse(Configs.URI_ANDROID_DATA))?.let {
-                            val destDir = it.findFile(folderName) ?: it.createDirectory(folderName)
-                            destDir?.findFile("files")?.let { filesDir -> for (filesFile in filesDir.listFiles()) filesFile.delete() }
-                            folderPath = destDir?.uri.toString()
-                            ZipManager.unZip(activity.contentResolver, it, file)
-                        } ?: run {
-                            throw Exception("沒有資料夾存取權限。")
+                    if (!accountDir.mkdirs()) Log.e(LOG_TAG, "create dir error.")
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        try {
+                            accountDir.listFiles()?.let { list ->
+                                list.map { file -> file.delete() }
+                            }
+                            ZipManager.unZip(zipFile.absolutePath, appDir.absolutePath)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
                     } else {
-                        ZipManager.unZip(file.absolutePath, Configs.PATH_APP_DATA)
+                        ZipManager.unZip(zipFile.absolutePath, appDir.absolutePath)
                     }
 
                     val currentTime = System.currentTimeMillis()
                     BaseDatabase.getInstance(activity).accountDAO()
                         .insert(
                             Account(
-                                alias = folderName, folder = folderPath, lang = entity.lang.ordinal,
+                                alias = folderName, folder = accountDir.absolutePath, lang = entity.lang.ordinal,
                                 createTime = currentTime, updateTime = currentTime
                             )
                         )
@@ -154,7 +161,8 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
             }
                 .subscribeOn(Schedulers.io())
                 .subscribe { }
-        }, { callback.onError(it) })
+        },
+            { callback.onError(it) })
     }
 
     fun delete(entity: GoogleDriveItem, callback: DeleteCallback) {
@@ -185,44 +193,33 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
         val credential = GoogleAccountCredential.usingOAuth2(activity, setOf(DriveScopes.DRIVE_FILE)).apply {
             selectedAccount = signedIn.account
         }
-        return Drive.Builder(
-            AndroidHttp.newCompatibleTransport(),
-            GsonFactory(), credential
-        ).build()
+        return Drive.Builder(NetHttpTransport(), GsonFactory(), credential).build()
     }
 
     private fun startZipFiles(signedIn: GoogleSignInAccount, account: Account, callback: UploadCallback) {
-        DocumentFile.fromTreeUri(activity, Uri.parse(Configs.URI_ANDROID_DATA))?.let { rootDir ->
-            val replacedName = account.folder.replace("%2F", "/", true)
-            val folderName = replacedName.substring(replacedName.lastIndexOf("/") + 1)
-            rootDir.findFile(folderName)?.let { backupDir ->
-                val filesDir = backupDir.findFile("files")
-                val hashZipFile = hashMapOf(
-                    "name" to "${folderName}.zip",
-                    "path" to "${activity.externalCacheDir?.absolutePath}/${folderName}.zip"
-                )
-                val fileList = ArrayList<String>()
+        val gameFolderName = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
+        activity.contentResolver.persistedUriPermissions.find { it.uri.toString().contains(gameFolderName) }?.let { uriPermission ->
+            DocumentFile.fromTreeUri(activity, uriPermission.uri)?.let { gameDir ->
+                val replacedName = account.folder.replace("%2F", "/", true)
+                val folderName = replacedName.substring(replacedName.lastIndexOf("/") + 1)
+                gameDir.findFile("files")?.listFiles()?.filter { it.isFile }?.let { list ->
+                    val hashZipFile = hashMapOf(
+                        "name" to "${folderName}.zip",
+                        "path" to "${activity.externalCacheDir}/${folderName}.zip"
+                    )
+                    val fileList = list.map { it.uri.toString() }
 
-                filesDir?.let {
                     mHandler.post { callback.onInitial(hashZipFile["name"]!!) }
-
-                    filesDir.listFiles().filter { item -> item.isFile }.forEach { file -> fileList.add(file.uri.toString()) }
-                    if (fileList.isNotEmpty()) {
-                        try {
-                            ZipManager.zip(activity.contentResolver, fileList, hashZipFile["path"]!!)
-                            startUploadFile(signedIn, hashZipFile, callback)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                    try {
+                        ZipManager.zip(activity.contentResolver, fileList, hashZipFile["path"]!!)
+                        startUploadFile(signedIn, hashZipFile, callback)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                } ?: run {
-                    callback.onError("找不到 files 資料夾。")
-                }
+                } ?: run { callback.onError("找不到 files 資料夾。") }
             } ?: run {
-                callback.onError("找不到備份資料夾。")
+                callback.onError("沒有資料夾存取權限。")
             }
-        } ?: run {
-            callback.onError("沒有資料夾存取權限。")
         }
     }
 
@@ -275,15 +272,19 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                         MediaHttpUploader.UploadState.INITIATION_STARTED -> {
                             callback.onUploadStarted(0)
                         }
+
                         MediaHttpUploader.UploadState.INITIATION_COMPLETE -> {
                         }
+
                         MediaHttpUploader.UploadState.MEDIA_IN_PROGRESS -> {
                             val percent = it.progress * 100
                             callback.inProgress(percent.toInt())
                         }
+
                         MediaHttpUploader.UploadState.MEDIA_COMPLETE -> {
                             callback.onComplete(100)
                         }
+
                         else -> {
                         }
                     }

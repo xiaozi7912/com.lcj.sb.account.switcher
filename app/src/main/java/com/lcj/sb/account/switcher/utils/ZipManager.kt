@@ -28,7 +28,7 @@ class ZipManager {
         }
 
         @Throws(Exception::class)
-        fun zip(resolver: ContentResolver, files: ArrayList<String>, zipFile: String) {
+        fun zip(resolver: ContentResolver, files: List<String>, zipFile: String) {
             ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { outputStream ->
                 for (file in files) {
                     resolver.openFileDescriptor(Uri.parse(file), "r").use { srcFile ->

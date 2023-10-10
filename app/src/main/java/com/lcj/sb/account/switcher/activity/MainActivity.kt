@@ -1,13 +1,17 @@
 package com.lcj.sb.account.switcher.activity
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.preference.PreferenceManager
+import android.os.Environment
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.GravityCompat
@@ -18,7 +22,6 @@ import com.google.android.gms.tasks.RuntimeExecutionException
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
-import com.google.gson.Gson
 import com.lcj.sb.account.switcher.BaseActivity
 import com.lcj.sb.account.switcher.BuildConfig
 import com.lcj.sb.account.switcher.R
@@ -29,29 +32,46 @@ import com.lcj.sb.account.switcher.fragment.AccountsFragment
 import com.lcj.sb.account.switcher.fragment.SettingsFragment
 import com.lcj.sb.account.switcher.fragment.SyncManagementFragment
 import com.lcj.sb.account.switcher.fragment.monster.MonsterFragment
-import com.lcj.sb.account.switcher.model.RemoteConfigModel
 import com.lcj.sb.account.switcher.utils.Configs
-import com.lcj.sb.account.switcher.utils.PackageUtils
 import com.lcj.sb.account.switcher.view.BottomMenuItemView
 import com.lcj.sb.account.switcher.view.DrawerItemView
-import pub.devrel.easypermissions.AfterPermissionGranted
-import pub.devrel.easypermissions.EasyPermissions
 
 class MainActivity : BaseActivity() {
     private lateinit var mBinding: ActivityMainBinding
-    private var mSelectedFunctionId = 0
 
-    companion object {
-        const val REQUEST_CODE_WRITE_PERMISSION = 1001
+    private val mRequestManageExternalStorageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()) {
+                getFCMInstanceId()
+                initView()
+                checkNewFeature()
+            }
+        }
     }
+
+    private val mRequestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+        val totalCount = permissions.size
+        var grantedCount = 0
+
+        for (entry in permissions.entries) {
+            if (entry.value) grantedCount++
+        }
+        if (totalCount == grantedCount) {
+            getFCMInstanceId()
+            initView()
+            checkNewFeature()
+        }
+    }
+
+    private var mSelectedFunctionId = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_main)
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         setSupportActionBar(mBinding.mainToolBar)
         initRemoteConfig()
-        requestPermissions()
+        checkPermissions()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -67,13 +87,8 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
-    }
-
     override fun initView() {
-        ActionBarDrawerToggle(mActivity, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name).let {
+        ActionBarDrawerToggle(this, mBinding.mainDrawerLayout, mBinding.mainToolBar, R.string.app_name, R.string.app_name).let {
             mBinding.mainDrawerLayout.addDrawerListener(it)
             it.syncState()
         }
@@ -86,7 +101,7 @@ class MainActivity : BaseActivity() {
         mBinding.menuItemMonster.visibility = View.GONE
 
         mBinding.mainToolBar.setOnMenuItemClickListener { view ->
-            PreferenceManager.getDefaultSharedPreferences(mActivity).let {
+            getPreferences(Context.MODE_PRIVATE).let {
                 val lang = Account.Language.valueOf(it.getString(Configs.PREF_KEY_LANGUAGE, "JP")!!)
 
                 when (view.itemId) {
@@ -109,11 +124,11 @@ class MainActivity : BaseActivity() {
             }
             false
         }
-        mBinding.mainDrawerItemSbJ.setDownloadAPKButtonClickListener(View.OnClickListener {
+        mBinding.mainDrawerItemSbJ.setDownloadAPKButtonClickListener {
             startActivity(Intent(Intent.ACTION_VIEW).apply {
                 data = Uri.parse(Configs.URL_APK_JP)
             })
-        })
+        }
 
         mBinding.mainDrawerItemSbJ.setOnClickListener {
             (it as DrawerItemView)
@@ -210,19 +225,6 @@ class MainActivity : BaseActivity() {
         mBinding.adView.loadAd(adRequest)
     }
 
-    @AfterPermissionGranted(REQUEST_CODE_WRITE_PERMISSION)
-    fun requestPermissions() {
-        val perms = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-
-        if (EasyPermissions.hasPermissions(mActivity, *perms)) {
-            getFCMInstanceId()
-            initView()
-            checkNewFeature()
-        } else {
-            EasyPermissions.requestPermissions(mActivity, "Request Permission", REQUEST_CODE_WRITE_PERMISSION, *perms)
-        }
-    }
-
     private fun initRemoteConfig() {
         val configSetting = FirebaseRemoteConfigSettings.Builder()
             .setMinimumFetchIntervalInSeconds(1800)
@@ -230,45 +232,13 @@ class MainActivity : BaseActivity() {
         mRemoteConfig.setConfigSettingsAsync(configSetting)
     }
 
-    private fun updateDownloadAPKButton(menu: Menu?) {
-        mRemoteConfig.fetchAndActivate().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val strConfigs = mRemoteConfig.getString("sb_configs")
-                val remoteConfig = Gson().fromJson(strConfigs, RemoteConfigModel::class.java)
-                var currentJPCode = PackageUtils.getInstance(mActivity).getVersionCode(Configs.PREFIX_NAME_SB_JP)
-                var currentTWCode = PackageUtils.getInstance(mActivity).getVersionCode(Configs.PREFIX_NAME_SB_TW)
-
-                if (BuildConfig.DEBUG) {
-                    currentJPCode--
-                    currentTWCode--
-                }
-
-                if (remoteConfig != null) {
-                    PreferenceManager.getDefaultSharedPreferences(mActivity).let {
-                        val lang = Account.Language.valueOf(it.getString(Configs.PREF_KEY_LANGUAGE, "JP")!!)
-
-                        when (lang) {
-                            Account.Language.JP -> {
-                                if (remoteConfig.versionCodeJP > currentJPCode) {
-                                    menu?.findItem(R.id.toolbar_menu_download)?.setVisible(true)
-                                } else {
-                                    menu?.findItem(R.id.toolbar_menu_download)?.setVisible(false)
-                                }
-                            }
-
-                            Account.Language.TW -> {
-                                if (remoteConfig.versionCodeTW > currentTWCode) {
-                                    menu?.findItem(R.id.toolbar_menu_download)?.setVisible(false)
-                                } else {
-                                    menu?.findItem(R.id.toolbar_menu_download)?.setVisible(false)
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                task.exception?.printStackTrace()
-            }
+    private fun checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getFCMInstanceId()
+            initView()
+            checkNewFeature()
+        } else {
+            mRequestPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
         }
     }
 
@@ -304,7 +274,7 @@ class MainActivity : BaseActivity() {
     }
 
     private fun checkNewFeature() {
-        PreferenceManager.getDefaultSharedPreferences(mActivity).apply {
+        getPreferences(Context.MODE_PRIVATE).apply {
             val featureVersion = getInt(Configs.PREF_KEY_NEW_FEATURE, 0)
             if (featureVersion < Configs.VERSION_NEW_FEATURE) {
                 showNewFeatureDialog()
@@ -313,16 +283,16 @@ class MainActivity : BaseActivity() {
     }
 
     private fun showNewFeatureDialog() {
-        AlertDialog.Builder(mActivity).apply {
+        AlertDialog.Builder(this).apply {
             setTitle("有新功能！")
             setMessage("新功能在「本機同步」中\n可刪除本機已同步的備份檔案\n是否要看操作教學影片")
-            setPositiveButton("觀看影片") { dialog, which ->
+            setPositiveButton("觀看影片") { _, _ ->
                 startActivity(Intent(Intent.ACTION_VIEW).apply {
                     data = Uri.parse("https://youtu.be/HybpZKYeKwE")
                 })
             }
-            setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, which -> dialog.dismiss() }
-            PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+            setNegativeButton(getString(R.string.dialog_button_cancel)) { dialog, _ -> dialog.dismiss() }
+            getPreferences(Context.MODE_PRIVATE).edit().apply {
                 putInt(Configs.PREF_KEY_NEW_FEATURE, Configs.VERSION_NEW_FEATURE)
                 apply()
             }
@@ -337,7 +307,7 @@ class MainActivity : BaseActivity() {
         ft.commit()
 
         mBinding.mainDrawerLayout.closeDrawer(GravityCompat.START)
-        PreferenceManager.getDefaultSharedPreferences(mActivity).edit().apply {
+        getPreferences(Context.MODE_PRIVATE).edit().apply {
             putBoolean(Configs.PREF_KEY_FIRST_RUN, false)
             putString(Configs.PREF_KEY_LANGUAGE, lang.name)
             apply()

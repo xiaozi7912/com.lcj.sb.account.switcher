@@ -38,16 +38,12 @@ open class BaseRepository(val activity: Activity) {
         fun onSuccess()
     }
 
-    interface CreateAccountCallback : BaseCallback {
+    interface BackupAccountCallback : BaseCallback {
         fun onSuccess()
         fun onNotExists()
     }
 
     interface LoadAccountCallback : BaseCallback {
-        fun onSuccess()
-    }
-
-    interface SaveAccountCallback : BaseCallback {
         fun onSuccess()
     }
 

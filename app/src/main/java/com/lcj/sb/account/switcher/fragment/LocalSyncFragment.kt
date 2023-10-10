@@ -1,6 +1,8 @@
 package com.lcj.sb.account.switcher.fragment
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -90,26 +92,26 @@ class LocalSyncFragment : BaseFragment() {
                         }
 
                         override fun onUploadStarted(progress: Int) {
-                            mHandler.post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
+                            Handler(Looper.getMainLooper()).post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
                         }
 
                         override fun inProgress(progress: Int) {
-                            mHandler.post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
+                            Handler(Looper.getMainLooper()).post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
                         }
 
                         override fun onComplete(progress: Int) {
-                            mHandler.post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
+                            Handler(Looper.getMainLooper()).post { RemoteProgressDialog.getInstance(mActivity).setProgress(progress) }
                         }
 
                         override fun onSuccess() {
-                            mHandler.post {
+                            Handler(Looper.getMainLooper()).post {
                                 RemoteProgressDialog.getInstance(mActivity).dismiss()
                                 Snackbar.make(mContentView, getString(R.string.file_upload_completed), Snackbar.LENGTH_SHORT).show()
                             }
                         }
 
                         override fun onError(message: String) {
-                            mHandler.post {
+                            Handler(Looper.getMainLooper()).post {
                                 RemoteProgressDialog.getInstance(mActivity).dismiss()
                                 Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show()
                             }
@@ -176,7 +178,7 @@ class LocalSyncFragment : BaseFragment() {
         BaseDatabase.getInstance(mActivity).accountDAO()
             .liveAccounts(Account.Language.JP.ordinal)
             .toLiveData(pageSize = 20)
-            .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
+            .observe(this) { mAdapter.update(it) }
     }
 
     private fun onTypeSwitchTWClick() {
@@ -185,6 +187,6 @@ class LocalSyncFragment : BaseFragment() {
         BaseDatabase.getInstance(mActivity).accountDAO()
             .liveAccounts(Account.Language.TW.ordinal)
             .toLiveData(pageSize = 20)
-            .observe(this, androidx.lifecycle.Observer { mAdapter.update(it) })
+            .observe(this) { mAdapter.update(it) }
     }
 }

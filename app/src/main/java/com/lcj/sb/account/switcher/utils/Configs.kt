@@ -11,7 +11,7 @@ import com.lcj.sb.account.switcher.model.DungeonLevelModel
 class Configs {
     companion object {
         val PATH_APP_DATA: String = String.format("%s/%s", Environment.getExternalStorageDirectory().absolutePath, "Android/data")
-        const val URI_ANDROID_DATA = "content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata"
+        const val URI_ANDROID_DATA = "content://com.android.externalstorage.documents/tree/primary:Android/data"
 
         const val PREFIX_NAME_SB_JP: String = "jp.gungho.bm"
         const val PREFIX_NAME_SB_TW: String = "com.ghg.sb"

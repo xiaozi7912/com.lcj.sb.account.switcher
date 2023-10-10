@@ -33,24 +33,22 @@ class LoginActivity : BaseActivity() {
 
             if (inputEmail.isNotEmpty() && inputPassword.isNotEmpty()) {
                 mAuth.signInWithEmailAndPassword(inputEmail, inputPassword)
-                        .addOnCompleteListener(mActivity) { task ->
-                            if (task.isSuccessful) {
-                                val user = mAuth.currentUser
-                                Log.d(LOG_TAG, "createUserWithEmail:success")
-                                Log.d(LOG_TAG, "isEmailVerified : ${user?.isEmailVerified}")
-                                val intent = Intent(mActivity, MainActivity::class.java)
-                                startActivity(intent)
-                            } else {
-                                Log.w(LOG_TAG, "createUserWithEmail:failure", task.exception)
-                            }
+                    .addOnCompleteListener(this) { task ->
+                        if (task.isSuccessful) {
+                            val user = mAuth.currentUser
+                            Log.d(LOG_TAG, "createUserWithEmail:success")
+                            Log.d(LOG_TAG, "isEmailVerified : ${user?.isEmailVerified}")
+                            val intent = Intent(this, MainActivity::class.java)
+                            startActivity(intent)
+                        } else {
+                            Log.w(LOG_TAG, "createUserWithEmail:failure", task.exception)
                         }
-            } else {
-
+                    }
             }
         }
 
         mRegisterButton.setOnClickListener {
-            val intent = Intent(mActivity, RegisterActivity::class.java)
+            val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
         }
     }

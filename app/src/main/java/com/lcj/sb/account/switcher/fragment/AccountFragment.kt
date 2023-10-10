@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.view.LayoutInflater
@@ -16,7 +18,12 @@ import android.widget.Toast
 import androidx.paging.toLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import com.lcj.sb.account.switcher.*
+import com.lcj.sb.account.switcher.BaseAdapter
+import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BaseFragment
+import com.lcj.sb.account.switcher.BaseRepository
+import com.lcj.sb.account.switcher.BuildConfig
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.AccountAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -28,7 +35,9 @@ import com.lcj.sb.account.switcher.view.ProgressDialog
 
 class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.AccountListListener {
     private lateinit var mBinding: FragmentAccountBinding
+
     private lateinit var mDisplayLang: Account.Language
+    private lateinit var mSelectedAccount: Account
 
     companion object {
         fun newInstance(): AccountFragment {
@@ -89,15 +98,19 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
                 if (resultCode == Activity.RESULT_OK) {
                     val contentResolver = mActivity.contentResolver
                     val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
                     contentResolver.takePersistableUriPermission(data?.data!!, takeFlags)
                     createAccountFolder()
                 }
             }
+
             REQUEST_CODE_FOLDER_PERMISSION_FOR_LOAD_GAME -> {
                 if (resultCode == Activity.RESULT_OK) {
                     val contentResolver = mActivity.contentResolver
                     val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
                     contentResolver.takePersistableUriPermission(data?.data!!, takeFlags)
+                    mActivity.grantUriPermission(BuildConfig.APPLICATION_ID, data?.data, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                     Toast.makeText(mActivity, "請重新點擊還原備份。", Toast.LENGTH_LONG).show()
                 }
             }
@@ -107,20 +120,18 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.create_button,
-            R.id.add_fab -> mDisplayLang.packageName.let {
-                if (FileManager.isPackageInstalled(it, mActivity)) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        if (!hasFolderPermission()) {
+            R.id.add_fab -> mDisplayLang.packageName.let { packageName ->
+                if (FileManager.isPackageInstalled(packageName, mActivity)) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        if (!hasFolderPermission(packageName)) {
                             val sm = mActivity.getSystemService(Context.STORAGE_SERVICE) as StorageManager
                             val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
-                            var uri = intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI)
-                            var scheme = uri.toString().replace("/root/", "/document/")
-
-                            scheme += "%3A" + "Android%2Fdata"
-                            uri = Uri.parse(scheme)
-                            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri)
-                            startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION)
-                            Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+                            intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI).let { uri ->
+                                val scheme = String.format("%s%%3AAndroid%%2Fdata%%2F%s", uri.toString().replace("/root/", "/document/"), packageName)
+                                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(scheme))
+                                startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION)
+                                Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+                            }
                         } else {
                             createAccountFolder()
                         }
@@ -128,9 +139,10 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
                         createAccountFolder()
                     }
                 } else {
-                    showErrorNoInstalled(it)
+                    showErrorNoInstalled(packageName)
                 }
             }
+
             R.id.game_start_button,
             R.id.game_fab -> mDisplayLang.packageName.let {
                 if (FileManager.isPackageInstalled(it, mActivity)) {
@@ -149,7 +161,7 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     override fun onDeleteClick(account: Account) {
         AccountRepository.getInstance(mActivity).onDeleteClick(account, object : BaseRepository.DeleteAccountCallback {
             override fun onSuccess() {
-                mHandler.post {
+                Handler(Looper.getMainLooper()).post {
                     mBinding.addFab.animate().translationY(0f).setInterpolator(LinearInterpolator()).start()
                     mBinding.gameFab.animate().translationY(0f).setInterpolator(LinearInterpolator()).start()
                     Snackbar.make(mContentView, getString(R.string.dialog_message_delete_success), Snackbar.LENGTH_SHORT).show()
@@ -157,11 +169,11 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
             }
 
             override fun onError(message: String) {
-                mHandler.post { Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show() }
+                Handler(Looper.getMainLooper()).post { Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show() }
             }
 
             override fun onNotExists() {
-                mHandler.post {
+                Handler(Looper.getMainLooper()).post {
                     Snackbar.make(mContentView, getString(R.string.dialog_message_delete_folder_not_exists), Snackbar.LENGTH_SHORT).show()
                 }
             }
@@ -173,33 +185,34 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     override fun onSaveClick(account: Account) {
-        ProgressDialog.getInstance(mActivity).show()
-        AccountRepository.getInstance(mActivity).onSaveClick(mDisplayLang, account, object : BaseRepository.SaveAccountCallback {
+        AccountRepository.getInstance(mActivity).onSaveClick(mDisplayLang, account, object : BaseRepository.BackupAccountCallback {
             override fun onSuccess() {
                 ProgressDialog.getInstance(mActivity).dismiss()
-                mHandler.post { Snackbar.make(mContentView, "備份成功", Snackbar.LENGTH_SHORT).show() }
+                Handler(Looper.getMainLooper()).post { Snackbar.make(mContentView, "備份成功", Snackbar.LENGTH_SHORT).show() }
             }
 
             override fun onError(message: String) {
                 ProgressDialog.getInstance(mActivity).dismiss()
-                mHandler.post { Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show() }
+                Handler(Looper.getMainLooper()).post { Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show() }
+            }
+
+            override fun onNotExists() {
             }
         })
     }
 
     override fun onLoadGameClick(account: Account) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!hasFolderPermission()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val packageName = Account.Language.values()[account.lang].packageName
+            if (!hasFolderPermission(packageName)) {
                 val sm = mActivity.getSystemService(Context.STORAGE_SERVICE) as StorageManager
                 val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
-                var uri = intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI)
-                var scheme = uri.toString().replace("/root/", "/document/")
-
-                scheme += "%3A" + "Android%2Fdata"
-                uri = Uri.parse(scheme)
-                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri)
-                startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION_FOR_LOAD_GAME)
-                Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+                intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI).let { uri ->
+                    val scheme = String.format("%s%%3AAndroid%%2Fdata%%2F%s", uri.toString().replace("/root/", "/document/"), packageName)
+                    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(scheme))
+                    startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION_FOR_LOAD_GAME)
+                    Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+                }
             } else {
                 loadGameData(account)
             }
@@ -217,17 +230,17 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     private fun createAccountFolder() {
-        AccountRepository.getInstance(mActivity).showCreateAccountDialog(mDisplayLang, object : BaseRepository.CreateAccountCallback {
+        AccountRepository.getInstance(mActivity).showCreateAccountDialog(mDisplayLang, object : BaseRepository.BackupAccountCallback {
             override fun onSuccess() {
-                mHandler.post { Toast.makeText(mActivity, "Success", Toast.LENGTH_SHORT).show() }
+                Handler(Looper.getMainLooper()).post { Toast.makeText(mActivity, "Success", Toast.LENGTH_SHORT).show() }
             }
 
             override fun onError(message: String) {
-                mHandler.post { Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show() }
+                Handler(Looper.getMainLooper()).post { Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show() }
             }
 
             override fun onNotExists() {
-                mHandler.post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
+                Handler(Looper.getMainLooper()).post { Snackbar.make(mContentView, getString(R.string.game_folder_not_exists), Snackbar.LENGTH_SHORT).show() }
             }
         })
     }
@@ -236,13 +249,17 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
         ProgressDialog.getInstance(mActivity).show()
         AccountRepository.getInstance(mActivity).onLoadGameClick(account, object : BaseRepository.LoadAccountCallback {
             override fun onSuccess() {
-                ProgressDialog.getInstance(mActivity).dismiss()
-                mHandler.post { mBinding.gameFab.performClick() }
+                Handler(Looper.getMainLooper()).post {
+                    ProgressDialog.getInstance(mActivity).dismiss()
+                    mBinding.gameFab.performClick()
+                }
             }
 
             override fun onError(message: String) {
-                ProgressDialog.getInstance(mActivity).dismiss()
-                mHandler.post { Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show() }
+                Handler(Looper.getMainLooper()).post {
+                    ProgressDialog.getInstance(mActivity).dismiss()
+                    Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show()
+                }
             }
         })
     }

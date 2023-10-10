@@ -18,7 +18,7 @@ class MonsterDetailActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = DataBindingUtil.setContentView(mActivity, R.layout.activity_monster_detail)
+        mBinding = DataBindingUtil.setContentView(this, R.layout.activity_monster_detail)
         val strMonsterJson = intent.getStringExtra(Configs.INTENT_KEY_MONSTER_MODEL)
         mMonsterItem = Gson().fromJson(strMonsterJson, MonsterModel::class.java)
 

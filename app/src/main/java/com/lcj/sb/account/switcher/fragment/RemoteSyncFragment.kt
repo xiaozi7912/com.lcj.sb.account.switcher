@@ -22,7 +22,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.services.drive.DriveScopes
-import com.lcj.sb.account.switcher.*
+import com.lcj.sb.account.switcher.BaseAdapter
+import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BaseFragment
+import com.lcj.sb.account.switcher.BaseRepository
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.GoogleDriveAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -36,7 +40,7 @@ import com.lcj.sb.account.switcher.view.RemoteProgressDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 
 class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener {
     private lateinit var mBinding: FragmentRemoteBackupBinding
@@ -99,6 +103,7 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
                     Toast.makeText(mActivity, "請重新點擊下載。", Toast.LENGTH_LONG).show()
                 }
             }
+
             else -> {
             }
         }
@@ -162,18 +167,17 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
                 }
 
                 override fun onDownloadClick(entity: GoogleDriveItem) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        if (!hasFolderPermission()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val packageName = entity.lang.packageName
+                        if (!hasFolderPermission(packageName)) {
                             val sm = mActivity.getSystemService(Context.STORAGE_SERVICE) as StorageManager
                             val intent = sm.primaryStorageVolume.createOpenDocumentTreeIntent()
-                            var uri = intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI)
-                            var scheme = uri.toString().replace("/root/", "/document/")
-
-                            scheme += "%3A" + "Android%2Fdata"
-                            uri = Uri.parse(scheme)
-                            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri)
-                            startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION)
-                            Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+                            intent.getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI).let { uri ->
+                                val scheme = String.format("%s%%3AAndroid%%2Fdata%%2F%s", uri.toString().replace("/root/", "/document/"), packageName)
+                                intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri.parse(scheme))
+                                startActivityForResult(intent, REQUEST_CODE_FOLDER_PERMISSION)
+                                Toast.makeText(mActivity, "請先給與 APP 存取 Android/data 資料夾權限。", Toast.LENGTH_LONG).show()
+                            }
                         } else {
                             downloadGameData(entity)
                         }

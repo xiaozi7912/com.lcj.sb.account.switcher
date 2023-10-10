@@ -1,11 +1,11 @@
 package com.lcj.sb.account.switcher.fragment
 
-import android.app.Activity
 import android.app.AlertDialog
-import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -31,7 +31,11 @@ import com.lcj.sb.account.switcher.database.entity.Account
 import com.lcj.sb.account.switcher.database.entity.DungeonParty
 import com.lcj.sb.account.switcher.databinding.DialogCreatePartyBinding
 import com.lcj.sb.account.switcher.databinding.FragmentPartyBinding
-import com.lcj.sb.account.switcher.model.*
+import com.lcj.sb.account.switcher.model.AccountInfoModel
+import com.lcj.sb.account.switcher.model.CreatePartyModel
+import com.lcj.sb.account.switcher.model.DungeonElementModel
+import com.lcj.sb.account.switcher.model.DungeonLevelModel
+import com.lcj.sb.account.switcher.model.DungeonStageModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.IconUtils
 import java.io.File
@@ -97,6 +101,7 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
                         add(model.index)
                     }
                 }
+
                 else -> arrayListOf(mSelectedFilterLevelModel.index)
             })
 
@@ -106,12 +111,13 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
                         add(model.index)
                     }
                 }
+
                 else -> arrayListOf(mSelectedFilterElementModel.index)
             })
 
             mBinding.model?.onFilterClick(mActivity) { dataList ->
                 dataList?.let {
-                    mHandler.post { mAdapter.update(dataList) }
+                    Handler(Looper.getMainLooper()).post { mAdapter.update(dataList) }
                 }
             }
         }
@@ -132,27 +138,13 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
         mBinding.recyclerView.adapter = mAdapter
 
         BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
-                .getPartyList(mAccount.id)
-                .observe(viewLifecycleOwner, Observer { mAdapter.update(it) })
+            .getPartyList(mAccount.id)
+            .observe(viewLifecycleOwner, Observer { mAdapter.update(it) })
     }
 
     override fun onResume() {
         super.onResume()
         BaseApplication.setCurrentScreen(mActivity, Configs.SCREEN_PARTY, LOG_TAG)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-//        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-//            val result = CropImage.getActivityResult(data)
-//            if (resultCode == Activity.RESULT_OK) {
-//                mCropImageUri = result.uri
-//                mCreatePartyBinding.partyIv.setImageURI(mCropImageUri)
-//                Log.d(LOG_TAG, "mCropImageUri : ${mCropImageUri}")
-//            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-//                result.error.printStackTrace()
-//            }
-//        }
     }
 
     override fun onDeleteClick(item: DungeonParty) {
@@ -165,7 +157,7 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
                 Thread {
                     File(item.imagePath).let { if (it.exists()) it.delete() }
                     BaseDatabase.getInstance(mActivity).dungeonPartyDAO().delete(item)
-                    mHandler.post {
+                    Handler(Looper.getMainLooper()).post {
                         Snackbar.make(mContentView, R.string.dialog_message_delete_success, Snackbar.LENGTH_SHORT).show()
                         dialog.dismiss()
                     }
@@ -179,26 +171,26 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
         val db = FirebaseFirestore.getInstance()
         val collectionPath = mSelectedLevelModel.title
         db.document("/summons_board/dungeon").collection(collectionPath)
-                .whereEqualTo("element", mSelectedElementModel.index).orderBy("number", Query.Direction.ASCENDING).get()
-                .addOnSuccessListener { result ->
-                    mDungeonStageList.clear()
+            .whereEqualTo("element", mSelectedElementModel.index).orderBy("number", Query.Direction.ASCENDING).get()
+            .addOnSuccessListener { result ->
+                mDungeonStageList.clear()
 
-                    for (document in result) {
-                        val model = document.toObject(DungeonStageModel::class.java)
-                        mDungeonStageList.add(model)
-                        Log.d(LOG_TAG, "${document.id} => ${document.data}")
-                        Log.d(LOG_TAG, "${document.id} => ${model.event_title}")
-                    }
+                for (document in result) {
+                    val model = document.toObject(DungeonStageModel::class.java)
+                    mDungeonStageList.add(model)
+                    Log.d(LOG_TAG, "${document.id} => ${document.data}")
+                    Log.d(LOG_TAG, "${document.id} => ${model.event_title}")
+                }
 
-                    if (result.isEmpty) {
-                        updateDungeonStageView(null)
-                    } else {
-                        updateDungeonStageView(mDungeonStageList[0])
-                    }
+                if (result.isEmpty) {
+                    updateDungeonStageView(null)
+                } else {
+                    updateDungeonStageView(mDungeonStageList[0])
                 }
-                .addOnFailureListener { error ->
-                    Log.w(LOG_TAG, error)
-                }
+            }
+            .addOnFailureListener { error ->
+                Log.w(LOG_TAG, error)
+            }
     }
 
     private fun showCreatePartyDialog() {
@@ -387,17 +379,19 @@ class PartyFragment : BaseFragment(), BaseAdapter.PartyListListener {
             if (mCropImageUri != null) {
                 Thread {
                     BaseDatabase.getInstance(mActivity).dungeonPartyDAO()
-                            .insert(DungeonParty(
-                                    accountId = mAccount.id,
-                                    dungeonType = mSelectedLevelModel.index,
-                                    elementType = mSelectedElementModel.index,
-                                    title = mSelectedStageModel?.title!!,
-                                    imagePath = mCropImageUri?.path!!,
-                                    iconName = mSelectedStageModel?.icon,
-                                    eventTitle = mSelectedStageModel?.event_title,
-                                    monsterName = mSelectedStageModel?.monster_name!!,
-                                    remark = remark
-                            ))
+                        .insert(
+                            DungeonParty(
+                                accountId = mAccount.id,
+                                dungeonType = mSelectedLevelModel.index,
+                                elementType = mSelectedElementModel.index,
+                                title = mSelectedStageModel?.title!!,
+                                imagePath = mCropImageUri?.path!!,
+                                iconName = mSelectedStageModel?.icon,
+                                eventTitle = mSelectedStageModel?.event_title,
+                                monsterName = mSelectedStageModel?.monster_name!!,
+                                remark = remark
+                            )
+                        )
                     dialog.dismiss()
                 }.start()
             } else {
