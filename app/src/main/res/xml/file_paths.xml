@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-path
+        name="summons_board_jp"
+        path="Android/data/jp.gungho.bm" />
+    <external-path
+        name="summons_board_tw"
+        path="Android/data/com.ghg.sb" />
+</paths>

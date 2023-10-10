@@ -1,21 +1,23 @@
+plugins {
+    id 'com.google.devtools.ksp'
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.firebase.crashlytics'
 
 android {
-    compileSdkVersion 33
-    flavorDimensions "server", "admob"
-
     defaultConfig {
         applicationId "com.lcj.sb.account.switcher"
+        compileSdk 34
+        targetSdkVersion 34
         minSdkVersion 26
-        targetSdkVersion 33
-        versionCode 33
         versionName "0.8.1"
+        versionCode 33
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
+    flavorDimensions = ["server", "admob"]
     productFlavors {
         sandbox {
             dimension "server"
@@ -88,24 +90,23 @@ dependencies {
     implementation "androidx.viewpager2:viewpager2:1.0.0"
     implementation 'androidx.room:room-runtime:2.5.2'
     implementation 'androidx.room:room-rxjava2:2.5.2'
-    implementation "com.google.android.material:material:1.9.0"
+    implementation "com.google.android.material:material:1.10.0"
     implementation "androidx.paging:paging-runtime-ktx:3.2.1"
 
     implementation 'com.google.firebase:firebase-crashlytics:18.4.3'
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
-    implementation 'com.google.android.gms:play-services-ads:22.3.0'
-    implementation 'com.google.firebase:firebase-auth:22.1.1'
+    implementation 'com.google.android.gms:play-services-ads:22.4.0'
+    implementation 'com.google.firebase:firebase-auth:22.1.2'
     implementation 'com.google.firebase:firebase-analytics:21.3.0'
     implementation 'com.google.firebase:firebase-storage:20.2.1'
     implementation 'com.google.firebase:firebase-messaging:23.2.1'
-    implementation 'com.google.firebase:firebase-ads:22.3.0'
-    implementation 'com.google.firebase:firebase-firestore-ktx:24.7.1'
+    implementation 'com.google.firebase:firebase-ads:22.4.0'
+    implementation 'com.google.firebase:firebase-firestore-ktx:24.8.1'
     implementation 'com.google.firebase:firebase-config:21.4.1'
-    implementation 'com.google.api-client:google-api-client-android:1.26.0'
-    implementation 'com.google.http-client:google-http-client-gson:1.26.0'
-    implementation 'com.google.apis:google-api-services-drive:v3-rev136-1.25.0'
+    implementation 'com.google.api-client:google-api-client-android:2.2.0'
+    implementation 'com.google.http-client:google-http-client-gson:1.43.3'
+    implementation 'com.google.apis:google-api-services-drive:v3-rev20230822-2.0.0'
 
-    implementation 'pub.devrel:easypermissions:3.0.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation 'com.github.bumptech.glide:glide:4.15.1'
@@ -119,11 +120,11 @@ dependencies {
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
-    kapt 'com.github.bumptech.glide:compiler:4.15.1'
+    ksp 'com.github.bumptech.glide:ksp:4.15.1'
+    ksp 'androidx.room:room-compiler:2.5.2'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    kapt 'androidx.room:room-compiler:2.5.2'
 }
 
 apply plugin: 'com.google.gms.google-services'
