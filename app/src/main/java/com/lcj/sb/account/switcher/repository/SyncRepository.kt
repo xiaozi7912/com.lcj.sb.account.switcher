@@ -32,7 +32,7 @@ import java.util.Collections
 
 class SyncRepository(activity: Activity) : BaseRepository(activity) {
     companion object {
-        private const val CHUNK_SIZE = (0.5 * 1024 * 1024).toInt()
+        private const val CHUNK_SIZE = (1 * 1024 * 1024).toInt()
         fun getInstance(activity: Activity): SyncRepository {
             return SyncRepository(activity)
         }
@@ -212,7 +212,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     mHandler.post { callback.onInitial(hashZipFile["name"]!!) }
                     try {
                         ZipManager.zip(activity.contentResolver, fileList, hashZipFile["path"]!!)
-                        startUploadFile(signedIn, hashZipFile, callback)
+                        upload(signedIn, hashZipFile, callback)
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -238,34 +238,42 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
         filesFile.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
         if (fileList.size > 0) {
             ZipManager.zip(fileList, hashZipFile["path"]!!)
-            startUploadFile(signedIn, hashZipFile, callback)
+            upload(signedIn, hashZipFile, callback)
         } else {
             callback.onError("資料夾內沒有檔案！")
         }
     }
 
-    private fun startUploadFile(signedIn: GoogleSignInAccount, hashZipFile: HashMap<String, String>, callback: UploadCallback) {
+    private fun upload(signedIn: GoogleSignInAccount, hashZipFile: HashMap<String, String>, callback: UploadCallback) {
         val service = getDriveService(signedIn)
+        val driveFiles = service.files()
+        val folderName = BuildConfig.APPLICATION_ID
+        val fileName = hashZipFile["name"]
+        val filePath = hashZipFile["path"] ?: ""
+        val mediaContent = FileContent("application/zip", File(filePath))
+
         try {
-            val qFolder = service.files().list()
-                .setQ("name='${BuildConfig.APPLICATION_ID}'")
-                .execute()
-            val qFile = service.files().list()
-                .setQ("name='${hashZipFile["name"]}'")
-                .execute()
-            val folderFile = if (qFolder.files.size == 0) {
-                service.files().create(com.google.api.services.drive.model.File().apply {
-                    name = BuildConfig.APPLICATION_ID
+            val folder = driveFiles.list().setQ("name='$folderName'").execute().files.firstOrNull() ?: run {
+                val newFolder = com.google.api.services.drive.model.File().apply {
+                    name = folderName
                     mimeType = "application/vnd.google-apps.folder"
-                }).execute()
-            } else {
-                qFolder.files.first()
+                }
+                driveFiles.create(newFolder).execute()
+            }
+            val file = driveFiles.list().setQ("name='$fileName'").execute().files.firstOrNull()?.let { file ->
+                val fileContent = com.google.api.services.drive.model.File().apply {
+                    name = fileName
+                }
+                driveFiles.update(file.id, fileContent, mediaContent)
+            } ?: run {
+                val newFile = com.google.api.services.drive.model.File().apply {
+                    parents = Collections.singletonList(folder.id)
+                    name = fileName
+                }
+                driveFiles.create(newFile, mediaContent)
             }
 
-            service.files().create(com.google.api.services.drive.model.File().apply {
-                parents = Collections.singletonList(folderFile.id)
-                name = hashZipFile["name"]
-            }, FileContent("application/zip", File(hashZipFile["path"]!!))).apply {
+            file.apply {
                 mediaHttpUploader.chunkSize = CHUNK_SIZE
                 mediaHttpUploader.setProgressListener {
                     when (it.uploadState) {
@@ -290,8 +298,6 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     }
                 }
             }.execute()
-
-            qFile.files.forEach { service.files().delete(it.id).execute() }
             callback.onSuccess()
         } catch (e: IOException) {
             e.printStackTrace()

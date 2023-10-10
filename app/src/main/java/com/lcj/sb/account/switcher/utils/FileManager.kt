@@ -30,7 +30,7 @@ class FileManager {
 
     interface LoadCallback {
         fun onCompleted()
-        fun onError()
+        fun onError(message: String = "")
     }
 
     companion object {
@@ -176,7 +176,7 @@ class FileManager {
 
                         accFilesFolder.listFiles()?.let { list ->
                             if (list.isEmpty()) {
-                                callback.onError()
+                                callback.onError("Account files folder is Empty.")
                             } else {
                                 for (file in list) {
                                     gameDir.findFile("files")?.let { filesDir ->

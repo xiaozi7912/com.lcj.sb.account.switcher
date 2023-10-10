@@ -123,8 +123,8 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
                     callback.onSuccess()
                 }
 
-                override fun onError() {
-                    callback.onError("Error")
+                override fun onError(message: String) {
+                    callback.onError(message)
                 }
             })
         }
