@@ -187,12 +187,10 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     override fun onSaveClick(account: Account) {
         AccountRepository.getInstance(mActivity).onSaveClick(mDisplayLang, account, object : BaseRepository.BackupAccountCallback {
             override fun onSuccess() {
-                ProgressDialog.getInstance(mActivity).dismiss()
                 Handler(Looper.getMainLooper()).post { Snackbar.make(mContentView, "備份成功", Snackbar.LENGTH_SHORT).show() }
             }
 
             override fun onError(message: String) {
-                ProgressDialog.getInstance(mActivity).dismiss()
                 Handler(Looper.getMainLooper()).post { Snackbar.make(mContentView, message, Snackbar.LENGTH_SHORT).show() }
             }
 
@@ -246,18 +244,15 @@ class AccountFragment : BaseFragment(), View.OnClickListener, BaseAdapter.Accoun
     }
 
     private fun loadGameData(account: Account) {
-        ProgressDialog.getInstance(mActivity).show()
         AccountRepository.getInstance(mActivity).onLoadGameClick(account, object : BaseRepository.LoadAccountCallback {
             override fun onSuccess() {
                 Handler(Looper.getMainLooper()).post {
-                    ProgressDialog.getInstance(mActivity).dismiss()
                     mBinding.gameFab.performClick()
                 }
             }
 
             override fun onError(message: String) {
                 Handler(Looper.getMainLooper()).post {
-                    ProgressDialog.getInstance(mActivity).dismiss()
                     Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show()
                 }
             }

@@ -18,7 +18,7 @@ import com.lcj.sb.account.switcher.databinding.DialogEditAccountBinding
 import com.lcj.sb.account.switcher.model.AccountEditModel
 import com.lcj.sb.account.switcher.utils.Configs
 import com.lcj.sb.account.switcher.utils.FileManager
-import com.lcj.sb.account.switcher.view.ProgressDialog
+import com.lcj.sb.account.switcher.view.RemoteProgressDialog
 import io.reactivex.internal.operators.completable.CompletableFromAction
 import io.reactivex.schedulers.Schedulers
 import java.io.File
@@ -46,7 +46,7 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
             setMessage(activity.getString(R.string.dialog_message_delete_backup))
             setPositiveButton(activity.getString(R.string.dialog_button_confirmed)) { _, _ ->
                 val folder = File(account.folder)
-                val d = CompletableFromAction.fromAction {
+                CompletableFromAction.fromAction {
                     if (folder.exists()) {
                         if (folder.isDirectory) {
                             folder.listFiles()?.forEach { childFile ->
@@ -65,9 +65,7 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
                         BaseDatabase.getInstance(activity).accountDAO().delete(account)
                         callback.onNotExists()
                     }
-                }
-                    .subscribeOn(Schedulers.io())
-                    .subscribe { }
+                }.subscribeOn(Schedulers.io()).subscribe { }.let { }
             }
             setNegativeButton(activity.getString(R.string.dialog_button_cancel)) { dialog, _ -> dialog.dismiss() }
         }.create().show()
@@ -105,7 +103,6 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
             setTitle("備份遊戲資料")
             setMessage("確定要覆蓋當前備份的資料嗎？")
             setPositiveButton(activity.getString(R.string.dialog_button_confirmed)) { dialog, _ ->
-                ProgressDialog.getInstance(activity).show()
                 updateAccount(dialog, lang, account, callback)
             }
             setNegativeButton(activity.getString(R.string.dialog_button_cancel)) { dialog, _ -> dialog.dismiss() }
@@ -114,16 +111,38 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
 
     fun onLoadGameClick(account: Account, callback: LoadAccountCallback) {
         val gameFolderName = if (account.lang == Account.Language.JP.ordinal) Configs.PREFIX_NAME_SB_JP else Configs.PREFIX_NAME_SB_TW
+
+        RemoteProgressDialog.getInstance(activity).title = "準備還原檔案"
+        RemoteProgressDialog.getInstance(activity).setVisible(true, true, true)
+        RemoteProgressDialog.getInstance(activity).show()
         CompletableFromAction {
             FileManager.loadFolder(activity, gameFolderName, account.folder, object : FileManager.LoadCallback {
+                override fun onDeleting() {
+                    RemoteProgressDialog.getInstance(activity).title = "檔案刪除中"
+                }
+
+                override fun onCoping() {
+                    RemoteProgressDialog.getInstance(activity).title = "檔案還原中"
+                }
+
+                override fun onProcess(current: Int, total: Int, fileName: String) {
+                    mHandler.post {
+                        RemoteProgressDialog.getInstance(activity).message = "正在處理: $fileName"
+                        RemoteProgressDialog.getInstance(activity).setFileCount(current, total)
+                        RemoteProgressDialog.getInstance(activity).setProgress(((current / total.toFloat()) * 100).toInt())
+                    }
+                }
+
                 override fun onCompleted() {
                     account.selected = true
                     BaseDatabase.getInstance(activity).accountDAO().deselectAll(account.lang)
                     BaseDatabase.getInstance(activity).accountDAO().update(account)
+                    RemoteProgressDialog.getInstance(activity).dismiss()
                     callback.onSuccess()
                 }
 
                 override fun onError(message: String) {
+                    RemoteProgressDialog.getInstance(activity).dismiss()
                     callback.onError(message)
                 }
             })
@@ -200,7 +219,7 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
         binding.backupSubmitBtn.isEnabled = false
         CompletableFromAction.fromAction {
             FileManager.backupFolder(activity, gameFolderName, destFolderName, object : FileManager.BackupCallback {
-                override fun onProcess(current: Int, total: Int) {
+                override fun onProcess(current: Int, total: Int, fileName: String) {
                     binding.backupProgressBar.max = total
                     binding.backupProgressBar.progress = current
                 }
@@ -224,16 +243,24 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
         val gameFolderName = lang.packageName
         val destFolderName = account.folder.substring(account.folder.lastIndexOf("/") + 1)
 
+        RemoteProgressDialog.getInstance(activity).title = "檔案備份中"
+        RemoteProgressDialog.getInstance(activity).setVisible(true, true, true)
+        RemoteProgressDialog.getInstance(activity).show()
         CompletableFromAction.fromAction {
             FileManager.backupFolder(activity, gameFolderName, destFolderName, object : FileManager.BackupCallback {
-                override fun onProcess(current: Int, total: Int) {
+                override fun onProcess(current: Int, total: Int, fileName: String) {
+                    mHandler.post {
+                        RemoteProgressDialog.getInstance(activity).message = "正在處理: $fileName"
+                        RemoteProgressDialog.getInstance(activity).setFileCount(current, total)
+                        RemoteProgressDialog.getInstance(activity).setProgress(((current / total.toFloat()) * 100).toInt())
+                    }
                 }
 
                 override fun onCompleted(folderPath: String) {
                     BaseDatabase.getInstance(activity).accountDAO().update(account.apply {
                         updateTime = System.currentTimeMillis()
                     })
-                    dialog.dismiss()
+                    RemoteProgressDialog.getInstance(activity).dismiss()
                     callback.onSuccess()
                 }
 
@@ -241,8 +268,6 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
                     callback.onError("備份失敗。")
                 }
             })
-        }
-            .subscribeOn(Schedulers.io())
-            .subscribe { }.let { }
+        }.subscribeOn(Schedulers.io()).subscribe { }.let { }
     }
 }

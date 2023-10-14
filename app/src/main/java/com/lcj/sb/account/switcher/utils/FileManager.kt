@@ -7,8 +7,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.util.Log
-import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import com.lazygeniouz.dfc.file.DocumentFileCompat
 import com.lcj.sb.account.switcher.BuildConfig
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -23,12 +23,15 @@ import java.util.regex.Pattern
 
 class FileManager {
     interface BackupCallback {
-        fun onProcess(current: Int, total: Int)
+        fun onProcess(current: Int, total: Int, fileName: String)
         fun onCompleted(folderPath: String)
         fun onError(message: String)
     }
 
     interface LoadCallback {
+        fun onDeleting()
+        fun onCoping()
+        fun onProcess(current: Int, total: Int, fileName: String)
         fun onCompleted()
         fun onError(message: String = "")
     }
@@ -115,30 +118,29 @@ class FileManager {
 
             if (!destFilesDir.mkdirs()) Log.e(LOG_TAG, "create dir error.")
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 context.contentResolver.persistedUriPermissions.find { it.uri.toString().contains(gameFolderName) }?.let { uriPermission ->
-                    DocumentFile.fromTreeUri(context, uriPermission.uri)?.let { gameDir ->
+                    DocumentFileCompat.fromTreeUri(context, uriPermission.uri)?.let { gameDir ->
                         gameDir.findFile("files")?.let { filesDir ->
                             if (!filesDir.exists()) {
                                 callback.onError("遊戲資料夾內沒資料。")
                                 return
                             }
 
-                            filesDir.listFiles().filter { file -> file.isFile }.let { fileList ->
-                                var current = 0
+                            filesDir.listFiles().filter { file -> file.isFile() }.let { fileList ->
                                 val totalSize = fileList.size
 
-                                for (documentFile in fileList) {
-                                    try {
-                                        val destFile = File(destFilesDir, documentFile.name ?: "")
-                                        copyFile(context.contentResolver, documentFile.uri, destFile.toUri())
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
+                                try {
+                                    for ((index, file) in fileList.withIndex()) {
+                                        val destFile = DocumentFileCompat.fromFile(context, File(destFilesDir, file.name))
+                                        destFile.copyFrom(file.uri)
+                                        callback.onProcess(index + 1, totalSize, file.name)
                                     }
-                                    current++
-                                    callback.onProcess(current, totalSize)
+                                    callback.onCompleted(destPath)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    callback.onError(e.cause.toString())
                                 }
-                                callback.onCompleted(destPath)
                             }
                         }
                     }
@@ -153,7 +155,7 @@ class FileManager {
                     fileList?.forEach {
                         copyFile(it.absolutePath, String.format("%s/%s", destFilesDir.absolutePath, it.name))
                         current++
-                        callback.onProcess(current, totalSize)
+                        callback.onProcess(current, totalSize, it.name)
                     }
                     callback.onCompleted(destFolderName)
                 } ?: run { callback.onError("沒有資料。") }
@@ -165,26 +167,36 @@ class FileManager {
             val gameFilesFolder = File(gameFolderPath, "files")
             val accFilesFolder = File(accountFolderPath, "files")
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 context.contentResolver.persistedUriPermissions.find { it.uri.toString().contains(gameFolderName) }?.let { uriPermission ->
-                    DocumentFile.fromTreeUri(context, uriPermission.uri)?.let { gameDir ->
-                        gameDir.findFile("files")?.listFiles()?.let { list ->
-                            for (documentFile in list.filter { file -> file.isFile }) {
-                                documentFile.delete()
-                            }
-                        }
+                    DocumentFileCompat.fromTreeUri(context, uriPermission.uri)?.let { gameDir ->
+                        gameDir.findFile("files")?.let { filesDir ->
+                            filesDir.listFiles().let { list ->
+                                val totalSize = list.size
 
-                        accFilesFolder.listFiles()?.let { list ->
-                            if (list.isEmpty()) {
-                                callback.onError("Account files folder is Empty.")
-                            } else {
-                                for (file in list) {
-                                    gameDir.findFile("files")?.let { filesDir ->
-                                        val destFile = filesDir.findFile(file.name) ?: filesDir.createFile("", file.name)
-                                        copyFile(context.contentResolver, file.toUri(), destFile?.uri!!)
-                                    }
+                                callback.onDeleting()
+                                for ((index, file) in list.withIndex()) {
+                                    file.delete()
+                                    callback.onProcess(index + 1, totalSize, file.name)
                                 }
-                                callback.onCompleted()
+                            }
+
+
+                            accFilesFolder.listFiles()?.let { list ->
+                                val totalSize = list.size
+
+                                if (list.isEmpty()) {
+                                    callback.onError("Account files folder is Empty.")
+                                } else {
+                                    callback.onCoping()
+                                    for ((index, file) in list.withIndex()) {
+                                        val srcFile = DocumentFileCompat.fromFile(context, file)
+                                        val destFile = filesDir.findFile(file.name) ?: filesDir.createFile("", file.name)
+                                        destFile?.let { srcFile.copyTo(it.uri) }
+                                        callback.onProcess(index + 1, totalSize, file.name)
+                                    }
+                                    callback.onCompleted()
+                                }
                             }
                         }
                     } ?: run { callback.onError() }
@@ -192,19 +204,22 @@ class FileManager {
             } else {
                 try {
                     accFilesFolder.listFiles()?.let { list ->
+                        val totalSize = list.size
+
                         if (list.isEmpty()) {
-                            callback.onError()
+                            callback.onError("Account files folder is Empty.")
                         } else {
-                            for (file in list) {
+                            for ((index, file) in list.withIndex()) {
                                 val destFile = String.format("%s/%s", gameFilesFolder.absolutePath, file.name)
                                 copyFile(file.absolutePath, destFile)
+                                callback.onProcess(index + 1, totalSize, file.name)
                             }
                             callback.onCompleted()
                         }
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    callback.onError()
+                    callback.onError(e.cause.toString())
                 }
             }
         }
@@ -220,13 +235,9 @@ class FileManager {
 
         @Throws(Exception::class)
         private fun copyFile(resolver: ContentResolver, srcUri: Uri, destUri: Uri) {
-            resolver.openFileDescriptor(srcUri, "r")?.use { srcFile ->
-                FileInputStream(srcFile.fileDescriptor).use { inputStream ->
-                    resolver.openFileDescriptor(destUri, "w")?.use { destFile ->
-                        FileOutputStream(destFile.fileDescriptor).use { outputStream ->
-                            outputStream.write(inputStream.readBytes())
-                        }
-                    }
+            resolver.openInputStream(srcUri)?.use { inputStream ->
+                resolver.openOutputStream(destUri)?.use { outputStream ->
+                    outputStream.write(inputStream.readBytes())
                 }
             }
         }

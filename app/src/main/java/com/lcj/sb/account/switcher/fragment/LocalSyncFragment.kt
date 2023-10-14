@@ -10,7 +10,11 @@ import android.view.ViewGroup
 import androidx.paging.toLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import com.lcj.sb.account.switcher.*
+import com.lcj.sb.account.switcher.BaseAdapter
+import com.lcj.sb.account.switcher.BaseApplication
+import com.lcj.sb.account.switcher.BaseFragment
+import com.lcj.sb.account.switcher.BaseRepository
+import com.lcj.sb.account.switcher.R
 import com.lcj.sb.account.switcher.adapter.LocalSyncListAdapter
 import com.lcj.sb.account.switcher.database.BaseDatabase
 import com.lcj.sb.account.switcher.database.entity.Account
@@ -23,7 +27,7 @@ import com.lcj.sb.account.switcher.view.RemoteProgressDialog
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 
 class LocalSyncFragment : BaseFragment() {
     private lateinit var mBinding: FragmentLocalBackupBinding
@@ -83,11 +87,12 @@ class LocalSyncFragment : BaseFragment() {
 
                 override fun onUploadClick(account: Account) {
                     Log.i(LOG_TAG, "onUploadClick")
+                    RemoteProgressDialog.getInstance(mActivity).title = "檔案上傳中"
+                    RemoteProgressDialog.getInstance(mActivity).setVisible(true, true, false)
                     RemoteProgressDialog.getInstance(mActivity).show()
                     SyncRepository.getInstance(mActivity).upload(account, object : BaseRepository.UploadCallback {
                         override fun onInitial(fileName: String) {
-                            RemoteProgressDialog.getInstance(mActivity).setTitle("檔案上傳中\n$fileName")
-                            RemoteProgressDialog.getInstance(mActivity).setFileCount(0, 0)
+                            RemoteProgressDialog.getInstance(mActivity).message = "正在處理: $fileName"
                             RemoteProgressDialog.getInstance(mActivity).setProgress(0)
                         }
 

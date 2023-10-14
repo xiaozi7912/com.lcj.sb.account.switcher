@@ -248,7 +248,7 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
         val type = FolderSync.Type.REMOTE
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN)
 
-        val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
+        BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ entity ->
@@ -258,7 +258,7 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
                         Account.Language.TW -> mBinding.settingsSbTSyncTimeTv.text = sdf.format(it.updateTime)
                     }
                 }
-            }, { err -> err.printStackTrace() })
+            }, { err -> err.printStackTrace() }).let { }
     }
 
     private fun onSyncJPButtonClick() {
@@ -268,10 +268,12 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
     }
 
     private fun downloadGameData(entity: GoogleDriveItem) {
+        RemoteProgressDialog.getInstance(mActivity).title = "檔案下載中"
+        RemoteProgressDialog.getInstance(mActivity).setVisible(true, false, false)
         RemoteProgressDialog.getInstance(mActivity).show()
         SyncRepository.getInstance(mActivity).download(entity, object : BaseRepository.DownloadCallback {
             override fun onInitial() {
-                RemoteProgressDialog.getInstance(mActivity).setTitle("檔案下載中\n${entity.name}")
+                RemoteProgressDialog.getInstance(mActivity).message = "正在處理: ${entity.name}"
                 RemoteProgressDialog.getInstance(mActivity).setProgress(0)
             }
 
@@ -279,12 +281,10 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
                 RemoteProgressDialog.getInstance(mActivity).setProgress(progress)
             }
 
-            override fun onComplete(progress: Int) {
-                RemoteProgressDialog.getInstance(mActivity).setProgress(progress)
-            }
-
-            override fun onUnzip() {
-                RemoteProgressDialog.getInstance(mActivity).setTitle("解壓縮中\n${entity.name}")
+            override fun onDownloadCompleted() {
+                RemoteProgressDialog.getInstance(mActivity).title = "解壓縮中"
+                RemoteProgressDialog.getInstance(mActivity).message = "正在處理: ${entity.name}"
+                RemoteProgressDialog.getInstance(mActivity).setProgress(100)
             }
 
             override fun onSuccess() {

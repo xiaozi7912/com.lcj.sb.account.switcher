@@ -28,11 +28,11 @@ import io.reactivex.schedulers.Schedulers
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.Calendar
 import java.util.Collections
 
 class SyncRepository(activity: Activity) : BaseRepository(activity) {
     companion object {
-        private const val CHUNK_SIZE = (1 * 1024 * 1024).toInt()
         fun getInstance(activity: Activity): SyncRepository {
             return SyncRepository(activity)
         }
@@ -97,10 +97,11 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
     fun download(entity: GoogleDriveItem, callback: DownloadCallback) {
         callback.onInitial()
         checkSignedInAccount({ signedIn ->
-            val d = CompletableFromAction.fromAction {
-                val service = getDriveService(signedIn)
+            CompletableFromAction.fromAction {
                 try {
+                    val service = getDriveService(signedIn)
                     val zipFile = File("${activity.externalCacheDir?.absolutePath}/${entity.name}")
+
                     FileOutputStream(zipFile).use { inputStream ->
                         service.files().get(entity.id).apply {
                             mediaHttpDownloader.setProgressListener {
@@ -114,7 +115,34 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                                     }
 
                                     MediaHttpDownloader.DownloadState.MEDIA_COMPLETE -> {
-                                        callback.onComplete(100)
+                                        val currentTime = Calendar.getInstance().timeInMillis
+                                        val folderName = entity.name.substring(0, entity.name.lastIndexOf("."))
+                                        val docDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                                        val appDir = File(docDir, BuildConfig.APPLICATION_ID)
+                                        val accountDir = File(appDir, folderName)
+                                        val account = Account(
+                                            alias = folderName, folder = accountDir.absolutePath, lang = entity.lang.ordinal,
+                                            createTime = currentTime, updateTime = currentTime
+                                        )
+
+                                        callback.onDownloadCompleted()
+
+                                        if (!accountDir.mkdirs()) Log.e(LOG_TAG, "create dir error.")
+
+                                        try {
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                                accountDir.listFiles()?.let { list -> list.map { file -> file.delete() } }
+                                                ZipManager.unZip(zipFile.absolutePath, appDir.absolutePath)
+                                            } else {
+                                                ZipManager.unZip(zipFile.absolutePath, appDir.absolutePath)
+                                            }
+                                            accountDir.setLastModified(currentTime)
+                                            BaseDatabase.getInstance(activity).accountDAO().insert(account)
+                                            mHandler.post { callback.onSuccess() }
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                            callback.onError(e.cause.toString())
+                                        }
                                     }
 
                                     else -> {
@@ -123,46 +151,12 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                             }
                         }.executeMediaAndDownloadTo(inputStream)
                     }
-                    mHandler.post { callback.onUnzip() }
-
-                    val folderName = entity.name.substring(0, entity.name.lastIndexOf("."))
-                    val docDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                    val appDir = File(docDir, BuildConfig.APPLICATION_ID)
-                    val accountDir = File(appDir, folderName)
-
-                    if (!accountDir.mkdirs()) Log.e(LOG_TAG, "create dir error.")
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        try {
-                            accountDir.listFiles()?.let { list ->
-                                list.map { file -> file.delete() }
-                            }
-                            ZipManager.unZip(zipFile.absolutePath, appDir.absolutePath)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    } else {
-                        ZipManager.unZip(zipFile.absolutePath, appDir.absolutePath)
-                    }
-
-                    val currentTime = System.currentTimeMillis()
-                    BaseDatabase.getInstance(activity).accountDAO()
-                        .insert(
-                            Account(
-                                alias = folderName, folder = accountDir.absolutePath, lang = entity.lang.ordinal,
-                                createTime = currentTime, updateTime = currentTime
-                            )
-                        )
-                    mHandler.post { callback.onSuccess() }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    mHandler.post { callback.onError(e.localizedMessage ?: "") }
+                    mHandler.post { callback.onError(e.cause.toString()) }
                 }
-            }
-                .subscribeOn(Schedulers.io())
-                .subscribe { }
-        },
-            { callback.onError(it) })
+            }.subscribeOn(Schedulers.io()).subscribe { }.let { }
+        }, { callback.onError(it) })
     }
 
     fun delete(entity: GoogleDriveItem, callback: DeleteCallback) {
@@ -212,7 +206,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                     mHandler.post { callback.onInitial(hashZipFile["name"]!!) }
                     try {
                         ZipManager.zip(activity.contentResolver, fileList, hashZipFile["path"]!!)
-                        upload(signedIn, hashZipFile, callback)
+                        uploadFile(signedIn, hashZipFile, callback)
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -238,13 +232,13 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
         filesFile.listFiles()?.forEach { file -> fileList.add(file.absolutePath) }
         if (fileList.size > 0) {
             ZipManager.zip(fileList, hashZipFile["path"]!!)
-            upload(signedIn, hashZipFile, callback)
+            uploadFile(signedIn, hashZipFile, callback)
         } else {
             callback.onError("資料夾內沒有檔案！")
         }
     }
 
-    private fun upload(signedIn: GoogleSignInAccount, hashZipFile: HashMap<String, String>, callback: UploadCallback) {
+    private fun uploadFile(signedIn: GoogleSignInAccount, hashZipFile: HashMap<String, String>, callback: UploadCallback) {
         val service = getDriveService(signedIn)
         val driveFiles = service.files()
         val folderName = BuildConfig.APPLICATION_ID
@@ -274,7 +268,6 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
             }
 
             file.apply {
-                mediaHttpUploader.chunkSize = CHUNK_SIZE
                 mediaHttpUploader.setProgressListener {
                     when (it.uploadState) {
                         MediaHttpUploader.UploadState.INITIATION_STARTED -> {

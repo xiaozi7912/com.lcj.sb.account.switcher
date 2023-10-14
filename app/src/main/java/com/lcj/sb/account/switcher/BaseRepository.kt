@@ -6,10 +6,10 @@ import com.lcj.sb.account.switcher.database.entity.GoogleDriveItem
 
 open class BaseRepository(val activity: Activity) {
     protected val LOG_TAG = javaClass.simpleName
-    protected val mHandler = Handler()
+    protected val mHandler = Handler(activity.mainLooper)
 
     interface BaseCallback {
-        fun onError(message: String)
+        fun onError(message: String = "")
     }
 
     interface UploadCallback : BaseCallback {
@@ -28,8 +28,7 @@ open class BaseRepository(val activity: Activity) {
     interface DownloadCallback : BaseCallback {
         fun onInitial()
         fun inProgress(progress: Int)
-        fun onComplete(progress: Int)
-        fun onUnzip()
+        fun onDownloadCompleted()
         fun onSuccess()
     }
 

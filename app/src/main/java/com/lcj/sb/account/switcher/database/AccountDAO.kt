@@ -24,7 +24,7 @@ interface AccountDAO {
     @Query("SELECT * FROM accounts WHERE lang = :lang ORDER BY create_time ASC")
     fun liveAccounts(lang: Int): DataSource.Factory<Int, Account>
 
-    @Query("SELECT * FROM accounts WHERE lang = :lang AND hidden = :hidden ORDER BY create_time ASC")
+    @Query("SELECT * FROM accounts WHERE lang = :lang AND hidden = :hidden ORDER BY folder ASC")
     fun liveAccounts(lang: Int, hidden: Boolean): DataSource.Factory<Int, Account>
 
     @Query("SELECT * FROM accounts WHERE lang = :lang AND hidden = :hidden ORDER BY folder ASC")
