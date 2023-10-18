@@ -265,7 +265,8 @@ class AccountRepository(activity: Activity) : BaseRepository(activity) {
                 }
 
                 override fun onError(message: String) {
-                    callback.onError("備份失敗。")
+                    RemoteProgressDialog.getInstance(activity).dismiss()
+                    callback.onError(message)
                 }
             })
         }.subscribeOn(Schedulers.io()).subscribe { }.let { }
