@@ -1,9 +1,7 @@
 package com.lcj.sb.account.switcher.utils
 
-import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.util.Log
@@ -113,6 +111,7 @@ class FileManager {
         }
 
         fun backupFolder(context: Context, gameFolderName: String, destFolderName: String, callback: BackupCallback) {
+            val gameFolderPath = String.format("%s/%s/%s", Environment.getExternalStorageDirectory(), "Android/data", gameFolderName)
             val destPath = String.format("%s/%s/%s", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), BuildConfig.APPLICATION_ID, destFolderName)
             val destFilesDir = File(destPath, "files")
 
@@ -146,7 +145,7 @@ class FileManager {
                     }
                 }
             } else {
-                val gameDir = File(gameFolderName)
+                val gameDir = File(gameFolderPath)
                 gameDir.listFiles()?.filter { it.name == "files" }?.forEach { dir ->
                     val fileList = dir?.listFiles()?.filter { item -> item.isFile }
                     var current = 0
@@ -228,15 +227,6 @@ class FileManager {
         private fun copyFile(srcFilePath: String, destFilePath: String) {
             FileInputStream(srcFilePath).use { inputStream ->
                 FileOutputStream(destFilePath).use { outputStream ->
-                    outputStream.write(inputStream.readBytes())
-                }
-            }
-        }
-
-        @Throws(Exception::class)
-        private fun copyFile(resolver: ContentResolver, srcUri: Uri, destUri: Uri) {
-            resolver.openInputStream(srcUri)?.use { inputStream ->
-                resolver.openOutputStream(destUri)?.use { outputStream ->
                     outputStream.write(inputStream.readBytes())
                 }
             }
