@@ -71,7 +71,7 @@ class SyncRepository(activity: Activity) : BaseRepository(activity) {
                         .setOrderBy("name")
                         .execute().files
 
-                    files.forEach { file ->
+                    files.sortedByDescending { file -> file.modifiedTime.value }.forEach { file ->
                         with(file.name) {
                             when {
                                 contains(Configs.PREFIX_NAME_SB_JP) -> Account.Language.JP

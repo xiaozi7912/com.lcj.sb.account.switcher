@@ -133,7 +133,7 @@ class LocalSyncFragment : BaseFragment() {
         val type = FolderSync.Type.LOCAL
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN)
 
-        val d = BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
+        BaseDatabase.getInstance(mActivity).folderSyncDAO().folderSync(type.ordinal, lang.ordinal)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ entity ->
@@ -143,11 +143,7 @@ class LocalSyncFragment : BaseFragment() {
                         Account.Language.TW -> mBinding.settingsSbTSyncTimeTv.text = sdf.format(it.updateTime)
                     }
                 }
-            }, { err -> err.printStackTrace() })
-    }
-
-    private fun refresh() {
-
+            }, { err -> err.printStackTrace() }).let { }
     }
 
     private fun showLocalSyncList(lang: Account.Language) {

@@ -210,12 +210,8 @@ class RemoteSyncFragment : BaseFragment(), SwipeRefreshLayout.OnRefreshListener 
 
     private fun handleSignInResult(result: Intent?) {
         GoogleSignIn.getSignedInAccountFromIntent(result)
-            .addOnSuccessListener { account ->
-                updateAccountUI(account)
-            }
-            .addOnFailureListener { err ->
-                err.printStackTrace()
-            }
+            .addOnSuccessListener { account -> updateAccountUI(account) }
+            .addOnFailureListener { e -> e.printStackTrace() }
     }
 
     private fun updateAccountUI(account: GoogleSignInAccount?) {
